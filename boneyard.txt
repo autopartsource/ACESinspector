@@ -1,0 +1,1502 @@
+﻿            lblStatus.Text = "Analyzing"; lblDuplicateApps.Text = "(analyzing)";
+            await Task.Run(() => aces.duplicates(vcdb, pcdb, progressDuplicates));
+            lblDuplicateApps.Text = aces.duplicateErrors.Count.ToString();
+            pictureBoxDuplicates.Visible = true; if (aces.duplicateErrors.Count > 0) { tabControl1.TabPages.Add(hiddenDuplicatesTab); highestVisableTab1Index++; dgDuplicates.Visible = true; pictureBoxDuplicates.BackColor = Color.Yellow; } else { pictureBoxDuplicates.BackColor = Color.Green; }
+            foreach (string error in aces.duplicateErrors) { dgDuplicates.Rows.Add(error.Split('\t')); }
+            lblProgressPercent.Text = "40%"; progressBar1.Value = 40;
+
+
+			            lblOverlapsCount.Text = "(analyzing)";
+            await Task.Run(() => aces.overlaps(vcdb, pcdb, qdb, progressOverlaps));
+            lblOverlapsCount.Text = aces.overlapsErrors.Count.ToString();
+            pictureBoxOverlaps.Visible = true; if (aces.overlapsErrors.Count > 0) { tabControl1.TabPages.Add(hiddenOverlapsTab); highestVisableTab1Index++; dgOverlaps.Visible = true; pictureBoxOverlaps.BackColor = Color.Red; } else { pictureBoxOverlaps.BackColor = Color.Green; }
+            foreach (string error in aces.overlapsErrors) { dgOverlaps.Rows.Add(error.Split('\t')); }
+            lblProgressPercent.Text = "60%"; progressBar1.Value = 60;
+
+
+
+			//from Autocare:ACES
+			
+        public List<string> overlaps(VCdb vcdb, PCdb pcdb, Qdb qdb, IProgress<int> progress)
+        {
+            // hashtable for temp storage of [basevid_parttype_position_qualifiers_mfrlable]=<list>apps
+            // any element that has more than one app in the value column is a vehicle with overlaps.
+            Dictionary<string, List<App>> overlapsHashtable = new Dictionary<string, List<App>>();
+            List<String> partsListTemp = new List<string>(); List<String> idsListTemp = new List<string>(); List<String> fitmentListTemp = new List<string>();
+            bool found; int i = 0; int percentProgress = 0; string hashkey = "";
+
+            foreach (App app in apps)
+            {//build a hashkey that defines a vehicle. use Tab characters to delimit the hashstring so it can be parsed apart later for presenation
+                hashkey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid + "\t" + app.namevalpairString(false) + "\t" + app.niceQdbQualifierString(qdb) + "\t" + String.Join(";", app.notes.ToArray()) + "\t" + app.mfrlabel + "\t" + app.asset + "\t" + app.assetitemref + "\t" + app.assetitemorder.ToString();
+
+                if (overlapsHashtable.ContainsKey(hashkey))
+                {
+                    found = false;
+                    foreach (App appTemp in overlapsHashtable[hashkey])
+                    {// only merge apps with disperate partnumbers (equal part numbers would be "duplicates")
+                        if (appTemp.part == app.part) { found = true; break; }
+                    }
+                    if (!found) { App appTemp = new App(); appTemp = app; overlapsHashtable[hashkey].Add(appTemp); }
+                }
+                else
+                {// first time seeing this hashkey
+                    List<App> appListTemp = new List<App>();
+                    App appTemp = new App();
+                    appTemp = app;
+                    appListTemp.Add(appTemp);
+                    overlapsHashtable[hashkey] = appListTemp;
+                }
+
+                if (progress != null)
+                {// only report progress on whole percentage steps (100 total reports). reporting on every iteration is too process intensive
+                    percentProgress = Convert.ToInt32(((double)i / (double)apps.Count) * 100);
+                    if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }
+                }
+                i++;
+            }
+
+            foreach (KeyValuePair<string, List<App>> entry in overlapsHashtable)
+            {
+                if (entry.Value.Count > 1)
+                {// "value" column (which is a List<App> type) contains multiplt apps for it's hashkey (basevehilceid + parttypeid + positionid + vcdbNameValuePairs +niceQdbQualifier + notes + mfrlabel + asset + assetitemref + assetitemorder)
+                    partsListTemp.Clear(); idsListTemp.Clear();
+                    foreach (App appTemp in entry.Value) { partsListTemp.Add(appTemp.part); idsListTemp.Add(appTemp.id.ToString()); } // build lists of parts and id's from list of overlapping apps
+                    App app = new App();
+                    app = entry.Value[0];// use the fist app in the list to determine the MMY, fitment, etc for display
+                    overlapsErrors.Add(app.basevehilceid.ToString() + "\t" + string.Join(",", idsListTemp) + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.niceFullFitmentString(vcdb, qdb) + "\t" + String.Join(",", partsListTemp));
+                    analysisErrors++;
+                }
+            }
+            return overlapsErrors;
+        }
+
+
+
+
+		
+        public List<string> duplicates(VCdb vcdb, PCdb pcdb, IProgress<int> progress)
+        {
+            // hashtable for temp storage of [basevid_parttype_position_qualifiers_mfrlable]="appId1,appId2,AppId3..."
+            // any element that has more than one appId in the second dimension, is a vehicle with duplicates.
+            Dictionary<String, List<App>> duplicatesHashtable = new Dictionary<string, List<App>>();
+            int i = 0; int percentProgress = 0; string hashkey = "";
+
+            foreach (App app in apps)
+            {
+                //build a hashkey that defines a vehicle. use Tabs characters to delimit the hashstring so it can be parsed apart later for presenation
+                hashkey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.namevalpairString(true) + "\t" + app.rawQdbDataString() + "\t" + app.mfrlabel + "\t" + app.part + "\t" + app.asset + "\t" + app.assetitemref + "\t" + app.assetitemorder.ToString();
+                if (duplicatesHashtable.ContainsKey(hashkey))
+                {
+                    duplicatesHashtable[hashkey].Add(app);
+                }
+                else
+                {
+                    List<App> appListTemp = new List<App>();
+                    duplicatesHashtable.Add(hashkey, appListTemp);
+                }
+
+                if (progress != null)
+                {// only report progress on whole percentage steps (100 total reports). reporting on every iteration is too process intensive
+                    percentProgress = Convert.ToInt32(((double)i / (double)apps.Count) * 100);
+                    if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }
+                }
+                i++;
+            }
+
+            string appIdsString = "";
+            foreach (KeyValuePair<string, List<App>> entry in duplicatesHashtable)
+            {
+                if (entry.Value.Count > 1)
+                {
+                    foreach (App appTemp in entry.Value) { appIdsString += appTemp.id.ToString() + ","; }
+                    var app = entry.Value[0]; // use the first app in the duplicates list to get make, model, year, etc.
+                    duplicateErrors.Add(app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.niceAttributesString(vcdb, true) + "\t" + appIdsString.TrimEnd(','));
+                    analysisWarnings++;
+                }
+            }
+            return duplicateErrors;
+        }
+
+
+		//old single-file analysis code for analyze button click event
+		        private async void btnAnalyze_Click(object sender, EventArgs e)
+        {
+            var analyzeStopwatch = new Stopwatch();
+            analyzeStopwatch.Start();
+
+            btnAnalyze.Enabled = false;
+            btnSelectACESfile.Enabled = false;
+            btnSelectPartInterchange.Enabled = false;
+            btnSelectReferenceACESfile.Enabled = false;
+            btnSelectVCdbFile.Enabled = false;
+            btnSelectPCdbFile.Enabled = false;
+            btnSelectQdbFile.Enabled = false;
+
+            progressBarLogicProblems.Value = 0;
+            progressBarQdbErrors.Value = 0;
+            progressBarInvalidBasevehicles.Value = 0;
+            progressBarInvalidVCdbCodes.Value = 0;
+            progressBarParttypePosition.Value = 0;
+            progressBarInvalidConfigurations.Value = 0;
+            progressBarDifferentials.Value = 0;
+
+            lblStatsVCdbVersion.Text = aces.VcdbVersionDate; lblStatsVCdbVersion.ForeColor = SystemColors.ControlText;
+            lblStatsPCdbVersion.Text = aces.PcdbVersionDate; lblStatsPCdbVersion.ForeColor = SystemColors.ControlText;
+            lblStatsQdbVersion.Text = aces.QdbVersionDate; lblStatsQdbVersion.ForeColor = SystemColors.ControlText;
+
+            lblStatsWarningsCount.Text = "";
+            lblStatsErrorsCount.Text = "";
+            lblLogicProblemsCount.Text = "";
+            lblInvalidQdbCount.Text = "";
+            lblInvalidBasevehilcesCount.Text = "";
+            lblInvalidVCdbCodesCount.Text = "";
+            lblInvalidParttypePositionCount.Text = "";
+            lblInvalidConfigurationsCount.Text = "";
+            lblDifferentialsSummary.Text = "";
+            lblQuantityWarnings.Text = "";
+            lblStatus.BackColor = SystemColors.ButtonFace;
+
+            dgBasevids.Rows.Clear();
+            dgVCdbCodes.Rows.Clear();
+            dgParttypePosition.Rows.Clear();
+            dgVCdbConfigs.Rows.Clear();
+            dgQdbErrors.Rows.Clear();
+            dgAddsDropsParts.Rows.Clear();
+            dgAddsDropsVehicles.Rows.Clear();
+            dgQuantityWarnings.Rows.Clear();
+
+            pictureBoxQdb.Visible = false;
+            pictureBoxLogicProblems.Visible = false;
+            pictureBoxInvalidBasevehicles.Visible = false;
+            pictureBoxInvalidVCdbCodes.Visible = false;
+            pictureBoxParttypePosition.Visible = false;
+            pictureBoxQuantityWarnings.Visible = false;
+            pictureBoxInvalidConfigurations.Visible = false;
+
+            aces.clearAnalysisResults();
+
+            lblStatsErrorsCount.Text = "(analyzing)";
+            lblStatsWarningsCount.Text = "(analyzing)";
+
+
+            var progressIndicator = new Progress<int>(ReportAnalyzeProgress);
+            var progressQdbErrors = new Progress<int>(ReportAnalyzeProgressQdbErrors);
+            var progressFitmentLogic = new Progress<int>(ReportAnalyzeProgressFitmentLogic);
+            var progressInvalidBasevehicles = new Progress<int>(ReportAnalyzeProgressInvalidBasevehicles);
+            var progressInvalidVCdbCodes = new Progress<int>(ReportAnalyzeProgressInvalidVCdbCodes);
+            var progressParttypePosition = new Progress<int>(ReportAnalyzeProgressParttypePosition);
+            var progressInvalidConfigurations = new Progress<int>(ReportAnalyzeProgressInvalidConfigurations);
+            var progressDifferentials = new Progress<int>(ReportAnalyzeProgressDifferentials);
+            var progressHoles = new Progress<int>(ReportFindHoles);
+
+            lblParttypeDisagreement.Text = dgParttypeDisagreement.Rows.Count.ToString();
+
+            lblProgressPercent.Text = "3%"; progressBar1.Value = 3;
+
+
+            if (checkBoxQtyOutliers.Checked)
+            {
+                lblQuantityWarnings.Text = "(analyzing)";
+                await Task.Run(() => aces.qtyOutliers(numericUpDownQtyOutliersThreshold.Value,numericUpDownQtyOutliersSample.Value, vcdb, pcdb, qdb, progressIndicator));
+                lblQuantityWarnings.Text = aces.qtyOutlierWarning.Count.ToString();
+                pictureBoxQuantityWarnings.Visible = true; if (aces.qtyOutlierWarning.Count > 0) { tabControl1.TabPages.Add(hiddenQuantityWarningsTab); highestVisableTab1Index++; dgQuantityWarnings.Visible = true; pictureBoxQuantityWarnings.BackColor = Color.Yellow; } else { pictureBoxQuantityWarnings.BackColor = Color.Green; }
+                foreach (string error in aces.qtyOutlierWarning) { dgQuantityWarnings.Rows.Add(error.Split('\t')); }
+                lblProgressPercent.Text = "8%"; progressBar1.Value = 8;
+            }
+
+            lblInvalidParttypePositionCount.Text = "(analyzing)";
+            await Task.Run(() => aces.invalidParttypePositions(vcdb, pcdb, progressParttypePosition));
+            lblInvalidParttypePositionCount.Text = aces.parttypePositionErrors.Count.ToString();
+            pictureBoxParttypePosition.Visible = true; if (aces.parttypePositionErrors.Count > 0) { tabControl1.TabPages.Add(hiddenParttypePositionErrorsTab); highestVisableTab1Index++; dgParttypePosition.Visible = true; pictureBoxParttypePosition.BackColor = Color.Red; } else { pictureBoxParttypePosition.BackColor = Color.Green; }
+            foreach (string error in aces.parttypePositionErrors) { dgParttypePosition.Rows.Add(error.Split('\t')); }
+            lblProgressPercent.Text = "20%"; progressBar1.Value = 20;
+
+
+            lblInvalidQdbCount.Text = "(analyzing)";
+            await Task.Run(() => aces.invalidQdbReferences(vcdb, pcdb, qdb, progressQdbErrors));
+            lblInvalidQdbCount.Text = aces.qdbErrors.Count.ToString();
+            pictureBoxQdb.Visible = true; if (aces.qdbErrors.Count > 0) { tabControl1.TabPages.Add(hiddenQdbErrorsTab); highestVisableTab1Index++; dgQdbErrors.Visible = true; pictureBoxQdb.BackColor = Color.Red; } else { pictureBoxQdb.BackColor = Color.Green; }
+            foreach (string error in aces.qdbErrors) { dgQdbErrors.Rows.Add(error.Split('\t')); }
+            lblProgressPercent.Text = "30%"; progressBar1.Value = 30;
+
+            lblInvalidBasevehilcesCount.Text = "(analyzing)";
+            await Task.Run(() => aces.invalidBasevids(vcdb, pcdb, progressInvalidBasevehicles));
+            lblInvalidBasevehilcesCount.Text = aces.basevehicleidsErrors.Count.ToString();
+            pictureBoxInvalidBasevehicles.Visible = true; if (aces.basevehicleidsErrors.Count > 0) { tabControl1.TabPages.Add(hiddenInvalidBaseVehiclesTab); highestVisableTab1Index++; dgBasevids.Visible = true; pictureBoxInvalidBasevehicles.BackColor = Color.Red; } else { pictureBoxInvalidBasevehicles.BackColor = Color.Green; }
+            foreach (string error in aces.basevehicleidsErrors) { dgBasevids.Rows.Add(error.Split('\t')); }
+            lblProgressPercent.Text = "70%"; progressBar1.Value = 70;
+
+
+            lblInvalidVCdbCodesCount.Text = "(analyzing)";
+            await Task.Run(() => aces.invalidAttributes(vcdb, pcdb, progressInvalidVCdbCodes));
+            lblInvalidVCdbCodesCount.Text = aces.vcdbCodesErrors.Count.ToString();
+            pictureBoxInvalidVCdbCodes.Visible = true; if (aces.vcdbCodesErrors.Count > 0) { tabControl1.TabPages.Add(hiddenInvalidVCdbCodesTab); highestVisableTab1Index++; dgVCdbCodes.Visible = true; pictureBoxInvalidVCdbCodes.BackColor = Color.Red; } else { pictureBoxInvalidVCdbCodes.BackColor = Color.Green; }
+            foreach (string error in aces.vcdbCodesErrors) { dgVCdbCodes.Rows.Add(error.Split('\t')); }
+            lblProgressPercent.Text = "80%"; progressBar1.Value = 80;
+          
+            
+            lblInvalidConfigurationsCount.Text = "(analyzing)";
+            await Task.Run(() => aces.invalidConfigs(vcdb, pcdb, qdb, errorsaces, progressInvalidConfigurations));
+            lblInvalidConfigurationsCount.Text = aces.vcdbConfigurationsErrors.Count.ToString();
+            pictureBoxInvalidConfigurations.Visible = true; if (aces.vcdbConfigurationsErrors.Count > 0) { tabControl1.TabPages.Add(hiddenInvalidConfigurationsTab); highestVisableTab1Index++; dgVCdbConfigs.Visible = true; pictureBoxInvalidConfigurations.BackColor = Color.Red; } else { pictureBoxInvalidConfigurations.BackColor = Color.Green; }
+            foreach (string error in aces.vcdbConfigurationsErrors) { dgVCdbConfigs.Rows.Add(error.Split('\t')); }
+
+            lblLogicProblemsCount.Text = "(analyzing)";
+            await Task.Run(() => aces.findFitmentLogicProblems(chkBadBranches.Checked, vcdb, pcdb, qdb, lblCachePath.Text + @"\ACESinspector-fitment permutations.txt",Convert.ToInt32(numericUpDownTreeConfigLimit.Value), progressFitmentLogic));
+            lblLogicProblemsCount.Text = aces.fitmentLogicProblems.Count.ToString();
+            pictureBoxLogicProblems.Visible = true; if (aces.fitmentLogicProblems.Count > 0) { tabControl1.TabPages.Add(hiddenLogicProblemsTab); highestVisableTab1Index++; dgFitmentLogicProblems.Visible = true; pictureBoxLogicProblems.BackColor = Color.Red; } else { pictureBoxLogicProblems.BackColor = Color.Green; }
+            foreach (string error in aces.fitmentLogicProblems) { dgFitmentLogicProblems.Rows.Add(error.Split('\t')); }
+            lblProgressPercent.Text = "50%"; progressBar1.Value = 50;
+
+
+
+            if (refaces.apps.Count > 0)
+            {
+                lblDifferentialsSummary.Text = "(analyzing)";
+                await Task.Run(() => diffaces.findDifferentials(aces, refaces, vcdb, pcdb, progressDifferentials));
+                foreach (string line in diffaces.differentialParts) { dgAddsDropsParts.Rows.Add(line.Split('\t')); }
+
+                App tempApp = new App();
+                foreach (string line in diffaces.differentialVehicles)
+                {
+                    string[] fields = line.Split('\t');
+
+                    //hashKey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.namevalpairString(false) + "\t" + app.notes + "\t" + app.mfrlabel;
+                    tempApp.Clear();
+                    tempApp.basevehilceid = Convert.ToInt32(fields[1]);
+                    tempApp.parttypeid = Convert.ToInt32(fields[2]);
+                    tempApp.positionid = Convert.ToInt32(fields[3]);
+                    if (fields[5] != "") { tempApp.VCdbAttributes = aces.parseAttributePairsString(fields[4]); }
+                    tempApp.notes = fields[5].Split(';').ToList();
+                    tempApp.mfrlabel = fields[6];
+                    dgAddsDropsVehicles.Rows.Add(fields[0], tempApp.basevehilceid.ToString(), vcdb.niceMakeOfBasevid(tempApp.basevehilceid), vcdb.niceModelOfBasevid(tempApp.basevehilceid), vcdb.niceYearOfBasevid(tempApp.basevehilceid), pcdb.niceParttype(tempApp.parttypeid), pcdb.nicePosition(tempApp.positionid), tempApp.niceAttributesString(vcdb, true), tempApp.mfrlabel);
+                }
+
+                lblDifferentialsSummary.Text = diffaces.differentialsSummary;
+                if (diffaces.differentialParts.Count > 0) { tabControl1.TabPages.Add(hiddenAddsDropsPartsTab); highestVisableTab1Index++; dgAddsDropsParts.Visible = true; }
+                if (diffaces.differentialVehicles.Count > 0) { tabControl1.TabPages.Add(hiddenAddsDropsVehiclesTab); highestVisableTab1Index++; dgAddsDropsVehicles.Visible = true; }
+            }
+
+            aces.analysisComplete = true;
+            btnSelectReferenceACESfile.Enabled = true;
+
+            btnSelectACESfile.Enabled = true;
+            btnSelectVCdbFile.Enabled = true;
+            btnSelectPCdbFile.Enabled = true;
+            btnSelectQdbFile.Enabled = true;
+            btnAssessmentSave.Enabled = true;
+
+            analyzeStopwatch.Stop();
+
+
+            if (aces.analysisErrors > 0)
+            {
+                lblStatus.Text = "Analysis complete (Failed) - " + analyzeStopwatch.Elapsed.Seconds.ToString() + " seconds"; lblStatus.BackColor = Color.Red;
+            }
+            else
+            {
+                if (aces.analysisWarnings > 0)
+                {
+                    lblStatus.Text = "Analysis complete (Passed with warnings) - " + analyzeStopwatch.Elapsed.Seconds.ToString() + " seconds"; lblStatus.BackColor = Color.Yellow;
+                }
+                else
+                {
+                    lblStatus.Text = "Analysis complete (Passed) - " + analyzeStopwatch.Elapsed.Seconds.ToString() + " seconds"; lblStatus.BackColor = Color.LightGreen;
+                }
+            }
+
+
+            if (aces.VcdbVersionDate != vcdb.version)
+            {
+                lblStatsVCdbVersion.ForeColor = Color.DarkOrange;
+                lblStatsVCdbVersion.Text = aces.VcdbVersionDate + "  (validated against VCdb:" + vcdb.version + ")";
+            }
+
+            if (aces.PcdbVersionDate != pcdb.version)
+            {
+                lblStatsPCdbVersion.ForeColor = Color.DarkOrange;
+                lblStatsPCdbVersion.Text = aces.PcdbVersionDate + "  (validated against PCdb:" + pcdb.version + ")";
+            }
+
+            if (aces.QdbVersionDate != qdb.version)
+            {
+                lblStatsQdbVersion.ForeColor = Color.DarkOrange;
+                lblStatsQdbVersion.Text = aces.QdbVersionDate + "  (validated against Qdb:" + qdb.version + ")";
+            }
+
+
+
+            lblProgressPercent.Text = "100%";
+            progressBar1.Value = 100;
+
+            lblStatsErrorsCount.Text = aces.analysisErrors.ToString();
+            lblStatsWarningsCount.Text = aces.analysisWarnings.ToString();
+
+            aces.recordAnalysisResults(vcdb.version, pcdb.version); // record file hash and results in registry
+        }
+
+
+        public List<string> invalidBasevids(VCdb vcdb, PCdb pcdb, IProgress<int> progress)
+        {
+            int i = 0; int percentProgress = 0;
+            BaseVehicle basevidTemp = new BaseVehicle();
+            foreach (App app in apps)
+            {
+                if (!vcdb.basevid.TryGetValue(apps[i].basevehilceid, out basevidTemp))
+                {
+                    basevehicleidsErrors.Add(app.id + "\t" + app.basevehilceid.ToString() + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, true));
+                    analysisErrors++;
+                }
+
+                if (progress != null)
+                {// only report progress on whole percentage steps (100 total reports). reporting on every iteration is too process intensive
+                    percentProgress = Convert.ToInt32(((double)i / (double)apps.Count) * 100);
+                    if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }
+                }
+                i++;
+            }
+            return basevehicleidsErrors;
+        }
+
+        public List<string> invalidAttributes(VCdb vcdb, PCdb pcdb, IProgress<int> progress)
+        {
+            int i = 0; string errorsString = ""; int percentProgress = 0;
+            BaseVehicle basevidTemp = new BaseVehicle();
+            foreach (App app in apps)
+            {
+                if (app.VCdbAttributes.Count > 0)
+                {
+                    errorsString = "";
+                    foreach (VCdbAttribute myAttribute in app.VCdbAttributes)
+                    {
+                        if (!vcdb.validAttribute(myAttribute))
+                        {
+                            errorsString += myAttribute.name + ":" + myAttribute.value.ToString() + ";";
+                        }
+                    }
+
+                    if (errorsString != "")
+                    {
+                        vcdbCodesErrors.Add(app.id + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + String.Join(";", app.notes));
+                        analysisErrors++;
+                    }
+                }
+                if (progress != null)
+                {// only report progress on whole percentage steps (100 total reports). reporting on every iteration is too process intensive
+                    percentProgress = Convert.ToInt32(((double)i / (double)apps.Count) * 100);
+                    if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }
+                }
+                i++;
+            }
+            return vcdbCodesErrors;
+        }
+
+
+
+        public List<string> invalidParttypePositions(VCdb vcdb, PCdb pcdb, IProgress<int> progress)
+        {// this method looks for parttype,position,and parttype/position problems
+
+            int i = 0; int percentProgress = 0;
+            string errorType = "";
+            //BaseVehicle basevidTemp = new BaseVehicle();
+
+            foreach (App app in apps)
+            {
+                errorType = "";
+
+                if (pcdb.niceParttype(app.parttypeid) == app.parttypeid.ToString())
+                {// parttype id not valid (nice name returned the numeric value of the id)
+                    errorType = "Invalid Parttype";
+                }
+
+                if (app.positionid != 0 && pcdb.nicePosition(app.positionid) == app.positionid.ToString())
+                {// parttype id not valid (nice name returned the numeric value of the id)
+                    errorType += " Invalid Position";
+                }
+
+                if (errorType == "" && app.positionid != 0 && !pcdb.codmasterParttypePoisitions.Contains(app.parttypeid.ToString() + "_" + app.positionid.ToString()))
+                {// this combo of parttype and position was not found in the codemaster table
+                    errorType = "Invalid Parttype-Position";
+                }
+
+                if (errorType != "")
+                {
+                    parttypePositionErrors.Add(errorType + "\t" + app.id.ToString() + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.niceAttributesString(vcdb, true) + "\t" + app.part);
+                    analysisErrors++;
+                }
+
+                /* this is how you would query the pcdb directly on every app - VERY SLOW!
+                sqlString = "select codemasterid from codemaster where partterminologyid = " + apps[i].parttypeid.ToString() + " and positionid = " + apps[i].positionid.ToString();
+                try
+                {
+                    OleDbCommand command = new OleDbCommand(sqlString, pcdb.pcdbConnection);
+                    OleDbDataReader reader = command.ExecuteReader();
+                    if (!reader.Read())
+                    {
+                        parttypePositionErrors.Add(apps[i].id + "\t" + vcdb.niceMakeOfBasevid(apps[i].basevehilceid) + "\t" + vcdb.niceModelOfBasevid(apps[i].basevehilceid) + "\t" + vcdb.niceYearOfBasevid(apps[i].basevehilceid) + "\t" + pcdb.niceParttype(apps[i].parttypeid) + "\t" + pcdb.nicePosition(apps[i].positionid) + "\t" + apps[i].quantity + "\t" + apps[i].part + "\t" + apps[i].niceAttributesString(vcdb, false) + "\t" + apps[i].notes);
+                        analysisErrors++;
+                    }
+                    reader.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine(sqlString);
+                }
+            
+    */
+
+                if (progress != null)
+                {// only report progress on whole percentage steps (100 total reports). reporting on every iteration is too process intensive
+                    percentProgress = Convert.ToInt32(((double)i / (double)apps.Count) * 100);
+                    if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }
+                }
+                i++;
+            }
+            return parttypePositionErrors;
+        }
+
+        public List<string> invalidQdbReferences(VCdb vcdb, PCdb pcdb, Qdb qdb, IProgress<int> progress)
+        {// this method looks for Qdb references that are not found in the currently loaded Qdb
+            int i = 0; int percentProgress = 0;
+            //BaseVehicle basevidTemp = new BaseVehicle();
+            foreach (App app in apps)
+            {
+                foreach (QdbQualifier myQdbQualifier in app.QdbQualifiers)
+                {
+                    if (qdb.niceQdbQualifier(myQdbQualifier.qualifierId, myQdbQualifier.qualifierParameters) == myQdbQualifier.qualifierId.ToString())
+                    {// QdbQualifier id not valid (nice name returned the numeric value of the id)
+
+                        qdbErrors.Add("Invalid Qdb id (" + myQdbQualifier.qualifierId.ToString() + ")" + "\t" + app.id + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + string.Join(";", app.notes));
+                        analysisErrors++;
+                    }
+                }
+                if (progress != null)
+                {// only report progress on whole percentage steps (100 total reports). reporting on every iteration is too process intensive
+                    percentProgress = Convert.ToInt32(((double)i / (double)apps.Count) * 100);
+                    if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }
+                }
+                i++;
+            }
+            return qdbErrors;
+        }
+
+
+        //        public List<string> qtyOutliers(Decimal threshold, Decimal sampleSize, VCdb vcdb, PCdb pcdb, Qdb qdb, IProgress<int> progress)
+        public void qtyOutliers(Decimal threshold, Decimal sampleSize, VCdb vcdb, PCdb pcdb, Qdb qdb, IProgress<int> progress)
+        {// this method looks for parttype,position,and parttype/position problems
+
+            // establish two hashtables <string,int>
+            //  - appcounts by parttype/position/qty
+            //  - appcounts by parttype/position
+            // establish a results hashtable <string,double> that is the percentage of (parttype/position/qty) within (parttype/position)
+            // roll through all apps and lookup thier quantity "outlierness" in the <string,double> table and record them on the output string list if they are below prevelence threshold
+
+            Dictionary<string, int> parttypePositionDict = new Dictionary<string, int>();
+            Dictionary<string, int> parttypePositionQtyDict = new Dictionary<string, int>();
+            Dictionary<string, Double> parttypePositionQtyPrevelence = new Dictionary<string, Double>();
+
+            Double outliernessThreshold = Convert.ToDouble(threshold/100);
+            int i = 0; int percentProgress = 0;
+            string hashKey = "";
+            string hashKeyTypePosition = "";
+
+            foreach (App app in apps)
+            {
+                hashKey = app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.quantity.ToString();
+                if (parttypePositionQtyDict.ContainsKey(hashKey))
+                {// seen this type/position/qty before. increment the counter
+                    parttypePositionQtyDict[hashKey] += 1;
+                }
+                else
+                {//brandnew  type/position/qty combination. establish the key and set value = 1;
+                    parttypePositionQtyDict[hashKey] = 1;
+                }
+
+                if (progress != null)
+                {// only report progress on whole percentage steps (100 total reports). reporting on every iteration is too process intensive
+                    percentProgress = Convert.ToInt32(((double)i / (double)apps.Count) * 30);
+                    if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }
+                }
+                i++;
+            }
+
+            foreach (KeyValuePair<string, int> dictEntry in parttypePositionQtyDict)
+            {
+                String[] chuncks = dictEntry.Key.Split('\t');
+                hashKey = chuncks[0] + "\t" + chuncks[1];
+                if (parttypePositionDict.ContainsKey(hashKey)) { parttypePositionDict[hashKey] += dictEntry.Value; } else { parttypePositionDict[hashKey] = dictEntry.Value; }
+            }
+
+            foreach (KeyValuePair<string, int> dictEntry in parttypePositionQtyDict)
+            {
+                String[] chuncks = dictEntry.Key.Split('\t');
+                hashKey = chuncks[0] + "\t" + chuncks[1] + "\t" + chuncks[2];
+                hashKeyTypePosition = chuncks[0] + "\t" + chuncks[1];
+                parttypePositionQtyPrevelence[hashKey] = (float)parttypePositionQtyDict[hashKey] / (float)parttypePositionDict[hashKeyTypePosition];
+            }
+
+            foreach (App app in apps)
+            {
+                hashKey = app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.quantity.ToString();
+                hashKeyTypePosition = app.parttypeid.ToString() + "\t" + app.positionid.ToString();
+
+                if (parttypePositionQtyPrevelence[hashKey] < outliernessThreshold && parttypePositionDict[hashKeyTypePosition] >= sampleSize)
+                {
+                    qtyOutlierWarning.Add("Quantity (" + app.quantity.ToString() + ") is unusual for this part-type and position\t" + app.id.ToString() + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + app.niceQdbQualifierString(qdb) + "\t" + string.Join(";", app.notes));
+                }
+
+                if (progress != null)
+                {// only report progress on whole percentage steps (100 total reports). reporting on every iteration is too process intensive
+                    percentProgress = Convert.ToInt32(((double)i / (double)apps.Count) * 40) + 60;
+                    if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }
+                }
+
+            }
+            //return qtyOutlierWarning;
+        }
+
+
+
+
+	    public void findInvalidConfigs(VCdb vcdb, PCdb pcdb, Qdb qdb, ACES errorsaces, IProgress<int> progress)
+        {
+            int i = 0; int percentProgress = 0;
+            BaseVehicle basevidTemp = new BaseVehicle();
+            bool appHasInvalidAttribute;
+            List<VCdbAttribute> dummyAttributesList = new List<VCdbAttribute>();
+            App dummyApp = new App();
+
+            foreach (App app in apps)
+            {
+                if (app.VCdbAttributes.Count > 0)
+                {
+                    appHasInvalidAttribute = false; foreach (VCdbAttribute myAttribute in app.VCdbAttributes) { if (!vcdb.validAttribute(myAttribute)) { appHasInvalidAttribute = true; } }
+                    if (!appHasInvalidAttribute)
+                    {// dont include invalid attributed apps in vcdb config analysis - these are handled in the "invalid attributes" analysis
+
+                        if (!vcdb.configIsValid(app))
+                        {   // this apps's combination of attribute values is not found in the specified VCdb.
+                            // create a new list of attributes for this app that has excluded any attribute where "U/K" is an option
+                            dummyAttributesList.Clear();
+                            foreach (VCdbAttribute attribute in app.VCdbAttributes)
+                            {
+                                if (!vcdb.attributeHasUKasOption(app.basevehilceid, attribute.name))
+                                {
+                                    dummyAttributesList.Add(attribute);
+                                }
+                            }
+
+                            dummyApp.VCdbAttributes = dummyAttributesList;
+                            dummyApp.basevehilceid = app.basevehilceid;
+                            if (!vcdb.configIsValid(dummyApp))
+                            {
+                                //vcdbConfigurationsErrors.Add(app.id + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + app.niceQdbQualifierString(qdb) + "\t" + string.Join(";", app.notes));
+
+                                vcdbConfigurationsErrorsCount
+                                errorsaces.apps.Add(app);
+                                analysisErrors++;
+                            }
+                        }
+                    }
+                }
+
+                if (progress != null)
+                {// only report progress on whole percentage steps (100 total reports). reporting on every iteration is too process intensive
+                    percentProgress = Convert.ToInt32(((double)i / (double)apps.Count) * 100);
+                    if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }
+                }
+                i++;
+            }
+        }
+
+        private async void btnAnalyze_Click(object sender, EventArgs e)
+        {
+            var analyzeStopwatch = new Stopwatch();
+            analyzeStopwatch.Start();
+
+            btnAnalyze.Enabled = false;
+            btnSelectACESfile.Enabled = false;
+            btnSelectPartInterchange.Enabled = false;
+            btnSelectReferenceACESfile.Enabled = false;
+            btnSelectVCdbFile.Enabled = false;
+            btnSelectPCdbFile.Enabled = false;
+            btnSelectQdbFile.Enabled = false;
+
+            progressBarLogicProblems.Value = 0;
+            progressBarQdbErrors.Value = 0;
+            progressBarInvalidBasevehicles.Value = 0;
+            progressBarInvalidVCdbCodes.Value = 0;
+            progressBarParttypePosition.Value = 0;
+            progressBarInvalidConfigurations.Value = 0;
+            progressBarDifferentials.Value = 0;
+
+            lblStatsVCdbVersion.Text = aces.VcdbVersionDate; lblStatsVCdbVersion.ForeColor = SystemColors.ControlText;
+            lblStatsPCdbVersion.Text = aces.PcdbVersionDate; lblStatsPCdbVersion.ForeColor = SystemColors.ControlText;
+            lblStatsQdbVersion.Text = aces.QdbVersionDate; lblStatsQdbVersion.ForeColor = SystemColors.ControlText;
+
+            lblStatsWarningsCount.Text = "";
+            lblStatsErrorsCount.Text = "";
+            lblLogicProblemsCount.Text = "";
+            lblInvalidQdbCount.Text = "";
+            lblInvalidBasevehilcesCount.Text = "";
+            lblInvalidVCdbCodesCount.Text = "";
+            lblInvalidParttypePositionCount.Text = "";
+            lblInvalidConfigurationsCount.Text = "";
+            lblDifferentialsSummary.Text = "";
+            lblQuantityWarnings.Text = "";
+            lblStatus.BackColor = SystemColors.ButtonFace;
+
+            dgBasevids.Rows.Clear();
+            dgVCdbCodes.Rows.Clear();
+            dgParttypePosition.Rows.Clear();
+            dgVCdbConfigs.Rows.Clear();
+            dgQdbErrors.Rows.Clear();
+            dgAddsDropsParts.Rows.Clear();
+            dgAddsDropsVehicles.Rows.Clear();
+            dgQuantityWarnings.Rows.Clear();
+
+            pictureBoxQdb.Visible = false;
+            pictureBoxLogicProblems.Visible = false;
+            pictureBoxInvalidBasevehicles.Visible = false;
+            pictureBoxInvalidVCdbCodes.Visible = false;
+            pictureBoxParttypePosition.Visible = false;
+            pictureBoxQuantityWarnings.Visible = false;
+            pictureBoxInvalidConfigurations.Visible = false;
+
+            aces.clearAnalysisResults();
+
+            lblStatsErrorsCount.Text = "(analyzing)";
+            lblStatsWarningsCount.Text = "(analyzing)";
+
+
+            var progressIndicator = new Progress<int>(ReportAnalyzeProgress);
+            var progressQdbErrors = new Progress<int>(ReportAnalyzeProgressQdbErrors);
+            var progressFitmentLogic = new Progress<int>(ReportAnalyzeProgressFitmentLogic);
+            var progressInvalidBasevehicles = new Progress<int>(ReportAnalyzeProgressInvalidBasevehicles);
+            var progressInvalidVCdbCodes = new Progress<int>(ReportAnalyzeProgressInvalidVCdbCodes);
+            var progressParttypePosition = new Progress<int>(ReportAnalyzeProgressParttypePosition);
+            var progressInvalidConfigurations = new Progress<int>(ReportAnalyzeProgressInvalidConfigurations);
+            var progressDifferentials = new Progress<int>(ReportAnalyzeProgressDifferentials);
+            var progressHoles = new Progress<int>(ReportFindHoles);
+
+            lblParttypeDisagreement.Text = dgParttypeDisagreement.Rows.Count.ToString();
+
+            lblProgressPercent.Text = "3%"; progressBar1.Value = 3;
+
+
+            if (checkBoxQtyOutliers.Checked)
+            {
+                lblQuantityWarnings.Text = "(analyzing)";
+                await Task.Run(() => aces.qtyOutliers(numericUpDownQtyOutliersThreshold.Value,numericUpDownQtyOutliersSample.Value, vcdb, pcdb, qdb, progressIndicator));
+                lblQuantityWarnings.Text = aces.qtyOutlierWarning.Count.ToString();
+                pictureBoxQuantityWarnings.Visible = true; if (aces.qtyOutlierWarning.Count > 0) { tabControl1.TabPages.Add(hiddenQuantityWarningsTab); highestVisableTab1Index++; dgQuantityWarnings.Visible = true; pictureBoxQuantityWarnings.BackColor = Color.Yellow; } else { pictureBoxQuantityWarnings.BackColor = Color.Green; }
+                foreach (string error in aces.qtyOutlierWarning) { dgQuantityWarnings.Rows.Add(error.Split('\t')); }
+                lblProgressPercent.Text = "8%"; progressBar1.Value = 8;
+            }
+
+            lblInvalidParttypePositionCount.Text = "(analyzing)";
+            await Task.Run(() => aces.invalidParttypePositions(vcdb, pcdb, progressParttypePosition));
+            lblInvalidParttypePositionCount.Text = aces.parttypePositionErrors.Count.ToString();
+            pictureBoxParttypePosition.Visible = true; if (aces.parttypePositionErrors.Count > 0) { tabControl1.TabPages.Add(hiddenParttypePositionErrorsTab); highestVisableTab1Index++; dgParttypePosition.Visible = true; pictureBoxParttypePosition.BackColor = Color.Red; } else { pictureBoxParttypePosition.BackColor = Color.Green; }
+            foreach (string error in aces.parttypePositionErrors) { dgParttypePosition.Rows.Add(error.Split('\t')); }
+            lblProgressPercent.Text = "20%"; progressBar1.Value = 20;
+
+
+            lblInvalidQdbCount.Text = "(analyzing)";
+            await Task.Run(() => aces.invalidQdbReferences(vcdb, pcdb, qdb, progressQdbErrors));
+            lblInvalidQdbCount.Text = aces.qdbErrors.Count.ToString();
+            pictureBoxQdb.Visible = true; if (aces.qdbErrors.Count > 0) { tabControl1.TabPages.Add(hiddenQdbErrorsTab); highestVisableTab1Index++; dgQdbErrors.Visible = true; pictureBoxQdb.BackColor = Color.Red; } else { pictureBoxQdb.BackColor = Color.Green; }
+            foreach (string error in aces.qdbErrors) { dgQdbErrors.Rows.Add(error.Split('\t')); }
+            lblProgressPercent.Text = "30%"; progressBar1.Value = 30;
+
+            lblInvalidBasevehilcesCount.Text = "(analyzing)";
+            await Task.Run(() => aces.invalidBasevids(vcdb, pcdb, progressInvalidBasevehicles));
+            lblInvalidBasevehilcesCount.Text = aces.basevehicleidsErrors.Count.ToString();
+            pictureBoxInvalidBasevehicles.Visible = true; if (aces.basevehicleidsErrors.Count > 0) { tabControl1.TabPages.Add(hiddenInvalidBaseVehiclesTab); highestVisableTab1Index++; dgBasevids.Visible = true; pictureBoxInvalidBasevehicles.BackColor = Color.Red; } else { pictureBoxInvalidBasevehicles.BackColor = Color.Green; }
+            foreach (string error in aces.basevehicleidsErrors) { dgBasevids.Rows.Add(error.Split('\t')); }
+            lblProgressPercent.Text = "70%"; progressBar1.Value = 70;
+
+
+            lblInvalidVCdbCodesCount.Text = "(analyzing)";
+            await Task.Run(() => aces.invalidAttributes(vcdb, pcdb, progressInvalidVCdbCodes));
+            lblInvalidVCdbCodesCount.Text = aces.vcdbCodesErrors.Count.ToString();
+            pictureBoxInvalidVCdbCodes.Visible = true; if (aces.vcdbCodesErrors.Count > 0) { tabControl1.TabPages.Add(hiddenInvalidVCdbCodesTab); highestVisableTab1Index++; dgVCdbCodes.Visible = true; pictureBoxInvalidVCdbCodes.BackColor = Color.Red; } else { pictureBoxInvalidVCdbCodes.BackColor = Color.Green; }
+            foreach (string error in aces.vcdbCodesErrors) { dgVCdbCodes.Rows.Add(error.Split('\t')); }
+            lblProgressPercent.Text = "80%"; progressBar1.Value = 80;
+
+
+            lblInvalidConfigurationsCount.Text = "(analyzing)";
+            await Task.Run(() => aces.invalidConfigs(vcdb, pcdb, qdb, errorsaces, progressInvalidConfigurations));
+            lblInvalidConfigurationsCount.Text = aces.vcdbConfigurationsErrors.Count.ToString();
+            pictureBoxInvalidConfigurations.Visible = true; if (aces.vcdbConfigurationsErrors.Count > 0) { tabControl1.TabPages.Add(hiddenInvalidConfigurationsTab); highestVisableTab1Index++; dgVCdbConfigs.Visible = true; pictureBoxInvalidConfigurations.BackColor = Color.Red; } else { pictureBoxInvalidConfigurations.BackColor = Color.Green; }
+            foreach (string error in aces.vcdbConfigurationsErrors) { dgVCdbConfigs.Rows.Add(error.Split('\t')); }
+
+            lblLogicProblemsCount.Text = "(analyzing)";
+            await Task.Run(() => aces.findFitmentLogicProblems(chkBadBranches.Checked, vcdb, pcdb, qdb, lblCachePath.Text + @"\ACESinspector-fitment permutations.txt",Convert.ToInt32(numericUpDownTreeConfigLimit.Value), progressFitmentLogic));
+            lblLogicProblemsCount.Text = aces.fitmentLogicProblems.Count.ToString();
+            pictureBoxLogicProblems.Visible = true; if (aces.fitmentLogicProblems.Count > 0) { tabControl1.TabPages.Add(hiddenLogicProblemsTab); highestVisableTab1Index++; dgFitmentLogicProblems.Visible = true; pictureBoxLogicProblems.BackColor = Color.Red; } else { pictureBoxLogicProblems.BackColor = Color.Green; }
+            foreach (string error in aces.fitmentLogicProblems) { dgFitmentLogicProblems.Rows.Add(error.Split('\t')); }
+            lblProgressPercent.Text = "50%"; progressBar1.Value = 50;
+
+
+
+            if (refaces.apps.Count > 0)
+            {
+                lblDifferentialsSummary.Text = "(analyzing)";
+                await Task.Run(() => diffaces.findDifferentials(aces, refaces, vcdb, pcdb, progressDifferentials));
+                foreach (string line in diffaces.differentialParts) { dgAddsDropsParts.Rows.Add(line.Split('\t')); }
+
+                App tempApp = new App();
+                foreach (string line in diffaces.differentialVehicles)
+                {
+                    string[] fields = line.Split('\t');
+
+                    //hashKey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.namevalpairString(false) + "\t" + app.notes + "\t" + app.mfrlabel;
+                    tempApp.Clear();
+                    tempApp.basevehilceid = Convert.ToInt32(fields[1]);
+                    tempApp.parttypeid = Convert.ToInt32(fields[2]);
+                    tempApp.positionid = Convert.ToInt32(fields[3]);
+                    if (fields[5] != "") { tempApp.VCdbAttributes = aces.parseAttributePairsString(fields[4]); }
+                    tempApp.notes = fields[5].Split(';').ToList();
+                    tempApp.mfrlabel = fields[6];
+                    dgAddsDropsVehicles.Rows.Add(fields[0], tempApp.basevehilceid.ToString(), vcdb.niceMakeOfBasevid(tempApp.basevehilceid), vcdb.niceModelOfBasevid(tempApp.basevehilceid), vcdb.niceYearOfBasevid(tempApp.basevehilceid), pcdb.niceParttype(tempApp.parttypeid), pcdb.nicePosition(tempApp.positionid), tempApp.niceAttributesString(vcdb, true), tempApp.mfrlabel);
+                }
+
+                lblDifferentialsSummary.Text = diffaces.differentialsSummary;
+                if (diffaces.differentialParts.Count > 0) { tabControl1.TabPages.Add(hiddenAddsDropsPartsTab); highestVisableTab1Index++; dgAddsDropsParts.Visible = true; }
+                if (diffaces.differentialVehicles.Count > 0) { tabControl1.TabPages.Add(hiddenAddsDropsVehiclesTab); highestVisableTab1Index++; dgAddsDropsVehicles.Visible = true; }
+            }
+
+            aces.analysisComplete = true;
+            btnSelectReferenceACESfile.Enabled = true;
+
+            btnSelectACESfile.Enabled = true;
+            btnSelectVCdbFile.Enabled = true;
+            btnSelectPCdbFile.Enabled = true;
+            btnSelectQdbFile.Enabled = true;
+            btnAssessmentSave.Enabled = true;
+
+            analyzeStopwatch.Stop();
+
+
+            if (aces.analysisErrors > 0)
+            {
+                lblStatus.Text = "Analysis complete (Failed) - " + analyzeStopwatch.Elapsed.Seconds.ToString() + " seconds"; lblStatus.BackColor = Color.Red;
+            }
+            else
+            {
+                if (aces.analysisWarnings > 0)
+                {
+                    lblStatus.Text = "Analysis complete (Passed with warnings) - " + analyzeStopwatch.Elapsed.Seconds.ToString() + " seconds"; lblStatus.BackColor = Color.Yellow;
+                }
+                else
+                {
+                    lblStatus.Text = "Analysis complete (Passed) - " + analyzeStopwatch.Elapsed.Seconds.ToString() + " seconds"; lblStatus.BackColor = Color.LightGreen;
+                }
+            }
+
+
+            if (aces.VcdbVersionDate != vcdb.version)
+            {
+                lblStatsVCdbVersion.ForeColor = Color.DarkOrange;
+                lblStatsVCdbVersion.Text = aces.VcdbVersionDate + "  (validated against VCdb:" + vcdb.version + ")";
+            }
+
+            if (aces.PcdbVersionDate != pcdb.version)
+            {
+                lblStatsPCdbVersion.ForeColor = Color.DarkOrange;
+                lblStatsPCdbVersion.Text = aces.PcdbVersionDate + "  (validated against PCdb:" + pcdb.version + ")";
+            }
+
+            if (aces.QdbVersionDate != qdb.version)
+            {
+                lblStatsQdbVersion.ForeColor = Color.DarkOrange;
+                lblStatsQdbVersion.Text = aces.QdbVersionDate + "  (validated against Qdb:" + qdb.version + ")";
+            }
+
+
+
+            lblProgressPercent.Text = "100%";
+            progressBar1.Value = 100;
+
+            lblStatsErrorsCount.Text = aces.analysisErrors.ToString();
+            lblStatsWarningsCount.Text = aces.analysisWarnings.ToString();
+
+            aces.recordAnalysisResults(vcdb.version, pcdb.version); // record file hash and results in registry
+        }
+
+
+
+
+		        private void btnClearInterchange_Click(object sender, EventArgs e)
+        {
+            aces.interchange.Clear();
+            lblinterchangefilePath.Text = "";
+        }
+
+
+
+
+
+
+
+
+
+
+		        public void findConfigurationErrors(VCdb vcdb, PCdb pcdb, Qdb qdb, ACES errorsaces, string cacheDirectory, IProgress<int> progress)
+        {
+            bool appHasInvalidAttribute;
+            List<VCdbAttribute> dummyAttributesList = new List<VCdbAttribute>();
+            App dummyApp = new App();
+            int j=1; int percentProgress = 0; int errorsCount = 0;
+            using (StreamWriter sw = new StreamWriter(cacheDirectory + "\\" + fileMD5hash + "_configurationErrors.txt"))
+            {
+                foreach(App app in apps)
+                {
+                    if (app.VCdbAttributes.Count > 0)
+                    {
+                        appHasInvalidAttribute = false; foreach (VCdbAttribute myAttribute in app.VCdbAttributes) { if (!vcdb.validAttribute(myAttribute)) { appHasInvalidAttribute = true; } }
+                        if (!appHasInvalidAttribute)
+                        {// dont include invalid attributed apps in vcdb config analysis - these are handled in the "invalid attributes" analysis
+
+                            if (!vcdb.configIsValid(app))
+                            {   // this apps's combination of attribute values is not found in the specified VCdb.
+                                // create a new list of attributes for this app that has excluded any attribute where "U/K" is an option
+                                dummyAttributesList.Clear();
+                                foreach (VCdbAttribute attribute in app.VCdbAttributes)
+                                {
+                                    if (!vcdb.attributeHasUKasOption(app.basevehilceid, attribute.name))
+                                    {
+                                        dummyAttributesList.Add(attribute);
+                                    }
+                                }
+
+                                dummyApp.VCdbAttributes = dummyAttributesList;
+                                dummyApp.basevehilceid = app.basevehilceid;
+                                if (!vcdb.configIsValid(dummyApp))
+                                {
+                                    vcdbConfigurationsErrorsCount++;
+                                    errorsCount++;
+                                    sw.WriteLine(app.id + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + app.niceQdbQualifierString(qdb) + "\t" + string.Join(";", app.notes));
+                                    errorsaces.apps.Add(app);
+                                    analysisErrors++;
+                                }
+                            }
+                        }
+                    }
+                    if (progress != null)
+                    {// only report progress on whole percentage steps (100 total reports). reporting on every iteration is too process intensive
+                        percentProgress = Convert.ToInt32(((double)j / (double)(apps.Count)));
+                        if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }
+                    }
+                    j++;
+                }
+            }
+            if (errorsCount== 0)
+            {
+                File.Delete(cacheDirectory + "\\" + fileMD5hash + "_configurationErrors.txt");
+            }
+            else
+            {
+                logHistoryEvent("", "Error: " + errorsCount.ToString() + " invalid vcdb configurations");
+            } // delete cache file if empty
+        }
+
+
+
+
+		
+            // re-assemble the configuration errors count from the collection of thread-specific cache files
+            for (int i = 1; i <= sectionCount; i++)
+            {
+                if (File.Exists(lblCachePath.Text + "\\" + aces.fileMD5hash + "_configurationErrors" + i.ToString() + ".txt"))
+                {
+                    using (var reader = new StreamReader(lblCachePath.Text + "\\" + aces.fileMD5hash + "_configurationErrors" + i.ToString() + ".txt"))
+                    {
+                        while (!reader.EndOfStream)
+                        {
+                            var line = reader.ReadLine();
+                            aces.vcdbConfigurationsErrorsCount++;
+                        }
+                    }
+                }
+            }
+
+            if (aces.vcdbConfigurationsErrorsCount > 0)
+            {
+                tabControl1.TabPages.Add(hiddenInvalidConfigurationsTab); highestVisableTab1Index++;
+                if (aces.vcdbConfigurationsErrorsCount > largeDatagridRecordThreshold)
+                {
+                    if (checkBoxLimitDataGridRows.Checked)
+                    {
+                        lblVCdbConfigErrorRedirect.Visible = true;
+                        lblVCdbConfigErrorRedirect.Text = "VCdb configuration errors are too numerous (" + aces.vcdbConfigurationsErrorsCount.ToString() + ") to display here. Export assessment file for full list.";
+                    }
+                    else
+                    {
+                        dgVCdbConfigs.Visible = true;
+                        for (int i = 1; i <= sectionCount; i++)
+                        {
+                            if (File.Exists(lblCachePath.Text + "\\" + aces.fileMD5hash + "_configurationErrors" + i.ToString() + ".txt"))
+                            {
+                                using (var reader = new StreamReader(lblCachePath.Text + "\\" + aces.fileMD5hash + "_configurationErrors" + i.ToString() + ".txt"))
+                                {
+                                    while (!reader.EndOfStream)
+                                    {
+                                        var line = reader.ReadLine();
+                                        dgVCdbConfigs.Rows.Add(line.Split('\t'));
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    dgVCdbConfigs.Visible = true;
+                    for (int i = 1; i <= sectionCount; i++)
+                    {
+                        if (File.Exists(lblCachePath.Text + "\\" + aces.fileMD5hash + "_configurationErrors" + i.ToString() + ".txt"))
+                        {
+                            using (var reader = new StreamReader(lblCachePath.Text + "\\" + aces.fileMD5hash + "_configurationErrors" + i.ToString() + ".txt"))
+                            {
+                                while (!reader.EndOfStream)
+                                {
+                                    var line = reader.ReadLine();
+                                    dgVCdbConfigs.Rows.Add(line.Split('\t'));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+
+
+
+
+        public string generateAssessmentFile(string _filePath,VCdb vcdb, PCdb pcdb, Qdb qdb, string cacheDirectory)
+        {
+            string validatedAgainstVCdb = ""; if(VcdbVersionDate != vcdb.version){validatedAgainstVCdb = "validated against version "+ vcdb.version;}
+            string validatedAgainstPCdb = ""; if(PcdbVersionDate != pcdb.version){validatedAgainstPCdb = "validated against version " + pcdb.version;}
+            string validatedAgainstQdb = ""; if(QdbVersionDate != qdb.version){validatedAgainstQdb = "validated against version " + qdb.version;}
+
+            string codeVersion= System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            string excelTabColorXMLtag = "";
+            try
+            {
+                using (StreamWriter sw = new StreamWriter(_filePath))
+                {
+                    sw.Write("<?xml version=\"1.0\"?><?mso-application progid=\"Excel.Sheet\"?><Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:html=\"http://www.w3.org/TR/REC-html40\"><DocumentProperties xmlns=\"urn:schemas-microsoft-com:office:office\"><Author>ACESinspector</Author><LastAuthor>ACESinspector</LastAuthor><Created>2017-02-20T01:10:23Z</Created><LastSaved>2017-02-20T02:49:36Z</LastSaved><Version>14.00</Version></DocumentProperties><OfficeDocumentSettings xmlns=\"urn:schemas-microsoft-com:office:office\"><AllowPNG/></OfficeDocumentSettings><ExcelWorkbook xmlns=\"urn:schemas-microsoft-com:office:excel\"><WindowHeight>7500</WindowHeight><WindowWidth>15315</WindowWidth><WindowTopX>120</WindowTopX><WindowTopY>150</WindowTopY><TabRatio>785</TabRatio><ProtectStructure>False</ProtectStructure><ProtectWindows>False</ProtectWindows></ExcelWorkbook><Styles><Style ss:ID=\"Default\" ss:Name=\"Normal\"><Alignment ss:Vertical=\"Bottom\"/><Borders/><Font ss:FontName=\"Calibri\" x:Family=\"Swiss\" ss:Size=\"11\" ss:Color=\"#000000\"/><Interior/><NumberFormat/><Protection/></Style><Style ss:ID=\"s62\"><NumberFormat ss:Format=\"Short Date\"/></Style><Style ss:ID=\"s64\" ss:Name=\"Hyperlink\"><Font ss:FontName=\"Calibri\" x:Family=\"Swiss\" ss:Size=\"11\" ss:Color=\"#0000FF\" ss:Underline=\"Single\"/></Style><Style ss:ID=\"s65\"><Font ss:FontName=\"Calibri\" x:Family=\"Swiss\" ss:Size=\"11\" ss:Color=\"#000000\" ss:Bold=\"1\"/><Interior ss:Color=\"#D9D9D9\" ss:Pattern=\"Solid\"/></Style></Styles><Worksheet ss:Name=\"Stats\"><Table ss:ExpandedColumnCount=\"3\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"116.25\"/><Column ss:Width=\"225\"/><Column ss:Width=\"225\"/>");
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Input Filename</Data></Cell><Cell><Data ss:Type=\"String\">" + Path.GetFileName(filePath) + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Title</Data></Cell><Cell><Data ss:Type=\"String\">" + DocumentTitle + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">ACES version</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + version + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">VCdb version cited</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + VcdbVersionDate + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + validatedAgainstVCdb + "</Data></Cell></Row>");
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">PCdb version cited</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + PcdbVersionDate + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + validatedAgainstPCdb + "</Data></Cell></Row>");
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Qdb version cited</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + QdbVersionDate + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + validatedAgainstQdb + "</Data></Cell></Row>");
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Application count</Data></Cell><Cell><Data ss:Type=\"Number\">"+apps.Count.ToString()+ "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique Part count</Data></Cell><Cell><Data ss:Type=\"Number\">"+partsAppCounts.Count.ToString()+ "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique MfrLabel count</Data></Cell><Cell><Data ss:Type=\"Number\">" + distinctMfrLabels.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique Parttypes count</Data></Cell><Cell><Data ss:Type=\"Number\">" + distinctPartTypes.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Validation tool</Data></Cell><Cell ss:StyleID=\"s64\" ss:HRef=\"https://autopartsource.com/ACESinspector\"><Data ss:Type=\"String\">ACESinspector version " + codeVersion + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                    sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><Selected/><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+
+                    List<string> partTypeNameList = new List<string>();
+                    List<string> positionNameList = new List<string>();
+                    sw.Write("<Worksheet ss:Name=\"Parts\"><Table ss:ExpandedColumnCount=\"4\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Applications Count</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Types</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Positions</Data></Cell></Row>");
+                    foreach (KeyValuePair<string,int> partsAppCountEntry in partsAppCounts)
+                    {
+                        partTypeNameList.Clear();  foreach(int partTypeId in partsPartTypes[partsAppCountEntry.Key]) { partTypeNameList.Add(pcdb.niceParttype(partTypeId));}
+                        positionNameList.Clear();  foreach(int positionId in partsPositions[partsAppCountEntry.Key]) { positionNameList.Add(pcdb.nicePosition(positionId));}
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">" + partsAppCountEntry.Key + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + partsAppCountEntry.Value.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + string.Join(",", partTypeNameList) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + String.Join(",",positionNameList) + "</Data></Cell></Row>");
+                    }
+                    sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+
+                    sw.Write("<Worksheet ss:Name=\"Part Types\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Index=\"2\" ss:AutoFitWidth=\"0\" ss:Width=\"183.75\"/>");
+                    foreach (int distinctPartType in distinctPartTypes) { sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + distinctPartType + "</Data></Cell><Cell><Data ss:Type=\"String\">" + pcdb.niceParttype(distinctPartType) + "</Data></Cell></Row>"); }
+                    sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+
+                    if(distinctMfrLabels.Count > 0)
+                    {
+                        sw.Write("<Worksheet ss:Name=\"MfrLabels\"><Table ss:ExpandedColumnCount=\"1\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"151.5\"/>");
+                        foreach (string distinctMfrLabel in distinctMfrLabels) { sw.Write("<Row><Cell><Data ss:Type=\"String\">" + distinctMfrLabel + "</Data></Cell></Row>"); }
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                    }
+
+                    if (parttypeDisagreementCount > 0)
+                    {
+                        sw.Write("<Worksheet ss:Name=\"Parttype Disagreement\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"78.75\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Parttypes</Data></Cell></Row>");
+                        using (var reader = new StreamReader(cacheDirectory + "\\" + fileMD5hash + "_parttypeDisagreementErrors.txt"))
+                        {
+                            while (!reader.EndOfStream)
+                            {
+                                var line = reader.ReadLine();
+                                string[] fileds = line.Split('\t');
+                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[1] + "</Data></Cell></Row>");
+                            }
+                        }
+                        excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                    }
+
+
+                    if (qtyOutlierCount > 0)
+                    {
+                        sw.Write("<Worksheet ss:Name=\"Qty Outliers\"><Table ss:ExpandedColumnCount=\"13\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"180\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Qdb-coded qualifiers</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
+                        using (var reader = new StreamReader(cacheDirectory + "\\" + fileMD5hash + "_qtyOutliers.txt"))
+                        {
+                            while (!reader.EndOfStream)
+                            {
+                                var line = reader.ReadLine();
+                                string[] fileds = line.Split('\t');
+                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[3] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[4] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[5] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[6] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[7] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[9] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[10] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[11] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[12] + "</Data></Cell></Row>");
+                            }
+                        }
+                        excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                    }
+
+                    if(parttypePositionErrorsCount > 0)
+                    {
+                        sw.Write("<Worksheet ss:Name=\"PartType-Position Errors\"><Table ss:ExpandedColumnCount=\"11\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"115\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
+                        using (var reader = new StreamReader(cacheDirectory + "\\" + fileMD5hash + "_parttypePositionErrors.txt"))
+                        {
+                            while (!reader.EndOfStream)
+                            {
+                                var line = reader.ReadLine();
+                                string[] fileds = line.Split('\t');
+                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[3] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[4] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[5] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[6] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[7] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[9] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[10] + "</Data></Cell></Row>");
+                            }
+                        }
+                        excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                    }
+
+                    
+                    if (qdbErrorsCount > 0)
+                    {
+                        sw.Write("<Worksheet ss:Name=\"Qdb Errors\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"115\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
+                        using (var reader = new StreamReader(cacheDirectory + "\\" + fileMD5hash + "_qdbErrors.txt"))
+                        {
+                            while (!reader.EndOfStream)
+                            {
+                                var line = reader.ReadLine();
+                                string[] fileds = line.Split('\t');
+                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[3] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[4] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[5] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[6] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[7] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[9] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[10] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[11] + "</Data></Cell></Row>");
+                            }
+                        }
+                        excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                    }
+                    
+
+                    if (basevehicleidsErrorsCount > 0)
+                    {
+                        sw.Write("<Worksheet ss:Name =\"Invalid Base Vids\"><Table ss:ExpandedColumnCount=\"7\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:Width=\"77.25\"/><Column ss:Index=\"4\" ss:AutoFitWidth=\"0\" ss:Width=\"96\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"73.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"253.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"371.25\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Invalid BaseVid</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
+                        using (var reader = new StreamReader(cacheDirectory + "\\" + fileMD5hash + "_basevehicleErrors.txt"))
+                        {
+                            while (!reader.EndOfStream)
+                            {
+                                var line = reader.ReadLine();
+                                string[] fileds = line.Split('\t');
+                                sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[3] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[4] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[5] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[6] + "</Data></Cell></Row>");
+                            }
+                        }
+                        excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><Print><ValidPrinterInfo/><HorizontalResolution>600</HorizontalResolution><VerticalResolution>600</VerticalResolution></Print>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                    }
+
+                    if(vcdbCodesErrorsCount > 0)
+                    {
+                        sw.Write("<Worksheet ss:Name=\"Invalid VCdb Codes\"><Table ss:ExpandedColumnCount=\"10\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"78.75\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"99.75\"/><Column ss:Width=\"31.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"60\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"112.5\"/><Column ss:Width=\"43.5\"/><Column ss:Width =\"43.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"237\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"319.5\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb Attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
+                        using (var reader = new StreamReader(cacheDirectory + "\\" + fileMD5hash + "_VCdbCodesErrors.txt"))
+                        {
+                            while (!reader.EndOfStream)
+                            {
+                                var line = reader.ReadLine();
+                                string[] fileds = line.Split('\t');
+                                sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[3] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[4] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[5] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[6] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[7] + "</Data></Cell><Cell><Data ss:Type =\"String\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[9] + "</Data></Cell></Row>");
+                            }
+                        }
+                        excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                    }
+
+
+                    if (vcdbConfigurationsErrorsCount > 0)
+                    {
+                        sw.Write("<Worksheet ss:Name=\"Invalid VCdb Configs\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"78.75\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"99.75\"/><Column ss:Width=\"31.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"60\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"112.5\"/><Column ss:Width=\"43.5\"/><Column ss:Width =\"43.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"237\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"319.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"319.5\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehiclce id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded Attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Qdb-coded Qualifiers</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
+                        using (var reader = new StreamReader(cacheDirectory + "\\" + fileMD5hash + "_configurationErrors.txt"))
+                        {
+                            while (!reader.EndOfStream)
+                            {
+                                var line = reader.ReadLine();
+                                string[] fileds = line.Split('\t');
+                                sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[3] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[4] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[5] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[6] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[7] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type =\"String\">" + fileds[9] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[10] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[11] + "</Data></Cell></Row>");
+                            }
+                        }
+                        excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                    }
+
+
+                    if (fitmentLogicProblemsCount > 0)
+                    {
+                        sw.Write("<Worksheet ss:Name=\"Fitment Logic Problems\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Problem Description</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Group</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">BaseVehcile Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
+                        using (var reader = new StreamReader(cacheDirectory + "\\" + fileMD5hash + "_fitmentLogicProblems.txt"))
+                        {
+                            while (!reader.EndOfStream)
+                            {
+                                var line = reader.ReadLine();
+                                string[] fileds = line.Split('\t');
+                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[3] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[4] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[5] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[6] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[7] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[9] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[10] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[11] + "</Data></Cell></Row>");
+                            }
+                        }
+                        excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                    }
+
+                    sw.Write("</Workbook>");
+                }
+                return "Assessment file (" + _filePath + ") generated";
+            }
+            catch (Exception ex)
+            {
+                return ex.ToString();
+            }
+        }
+
+
+
+
+        private async void btnAssessmentSave_Click(object sender, EventArgs e)
+        {
+            if (lblCachePath.Text == "")
+            {
+                MessageBox.Show("Please select a folder where ACESinspector can store cache files. This can be done in the Settings tab");
+                return;
+            }
+
+            string result = "";
+            using (var fbd = new FolderBrowserDialog())
+            {
+                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
+                key.CreateSubKey("ACESinspector");
+                key = key.OpenSubKey("ACESinspector", true);
+                if (key.GetValue("lastAssessmentDirectoryPath") != null) { fbd.SelectedPath = key.GetValue("lastAssessmentDirectoryPath").ToString(); }
+                DialogResult dialogResult = fbd.ShowDialog();
+                if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath) && aces.apps.Count > 0)
+                {
+                    key.SetValue("lastAssessmentDirectoryPath", fbd.SelectedPath);
+                    result = aces.generateAssessmentFile(fbd.SelectedPath + @"\Assessment_" + Path.GetFileName(aces.filePath), vcdb, pcdb, qdb, lblCachePath.Text);
+                    MessageBox.Show(result);
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		        // fill the various data dictionaries from the first connection in the list of active MySQL database connections
+        public void importMySQLdata()
+        {
+            importSuccess = false;
+            importExceptionMessage = "";
+
+            try
+            {
+                MySqlCommand command = new MySqlCommand("SELECT BaseVehicle.BaseVehicleId,Make.MakeName,Model.ModelName,BaseVehicle.YearId,VehicleType.VehicleTypeName FROM BaseVehicle,Make,Model,VehicleType where BaseVehicle.MakeId=Make.MakeId and BaseVehicle.ModelId=Model.ModelId and Model.VehicleTypeId=VehicleType.VehicleTypeId order by MakeName,ModelName,YearId;", connectionMySQLlist.First());
+                MySqlDataReader reader = command.ExecuteReader();
+
+                int i;
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    BaseVehicle basevidTemp = new BaseVehicle();
+                    basevidTemp.MakeName = reader.GetValue(1).ToString();
+                    basevidTemp.ModelName = reader.GetValue(2).ToString();
+                    basevidTemp.YearId = reader.GetValue(3).ToString();
+                    basevidTemp.VehicleTypeName = reader.GetValue(4).ToString();
+                    vcdbBasevhicleDict.Add(i, basevidTemp);
+                }
+                reader.Close();
+
+                command.CommandText = "SELECT VersionDate from Version"; reader = command.ExecuteReader();
+                while (reader.Read()) { version = reader.GetValue(0).ToString(); }
+
+                DateTime dt = new DateTime();
+                if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
+                reader.Close();
+
+                command.CommandText = "SELECT EngineBaseid,liter,cc,cid,cylinders,blocktype from EngineBase"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); enginebaseDict.Add(i, reader.GetValue(5).ToString().Trim() + reader.GetValue(4).ToString().Trim() + " " + reader.GetValue(1).ToString().Trim() + "L"); }
+                reader.Close();
+
+                command.CommandText = "SELECT Submodelid,submodelname from SubModel"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); submodelDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT Drivetypeid,drivetypename from DriveType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); drivetypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT aspirationid,aspirationname from Aspiration"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); aspirationDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT fueltypeid,fueltypename from FuelType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fueltypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT braketypeid,braketypename from BrakeType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); braketypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT brakeabsid,brakeabsname from BrakeABS"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); brakeabsDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT mfrbodycodeid,mfrbodycodename from MfrBodyCode"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); mfrbodycodeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT bodynumdoorsid,bodynumdoors from BodyNumDoors"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bodynumdoorsDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT bodytypeid,bodytypename from BodyType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bodytypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT enginedesignationid,enginedesignationname from EngineDesignation"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); enginedesignationDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT enginevinid,enginevinname from EngineVIN"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); enginevinDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT engineversionid,engineversion from EngineVersion"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); engineversionDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT mfrid,mfrname from Mfr"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); mfrDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT fueldeliverytypeid,fueldeliverytypename from FuelDeliveryType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fueldeliverytypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT fueldeliverysubtypeid,fueldeliverysubtypename from FuelDeliverySubType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fueldeliverysubtypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT fuelsystemcontroltypeid,fuelsystemcontroltypename from FuelSystemControlType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fuelsystemcontroltypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT fuelsystemdesignid,fuelsystemdesignname from FuelSystemDesign"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fuelsystemdesignDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT cylinderheadtypeid,cylinderheadtypename from CylinderHeadType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); cylinderheadtypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT ignitionsystemtypeid,ignitionsystemtypename from IgnitionSystemType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); ignitionsystemtypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT transmissionmfrcodeid,transmissionmfrcode from TransmissionMfrCode"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissionmfrcodeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT TransmissionBase.TransmissionBaseID,TransmissionControlTypeName, transmissiontypename, transmissionnumspeeds from TransmissionBase, TransmissionType, TransmissionNumSpeeds, TransmissionControlType WHERE TransmissionBase.TransmissionTypeID = TransmissionType.TransmissionTypeID AND TransmissionBase.TransmissionNumSpeedsID = TransmissionNumSpeeds.TransmissionNumSpeedsID AND TransmissionBase.TransmissionControlTypeID = TransmissionControlType.TransmissionControlTypeID"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissionbaseDict.Add(i, reader.GetValue(1).ToString().Trim() + " " + reader.GetValue(2).ToString().Trim() + " Speed " + reader.GetValue(3).ToString().Trim()); }
+                reader.Close();
+
+                command.CommandText = "SELECT TransmissionTypeID,TransmissionTypeName from TransmissionType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissiontypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT TransmissionControlTypeID,TransmissionControlTypeName from TransmissionControlType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissioncontroltypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT TransmissionNumSpeedsID,TransmissionNumSpeeds from TransmissionNumSpeeds"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissionnumspeedsDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT bedlengthid,bedlength from BedLength"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bedlengthDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT bedtypeid,bedtypename from BedType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bedtypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT wheelbaseid,wheelbase from WheelBase"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); wheelbaseDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT brakesystemid,brakesystemname from BrakeSystem"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); brakesystemDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT regionid,regionname from Region"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); regionDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT springtypeid,springtypename from SpringType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); springtypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT steeringsystemid,steeringsystemname from SteeringSystem"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); steeringsystemDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT steeringtypeid,steeringtypename from SteeringType"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); steeringtypeDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                command.CommandText = "SELECT valvesid,valvesperengine from Valves"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); valvesDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
+
+                importSuccess = true;
+            }
+            catch (Exception ex)
+            {
+                importExceptionMessage = ex.Message;
+            }
+        }
+    
+
+
+	//---------
+	
+            string sqlString = configValidationSQLForApp(app);
+            try
+            {
+                if (useRemoteDB)
+                {// we are in remote mysql datasource mode
+
+                    MySqlCommand command = new MySqlCommand(sqlString, connectionMySQLlist[remoteVCdbConnectionIndex]);
+                    MySqlDataReader reader = command.ExecuteReader();
+
+                    if (reader.Read())
+                    {// got a configuration hit on a "U/K" option
+                        returnValue = true;
+                    }
+                    else
+                    {// try re-query using the "N/A" code
+                        if (idForNA > -1)
+                        {// "N/A" is possible for this attribute
+                            reader.Close();
+                            myVCdbAttribute.value = idForNA;
+                            app.VCdbAttributes.Clear();
+                            app.VCdbAttributes.Add(myVCdbAttribute);
+                            sqlString = configValidationSQLForApp(app);
+                            command.CommandText = sqlString;
+                            reader = command.ExecuteReader();
+                            if (reader.Read())
+                            {// got a configuration hit on an "N/A" option
+                                returnValue = true;
+                            }
+                        }
+                        else
+                        {// no hit on U/K, no hit on N/A - now try N/R (if not -1)
+                            if (idForNR > -1)
+                            {// "N/R" is possible for this attribute
+                                reader.Close();
+                                myVCdbAttribute.value = idForNR;
+                                app.VCdbAttributes.Clear();
+                                app.VCdbAttributes.Add(myVCdbAttribute);
+                                sqlString = configValidationSQLForApp(app);
+                                command.CommandText = sqlString;
+                                reader = command.ExecuteReader();
+                                if (reader.Read())
+                                {// got a configuration hit on an "N/R" option
+                                    returnValue = true;
+                                }
+                            }
+                        }
+                    }
+                    reader.Close();
+                }
+                else
+                {// we are in local M$ Access file mode
+                    OleDbCommand command = new OleDbCommand(sqlString, connectionOLEDB);
+                    OleDbDataReader reader = command.ExecuteReader();
+                    if (reader.Read())
+                    {// got a configuration hit on a "U/K" option
+                        returnValue = true;
+                    }
+                    else
+                    {// try re-query using the "N/A" code
+                        if (idForNA > -1)
+                        {// "N/A" is possible for this attribute
+                            reader.Close();
+                            myVCdbAttribute.value = idForNA;
+                            app.VCdbAttributes.Clear();
+                            app.VCdbAttributes.Add(myVCdbAttribute);
+                            sqlString = configValidationSQLForApp(app);
+                            command.CommandText = sqlString;
+                            reader = command.ExecuteReader();
+                            if (reader.Read())
+                            {// got a configuration hit on an "N/A" option
+                                returnValue = true;
+                            }
+                        }
+                        else
+                        {// no hit on U/K, no hit on N/A - now try N/R (if not -1)
+                            if (idForNR > -1)
+                            {// "N/R" is possible for this attribute
+                                reader.Close();
+                                myVCdbAttribute.value = idForNR;
+                                app.VCdbAttributes.Clear();
+                                app.VCdbAttributes.Add(myVCdbAttribute);
+                                sqlString = configValidationSQLForApp(app);
+                                command.CommandText = sqlString;
+                                reader = command.ExecuteReader();
+                                if (reader.Read())
+                                {// got a configuration hit on an "N/R" option
+                                    returnValue = true;
+                                }
+                            }
+                        }
+                    }
+                    reader.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine(ex.Message);  // need to find a better way to log/report an error here
+                Console.WriteLine(sqlString);
+            }
+            return returnValue;
+
+	//-----------
+
+

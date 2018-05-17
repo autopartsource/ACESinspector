@@ -8,14 +8,14 @@ autopartsource.com/ACESinspector
 
 # Changelog
 
+1.2.0.12 (released 5/17/2018)
+Added PowerOutput support (yes - it was missing since day one)
+Write registry values for MySQL server upon "leave" events on host, user, password
+
 1.2.0.10 (released 4/28/2018)
 Added multi-thread support
 Added mysql remote database support with baked-in MySQL client DLL
 Added support for year-range-style apps
-
-
-
-
 
 1.0.2.1 (released 12/5?/2017)
 Re-worked aces.apps from fixed array of App types to <List<App>>

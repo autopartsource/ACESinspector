@@ -2154,8 +2154,7 @@ namespace ACESinspector
             aces.recordAnalysisResults(vcdb.version, pcdb.version); // record file hash and results in registry
         }
 
-        //xxx
-
+        
         private async void btnAppExportSave_Click(object sender, EventArgs e)
         {
             string result = ""; string delimiter = "";
@@ -2433,7 +2432,7 @@ namespace ACESinspector
         }
 
 
-        //xxx
+        
         private async void btnExportRelatedParts_Click(object sender, EventArgs e)
         {
             string result = "";
@@ -3461,9 +3460,6 @@ namespace ACESinspector
             RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
             key.CreateSubKey("ACESinspector");
             key = key.OpenSubKey("ACESinspector", true);
-            key.SetValue("MySQLhost", textBoxMySQLhost.Text.Trim());
-            key.SetValue("MySQLuser", textBoxMySQLuser.Text.Trim());
-            key.SetValue("MySQLpassword", textBoxMySQLpassword.Text.Trim());
 
             getAvailableMySQLdatabaseList();
 
@@ -3696,7 +3692,29 @@ namespace ACESinspector
             }
         }
 
+        private void textBoxMySQLhost_Leave(object sender, EventArgs e)
+        {
+            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
+            key.CreateSubKey("ACESinspector");
+            key = key.OpenSubKey("ACESinspector", true);
+            key.SetValue("MySQLhost", textBoxMySQLhost.Text.Trim());
+        }
 
+        private void textBoxMySQLpassword_Leave(object sender, EventArgs e)
+        {
+            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
+            key.CreateSubKey("ACESinspector");
+            key = key.OpenSubKey("ACESinspector", true);
+            key.SetValue("MySQLpassword", textBoxMySQLpassword.Text.Trim());
+        }
+
+        private void textBoxMySQLuser_Leave(object sender, EventArgs e)
+        {
+            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
+            key.CreateSubKey("ACESinspector");
+            key = key.OpenSubKey("ACESinspector", true);
+            key.SetValue("MySQLuser", textBoxMySQLuser.Text.Trim());
+        }
 
         private string escapeXMLspecialChars(string inputString)
         {

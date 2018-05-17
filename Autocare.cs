@@ -3493,8 +3493,10 @@ namespace ACESinspector
         public Dictionary<int, String> steeringsystemDict = new Dictionary<int, string>();
         public Dictionary<int, String> steeringtypeDict = new Dictionary<int, string>();
         public Dictionary<int, String> valvesDict = new Dictionary<int, string>();
+        public Dictionary<int, String> poweroutputDict = new Dictionary<int, string>();
 
-        
+
+
         public string connectLocalOLEDB(string path)
         {
             string result = "";
@@ -3606,6 +3608,7 @@ namespace ACESinspector
             steeringsystemDict.Clear();
             steeringtypeDict.Clear();
             valvesDict.Clear();
+            poweroutputDict.Clear();
             disconnect();
         }
 
@@ -3658,6 +3661,7 @@ namespace ACESinspector
                 case "SteeringSystem": gotValue = steeringsystemDict.TryGetValue(attribute.value, out niceValue); break;
                 case "SteeringType": gotValue = steeringtypeDict.TryGetValue(attribute.value, out niceValue); break;
                 case "ValvesPerEngine": gotValue = valvesDict.TryGetValue(attribute.value, out niceValue); break;
+                case "PowerOutput": gotValue = poweroutputDict.TryGetValue(attribute.value, out niceValue); break;
                 default: gotValue = false; break;
             }
 
@@ -3684,6 +3688,7 @@ namespace ACESinspector
                     case "SteeringSystem": returnValue = niceValue + " Steering"; break;
                     case "SteeringType": returnValue = niceValue + " Steering"; break;
                     case "ValvesPerEngine": returnValue = niceValue + " Valve"; break;
+                    case "PowerOutput": returnValue = niceValue + " Horsepower"; break;
                     default: returnValue = niceValue; break;
                 }
             }
@@ -3740,6 +3745,7 @@ namespace ACESinspector
                 case "SteeringSystem": return steeringsystemDict.TryGetValue(attribute.value, out niceValue);
                 case "SteeringType": return steeringtypeDict.TryGetValue(attribute.value, out niceValue);
                 case "ValvesPerEngine": return valvesDict.TryGetValue(attribute.value, out niceValue);
+                case "PowerOutput": return poweroutputDict.TryGetValue(attribute.value, out niceValue);
                 default: return false;
             }
         }
@@ -4079,6 +4085,14 @@ namespace ACESinspector
                     }
                     break;
 
+                case "PowerOutput":
+                    foreach (KeyValuePair<int, vcdbVehilce> vehicleEntry in vcdbBasevhicleDict[app.basevehilceid].vcdbVehicleDict)
+                    {
+                        foreach (vcdbEngineConfig engineConfig in vehicleEntry.Value.EngineConfigList) { if (engineConfig.PowerOutputID == app.VCdbAttributes[i].value) { result.Add(vehicleEntry.Key); } }
+                    }
+                    break;
+
+
                 default: break;
             }
 
@@ -4257,6 +4271,7 @@ namespace ACESinspector
                 case "SteeringSystem": return "SteeringSystemID = " + myAttribute.value + " and ";
                 case "SteeringType": return "SteeringTypeID = " + myAttribute.value + " and ";
                 case "ValvesPerEngine": return "EngineConfig.ValvesID = " + myAttribute.value + " and ";
+                case "PowerOutput": return "EngineConfig.PowerOutputID = " + myAttribute.value + " and ";
                 default: return "";
             }
         }
@@ -4341,6 +4356,7 @@ namespace ACESinspector
                 case "FuelSystemDesign": wildcardIDs.Add(4); wildcardIDs.Add(2); break;//2=N/A, 3=N/R
                 case "IgnitionSystemType": wildcardIDs.Add(4); wildcardIDs.Add(2); break;//2=N/A, 3=N/R
                 case "ValvesPerEngine": wildcardIDs.Add(16); wildcardIDs.Add(25); break;//17=N/R, 25=N/A
+                case "PowerOutput": wildcardIDs.Add(1); wildcardIDs.Add(2); wildcardIDs.Add(2); break;//1=U/K, 2=N/A, 3=N/R
                 case "CylinderHeadType": wildcardIDs.Add(4); wildcardIDs.Add(2); break;//2=N/A, 3=N/R
                 case "FuelType": wildcardIDs.Add(18); wildcardIDs.Add(20); break; //20=N/A
                 case "BodyNumDoors": wildcardIDs.Add(4); break;
@@ -4664,7 +4680,7 @@ namespace ACESinspector
                     }
                 }
                 reader.Close();
-                importProgress = 90;
+                importProgress = 85;
 
                 command.CommandText = "SELECT versiondate from version;"; reader = command.ExecuteReader();
                 while (reader.Read()) { version = reader.GetValue(0).ToString(); }
@@ -4781,42 +4797,52 @@ namespace ACESinspector
 
                 command.CommandText = "SELECT bedlengthid,bedlength from bedlength;"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bedlengthDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); importProgress = 91;
+                reader.Close(); importProgress = 90;
 
                 command.CommandText = "SELECT bedtypeid,bedtypename from bedtype;"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bedtypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); importProgress = 92;
+                reader.Close(); importProgress = 91;
 
                 command.CommandText = "SELECT wheelbaseid,wheelbase from wheelbase;"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); wheelbaseDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); importProgress = 93;
+                reader.Close(); importProgress = 92;
 
                 command.CommandText = "SELECT brakesystemid,brakesystemname from brakesystem;"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); brakesystemDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); importProgress = 94;
+                reader.Close(); importProgress = 93;
 
                 command.CommandText = "SELECT regionid,regionname from region;"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); regionDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); importProgress = 95;
+                reader.Close(); importProgress = 94;
 
                 command.CommandText = "SELECT springtypeid,springtypename from springtype;"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); springtypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); importProgress = 96;
+                reader.Close(); importProgress = 95;
 
 
                 command.CommandText = "SELECT steeringsystemid,steeringsystemname from steeringsystem;"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); steeringsystemDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); importProgress = 97;
+                reader.Close(); importProgress = 96;
 
 
                 command.CommandText = "SELECT steeringtypeid,steeringtypename from steeringtype;"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); steeringtypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); importProgress = 98;
+                reader.Close(); importProgress = 97;
 
 
                 command.CommandText = "SELECT valvesid,valvesperengine from valves;"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); valvesDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close(); importProgress = 98;
+
+
+                command.CommandText = "select PowerOutputID,HorsePower from PowerOutput;"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); poweroutputDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close(); importProgress = 100;
+
+
+                //xxx
+
+
 
 
                 importSuccess = true;
@@ -4878,6 +4904,7 @@ namespace ACESinspector
                     }
                 }
                 reader.Close();
+                importProgress = 10;
 
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, DriveType.DriveTypeID from Vehicle, VehicleToDriveType, DriveType where Vehicle.VehicleID= VehicleToDriveType.VehicleID and VehicleToDriveType.DriveTypeID = DriveType.DriveTypeID"; reader = command.ExecuteReader();
                 while (reader.Read())
@@ -4890,6 +4917,8 @@ namespace ACESinspector
                     }
                 }
                 reader.Close();
+                importProgress = 12;
+
 
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, WheelBase.WheelBaseID from Vehicle, VehicleToWheelbase, WheelBase where Vehicle.VehicleID= VehicleToWheelbase.VehicleID and VehicleToWheelbase.WheelbaseID = WheelBase.WheelBaseID"; reader = command.ExecuteReader();
                 while (reader.Read())
@@ -4903,6 +4932,8 @@ namespace ACESinspector
                     }
                 }
                 reader.Close();
+                importProgress =13;
+
 
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, MfrBodyCode.MfrBodyCodeID from Vehicle, VehicleToMfrBodyCode, MfrBodyCode where Vehicle.VehicleID= VehicleToMfrBodyCode.VehicleID and VehicleToMfrBodyCode.MfrBodyCodeID =MfrBodyCode.MfrBodyCodeID"; reader = command.ExecuteReader();
                 while (reader.Read())
@@ -4916,6 +4947,7 @@ namespace ACESinspector
                     }
                 }
                 reader.Close();
+                importProgress = 14;
 
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, BedLengthID, BedTypeID from Vehicle, VehicleToBedConfig, BedConfig where Vehicle.VehicleID = VehicleToBedConfig.VehicleID and VehicleToBedConfig.BedConfigID = BedConfig.BedConfigID"; reader = command.ExecuteReader();
                 while (reader.Read())
@@ -4932,6 +4964,7 @@ namespace ACESinspector
                     }
                 }
                 reader.Close();
+                importProgress = 15;
 
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID,  BodyTypeID, BodyNumDoorsID from Vehicle, VehicleToBodyStyleConfig, BodyStyleConfig where Vehicle.VehicleID = VehicleToBodyStyleConfig.VehicleID and VehicleToBodyStyleConfig.BodyStyleConfigID = BodyStyleConfig.BodyStyleConfigID"; reader = command.ExecuteReader();
                 while (reader.Read())
@@ -4947,6 +4980,7 @@ namespace ACESinspector
                     }
                 }
                 reader.Close();
+                importProgress = 17;
 
 
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, FrontBrakeTypeID, RearBrakeTypeID, BrakeSystemID, BrakeABSID from Vehicle, VehicleToBrakeConfig, BrakeConfig where Vehicle.VehicleID = VehicleToBrakeConfig.VehicleID and VehicleToBrakeConfig.BrakeConfigID = BrakeConfig.BrakeConfigID"; reader = command.ExecuteReader();
@@ -4981,6 +5015,8 @@ namespace ACESinspector
                     }
                 }
                 reader.Close();
+                importProgress = 30;
+
 
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, SteeringTypeID, SteeringSystemID from Vehicle, VehicleToSteeringConfig, SteeringConfig where Vehicle.VehicleID = VehicleToSteeringConfig.VehicleID and VehicleToSteeringConfig.SteeringConfigID = SteeringConfig.SteeringConfigID"; reader = command.ExecuteReader();
                 while (reader.Read())
@@ -4996,6 +5032,8 @@ namespace ACESinspector
                     }
                 }
                 reader.Close();
+                importProgress = 40;
+
 
                 // if you wanted to limit the vcdb to type2 (pass car and light truck) vehicles:
                 //command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, EngineConfig.EngineBaseID, EngineDesignationID, EngineVINID, ValvesID, AspirationID, CylinderHeadTypeID, FuelTypeID, IgnitionSystemTypeID, EngineMfrID, EngineVersionID, PowerOutputID, FuelDeliveryTypeID, FuelDeliverySubTypeID, FuelSystemControlTypeID, FuelSystemDesignID from BaseVehicle, Model, VehicleType, Vehicle, VehicleToEngineConfig, EngineConfig, EngineBase, FuelDeliveryConfig where Vehicle.BaseVehicleID=BaseVehicle.BaseVehicleID and BaseVehicle.ModelID=Model.ModelID and Model.VehicleTypeID=VehicleType.VehicleTypeID and Vehicle.VehicleID = VehicleToEngineConfig.VehicleID and VehicleToEngineConfig.EngineConfigID = EngineConfig.EngineConfigID and EngineConfig.EngineBaseID = EngineBase.EngineBaseID and EngineConfig.FuelDeliveryConfigID=FuelDeliveryConfig.FuelDeliveryConfigID and VehicleType.VehicleTypeGroupID=2";
@@ -5026,7 +5064,7 @@ namespace ACESinspector
                     }
                 }
                 reader.Close();
-                importProgress = 60;
+                importProgress = 50;
 
                 // if you wanted to limit the vcdb to type2 (pass car and light truck) vehicles:
                 //command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, Transmission.TransmissionBaseID, TransmissionTypeID, TransmissionNumSpeedsID, TransmissionControlTypeID, TransmissionMfrCodeID, TransmissionElecControlledID, TransmissionMfrID from BaseVehicle, Model, VehicleType, Vehicle, VehicleToTransmission, Transmission, TransmissionBase where Vehicle.BaseVehicleID=BaseVehicle.BaseVehicleID and BaseVehicle.ModelID=Model.ModelID and Model.VehicleTypeID=VehicleType.VehicleTypeID and Vehicle.VehicleID = VehicleToTransmission.VehicleID and VehicleToTransmission.TransmissionID = Transmission.TransmissionID and Transmission.TransmissionBaseID = TransmissionBase.TransmissionBaseID and VehicleType.VehicleTypeGroupID=2";
@@ -5049,7 +5087,7 @@ namespace ACESinspector
                     }
                 }
                 reader.Close();
-                importProgress = 80;
+                importProgress = 62;
 
                 //BaseVehicle bvtemp = new BaseVehicle();
                 //bvtemp = vcdbBasevhicleDict[2231];
@@ -5060,148 +5098,188 @@ namespace ACESinspector
                 DateTime dt = new DateTime();
                 if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
                 reader.Close();
+                importProgress = 63;
 
                 command.CommandText = "SELECT EngineBaseid,liter,cc,cid,cylinders,blocktype from EngineBase"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); enginebaseDict.Add(i, reader.GetValue(5).ToString().Trim() + reader.GetValue(4).ToString().Trim() + " " + reader.GetValue(1).ToString().Trim() + "L"); }
                 reader.Close();
+                importProgress = 64;
 
                 command.CommandText = "SELECT Submodelid,submodelname from SubModel"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); submodelDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 65;
 
                 command.CommandText = "SELECT Drivetypeid,drivetypename from DriveType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); drivetypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 66;
 
                 command.CommandText = "SELECT aspirationid,aspirationname from Aspiration"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); aspirationDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 67;
 
                 command.CommandText = "SELECT fueltypeid,fueltypename from FuelType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fueltypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 68;
 
                 command.CommandText = "SELECT braketypeid,braketypename from BrakeType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); braketypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 69;
 
                 command.CommandText = "SELECT brakeabsid,brakeabsname from BrakeABS"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); brakeabsDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 70;
 
                 command.CommandText = "SELECT mfrbodycodeid,mfrbodycodename from MfrBodyCode"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); mfrbodycodeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 71;
 
                 command.CommandText = "SELECT bodynumdoorsid,bodynumdoors from BodyNumDoors"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bodynumdoorsDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 72;
 
                 command.CommandText = "SELECT bodytypeid,bodytypename from BodyType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bodytypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 73;
 
                 command.CommandText = "SELECT enginedesignationid,enginedesignationname from EngineDesignation"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); enginedesignationDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 74;
 
                 command.CommandText = "SELECT enginevinid,enginevinname from EngineVIN"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); enginevinDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 75;
 
                 command.CommandText = "SELECT engineversionid,engineversion from EngineVersion"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); engineversionDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 76;
 
                 command.CommandText = "SELECT mfrid,mfrname from Mfr"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); mfrDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 78;
 
                 command.CommandText = "SELECT fueldeliverytypeid,fueldeliverytypename from FuelDeliveryType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fueldeliverytypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 79;
 
                 command.CommandText = "SELECT fueldeliverysubtypeid,fueldeliverysubtypename from FuelDeliverySubType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fueldeliverysubtypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 80;
 
                 command.CommandText = "SELECT fuelsystemcontroltypeid,fuelsystemcontroltypename from FuelSystemControlType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fuelsystemcontroltypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 81;
 
                 command.CommandText = "SELECT fuelsystemdesignid,fuelsystemdesignname from FuelSystemDesign"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fuelsystemdesignDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 82;
 
                 command.CommandText = "SELECT cylinderheadtypeid,cylinderheadtypename from CylinderHeadType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); cylinderheadtypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 83;
 
                 command.CommandText = "SELECT ignitionsystemtypeid,ignitionsystemtypename from IgnitionSystemType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); ignitionsystemtypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 84;
 
                 command.CommandText = "SELECT transmissionmfrcodeid,transmissionmfrcode from TransmissionMfrCode"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissionmfrcodeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 85;
 
                 command.CommandText = "SELECT TransmissionBase.TransmissionBaseID,TransmissionControlTypeName, transmissiontypename, transmissionnumspeeds from TransmissionBase, TransmissionType, TransmissionNumSpeeds, TransmissionControlType WHERE TransmissionBase.TransmissionTypeID = TransmissionType.TransmissionTypeID AND TransmissionBase.TransmissionNumSpeedsID = TransmissionNumSpeeds.TransmissionNumSpeedsID AND TransmissionBase.TransmissionControlTypeID = TransmissionControlType.TransmissionControlTypeID"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissionbaseDict.Add(i, reader.GetValue(1).ToString().Trim() + " " + reader.GetValue(2).ToString().Trim() + " Speed " + reader.GetValue(3).ToString().Trim()); }
                 reader.Close();
+                importProgress = 86;
 
                 command.CommandText = "SELECT TransmissionTypeID,TransmissionTypeName from TransmissionType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissiontypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 87;
 
                 command.CommandText = "SELECT TransmissionControlTypeID,TransmissionControlTypeName from TransmissionControlType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissioncontroltypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 88;
 
                 command.CommandText = "select ElecControlledID, ElecControlled from ElecControlled"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissioeleccontrolledDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 89;
 
                 command.CommandText = "SELECT TransmissionNumSpeedsID,TransmissionNumSpeeds from TransmissionNumSpeeds"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissionnumspeedsDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 95;
+                importProgress = 90;
 
                 command.CommandText = "SELECT bedlengthid,bedlength from BedLength"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bedlengthDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 91;
 
                 command.CommandText = "SELECT bedtypeid,bedtypename from BedType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bedtypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 92;
 
                 command.CommandText = "SELECT wheelbaseid,wheelbase from WheelBase"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); wheelbaseDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 93;
 
                 command.CommandText = "SELECT brakesystemid,brakesystemname from BrakeSystem"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); brakesystemDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 94;
 
                 command.CommandText = "SELECT regionid,regionname from Region"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); regionDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 95;
 
                 command.CommandText = "SELECT springtypeid,springtypename from SpringType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); springtypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 96;
 
                 command.CommandText = "SELECT steeringsystemid,steeringsystemname from SteeringSystem"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); steeringsystemDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 97;
 
                 command.CommandText = "SELECT steeringtypeid,steeringtypename from SteeringType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); steeringtypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 98;
 
                 command.CommandText = "SELECT valvesid,valvesperengine from Valves"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); valvesDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
+                importProgress = 99;
+
+                command.CommandText = "select PowerOutputID,HorsePower from PowerOutput"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); poweroutputDict.Add(i, reader.GetValue(1).ToString()); }
+                reader.Close();
                 importProgress = 100;
+
 
                 importSuccess = true;
 

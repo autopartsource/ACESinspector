@@ -110,6 +110,9 @@
             this.label24 = new System.Windows.Forms.Label();
             this.numericUpDownTreeConfigLimit = new System.Windows.Forms.NumericUpDown();
             this.tabPageExports = new System.Windows.Forms.TabPage();
+            this.progBarExportRelatedParts = new System.Windows.Forms.ProgressBar();
+            this.progBarExportFlatApps = new System.Windows.Forms.ProgressBar();
+            this.progBarExportBuyersGuide = new System.Windows.Forms.ProgressBar();
             this.checkBoxAnonymizeErrorsACES = new System.Windows.Forms.CheckBox();
             this.btnExportConfigerrorsACES = new System.Windows.Forms.Button();
             this.checkBoxEncipherExport = new System.Windows.Forms.CheckBox();
@@ -272,9 +275,6 @@
             this.progBarRefACESload = new System.Windows.Forms.ProgressBar();
             this.lblPrimeACESLoadStatus = new System.Windows.Forms.Label();
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
-            this.progBarExportBuyersGuide = new System.Windows.Forms.ProgressBar();
-            this.progBarExportFlatApps = new System.Windows.Forms.ProgressBar();
-            this.progBarExportRelatedParts = new System.Windows.Forms.ProgressBar();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -831,6 +831,7 @@
             this.textBoxMySQLpassword.Name = "textBoxMySQLpassword";
             this.textBoxMySQLpassword.Size = new System.Drawing.Size(110, 20);
             this.textBoxMySQLpassword.TabIndex = 6;
+            this.textBoxMySQLpassword.Leave += new System.EventHandler(this.textBoxMySQLpassword_Leave);
             // 
             // label15
             // 
@@ -847,6 +848,7 @@
             this.textBoxMySQLuser.Name = "textBoxMySQLuser";
             this.textBoxMySQLuser.Size = new System.Drawing.Size(75, 20);
             this.textBoxMySQLuser.TabIndex = 4;
+            this.textBoxMySQLuser.Leave += new System.EventHandler(this.textBoxMySQLuser_Leave);
             // 
             // label14
             // 
@@ -863,6 +865,7 @@
             this.textBoxMySQLhost.Name = "textBoxMySQLhost";
             this.textBoxMySQLhost.Size = new System.Drawing.Size(172, 20);
             this.textBoxMySQLhost.TabIndex = 1;
+            this.textBoxMySQLhost.Leave += new System.EventHandler(this.textBoxMySQLhost_Leave);
             // 
             // checkBoxAutoloadLocalDatabases
             // 
@@ -1255,6 +1258,27 @@
             this.tabPageExports.TabIndex = 5;
             this.tabPageExports.Text = "Exports";
             this.tabPageExports.UseVisualStyleBackColor = true;
+            // 
+            // progBarExportRelatedParts
+            // 
+            this.progBarExportRelatedParts.Location = new System.Drawing.Point(879, 117);
+            this.progBarExportRelatedParts.Name = "progBarExportRelatedParts";
+            this.progBarExportRelatedParts.Size = new System.Drawing.Size(144, 18);
+            this.progBarExportRelatedParts.TabIndex = 56;
+            // 
+            // progBarExportFlatApps
+            // 
+            this.progBarExportFlatApps.Location = new System.Drawing.Point(287, 10);
+            this.progBarExportFlatApps.Name = "progBarExportFlatApps";
+            this.progBarExportFlatApps.Size = new System.Drawing.Size(144, 18);
+            this.progBarExportFlatApps.TabIndex = 55;
+            // 
+            // progBarExportBuyersGuide
+            // 
+            this.progBarExportBuyersGuide.Location = new System.Drawing.Point(167, 63);
+            this.progBarExportBuyersGuide.Name = "progBarExportBuyersGuide";
+            this.progBarExportBuyersGuide.Size = new System.Drawing.Size(144, 18);
+            this.progBarExportBuyersGuide.TabIndex = 54;
             // 
             // checkBoxAnonymizeErrorsACES
             // 
@@ -2787,27 +2811,6 @@
             this.lblRefACESLoadStatus.Size = new System.Drawing.Size(35, 13);
             this.lblRefACESLoadStatus.TabIndex = 53;
             this.lblRefACESLoadStatus.Text = "label1";
-            // 
-            // progBarExportBuyersGuide
-            // 
-            this.progBarExportBuyersGuide.Location = new System.Drawing.Point(167, 63);
-            this.progBarExportBuyersGuide.Name = "progBarExportBuyersGuide";
-            this.progBarExportBuyersGuide.Size = new System.Drawing.Size(144, 18);
-            this.progBarExportBuyersGuide.TabIndex = 54;
-            // 
-            // progBarExportFlatApps
-            // 
-            this.progBarExportFlatApps.Location = new System.Drawing.Point(287, 10);
-            this.progBarExportFlatApps.Name = "progBarExportFlatApps";
-            this.progBarExportFlatApps.Size = new System.Drawing.Size(144, 18);
-            this.progBarExportFlatApps.TabIndex = 55;
-            // 
-            // progBarExportRelatedParts
-            // 
-            this.progBarExportRelatedParts.Location = new System.Drawing.Point(879, 117);
-            this.progBarExportRelatedParts.Name = "progBarExportRelatedParts";
-            this.progBarExportRelatedParts.Size = new System.Drawing.Size(144, 18);
-            this.progBarExportRelatedParts.TabIndex = 56;
             // 
             // Form1
             // 

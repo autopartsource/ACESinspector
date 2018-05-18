@@ -1150,6 +1150,9 @@ namespace ACESinspector
             btnSelectPCdbFile.Enabled = false;
             btnSelectQdbFile.Enabled = false;
             progressBarDifferentials.Value = 0;
+            string problemDescription = "";
+            int elementPrevalence = 0;
+            Dictionary<string, int> fitmentElementPrevalence = new Dictionary<string, int>();
 
             aces.logHistoryEvent("", "10\tbtnSelectACESfile - populating parts tab");
             
@@ -1588,9 +1591,9 @@ namespace ACESinspector
 
                     if (aces.fitmentLogicProblemsCount > 0)
                     {
-                        string problemDescription = "";
-                        int elementPrevalence = 0;
-                        Dictionary<string, int> fitmentElementPrevalence = new Dictionary<string, int>();
+                        problemDescription = "";
+                        elementPrevalence = 0;
+                        fitmentElementPrevalence.Clear();
 
                         sw.Write("<Worksheet ss:Name=\"Fitment Logic Problems\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Problem Description</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Group</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">BaseVehcile Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
                         foreach (KeyValuePair<string, List<App>> entry in aces.fitmentProblemGroupsAppLists)
@@ -2018,10 +2021,15 @@ namespace ACESinspector
                         pictureBoxFitmentTree.Visible = true;
 
                         foreach(KeyValuePair<string,List<App>> entry in aces.fitmentProblemGroupsAppLists)
-                        {
-                            foreach(App app in entry.Value)
+                        {// construct a tree in order to re-discover the problmes with it.
+                            aces.fitmentNodeList.Clear(); fitmentElementPrevalence.Clear();
+                            foreach (string fitmentElement in aces.fitmentProblemGroupsBestPermutations[entry.Key]){fitmentElementPrevalence.Add(fitmentElement, elementPrevalence); elementPrevalence++;}
+                            aces.fitmentNodeList.AddRange(aces.buildFitmentTreeFromAppList(entry.Value, fitmentElementPrevalence, -1, false, false, vcdb, qdb));
+                            problemDescription = aces.fitmentTreeProblemDescription(aces.fitmentNodeList, checkBoxConcernForDisparate.Checked);
+
+                            foreach (App app in entry.Value)
                             {
-                                dgFitmentLogicProblems.Rows.Add(entry.Key,app.id.ToString(),app.basevehilceid.ToString(), vcdb.niceMakeOfBasevid(app.basevehilceid), vcdb.niceModelOfBasevid(app.basevehilceid), vcdb.niceYearOfBasevid(app.basevehilceid),pcdb.niceParttype(app.parttypeid),pcdb.nicePosition(app.positionid),app.quantity.ToString(),app.part,app.niceFullFitmentString(vcdb, qdb));
+                                dgFitmentLogicProblems.Rows.Add(problemDescription,entry.Key,app.id.ToString(),app.reference,app.basevehilceid.ToString(), vcdb.niceMakeOfBasevid(app.basevehilceid), vcdb.niceModelOfBasevid(app.basevehilceid), vcdb.niceYearOfBasevid(app.basevehilceid),pcdb.niceParttype(app.parttypeid),pcdb.nicePosition(app.positionid),app.quantity.ToString(),app.part,app.niceFullFitmentString(vcdb, qdb));
                             }
                         }
                     }
@@ -2031,10 +2039,15 @@ namespace ACESinspector
                     dgFitmentLogicProblems.Visible = true;
                     pictureBoxFitmentTree.Visible = true;
                     foreach (KeyValuePair<string, List<App>> entry in aces.fitmentProblemGroupsAppLists)
-                    {
+                    {   // construct a tree in order to re-discover the problmes with it.
+                        aces.fitmentNodeList.Clear(); fitmentElementPrevalence.Clear();
+                        foreach (string fitmentElement in aces.fitmentProblemGroupsBestPermutations[entry.Key]) { fitmentElementPrevalence.Add(fitmentElement, elementPrevalence); elementPrevalence++; }
+                        aces.fitmentNodeList.AddRange(aces.buildFitmentTreeFromAppList(entry.Value, fitmentElementPrevalence, -1, false, false, vcdb, qdb));
+                        problemDescription = aces.fitmentTreeProblemDescription(aces.fitmentNodeList, checkBoxConcernForDisparate.Checked);
+
                         foreach (App app in entry.Value)
                         {
-                            dgFitmentLogicProblems.Rows.Add(entry.Key, app.id.ToString(), app.basevehilceid.ToString(), vcdb.niceMakeOfBasevid(app.basevehilceid), vcdb.niceModelOfBasevid(app.basevehilceid), vcdb.niceYearOfBasevid(app.basevehilceid), pcdb.niceParttype(app.parttypeid), pcdb.nicePosition(app.positionid), app.quantity.ToString(), app.part, app.niceFullFitmentString(vcdb, qdb));
+                            dgFitmentLogicProblems.Rows.Add(problemDescription, entry.Key, app.id.ToString(), app.reference, app.basevehilceid.ToString(), vcdb.niceMakeOfBasevid(app.basevehilceid), vcdb.niceModelOfBasevid(app.basevehilceid), vcdb.niceYearOfBasevid(app.basevehilceid), pcdb.niceParttype(app.parttypeid), pcdb.nicePosition(app.positionid), app.quantity.ToString(), app.part, app.niceFullFitmentString(vcdb, qdb));
                         }
                     }
                 }
@@ -3196,8 +3209,8 @@ namespace ACESinspector
             //List<fitmentNode> nodeslist = new List<fitmentNode>();
             if (e.RowIndex >= 0)
             {
-                macroProblemGroupKeyInView = dgFitmentLogicProblems.Rows[e.RowIndex].Cells[0].Value.ToString();
-                fitmentProblemAppIdInView = Convert.ToInt32(dgFitmentLogicProblems.Rows[e.RowIndex].Cells[1].Value.ToString());
+                macroProblemGroupKeyInView = dgFitmentLogicProblems.Rows[e.RowIndex].Cells[1].Value.ToString();
+                fitmentProblemAppIdInView = Convert.ToInt32(dgFitmentLogicProblems.Rows[e.RowIndex].Cells[2].Value.ToString());
                 if (aces.fitmentProblemGroupsAppLists.ContainsKey(macroProblemGroupKeyInView))
                 {
                     aces.fitmentNodeList.Clear();
@@ -3714,6 +3727,10 @@ namespace ACESinspector
             key.CreateSubKey("ACESinspector");
             key = key.OpenSubKey("ACESinspector", true);
             key.SetValue("MySQLuser", textBoxMySQLuser.Text.Trim());
+        }
+
+        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
         }
 
         private string escapeXMLspecialChars(string inputString)

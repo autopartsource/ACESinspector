@@ -8,16 +8,22 @@ autopartsource.com/ACESinspector
 
 # Changelog
 
+1.2.0.13 (released 5/18/2018)
+Added "Problem Description" and "Reference" attribute to dataGrid in FitmentLogicProblems
+
+
 1.2.0.12 (released 5/17/2018)
 Added PowerOutput support (yes - it was missing since day one)
+
 Write registry values for MySQL server upon "leave" events on host, user, password
+
 
 1.2.0.10 (released 4/28/2018)
 Added multi-thread support
 Added mysql remote database support with baked-in MySQL client DLL
 Added support for year-range-style apps
 
-1.0.2.1 (released 12/5?/2017)
+1.0.2.1 (released 12/5/2017)
 Re-worked aces.apps from fixed array of App types to <List<App>>
 Changed CNCoverlap detection from simple blank-vs-nonblank fitment to "deep CNC inspection". In other words, all apps within a mmy/parttype/position/mfrlabel have to all have the same 
 named VCdb attributes - If enginebase, for example, is used on one app, it must be use across the whole group.

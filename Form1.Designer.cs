@@ -238,17 +238,6 @@
             this.splitContainerFitmentLogic = new System.Windows.Forms.SplitContainer();
             this.lblFitmentLogicProblemsTabRedirect = new System.Windows.Forms.Label();
             this.dgFitmentLogicProblems = new System.Windows.Forms.DataGridView();
-            this.dgLogicProblemsGroup = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsAppId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsBaseVehicleId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsMake = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsModel = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsYear = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsPartType = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsPosition = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsQty = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsPart = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsFitment = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.listBoxFitmentLogicElements = new System.Windows.Forms.ListBox();
             this.pictureBoxFitmentTree = new System.Windows.Forms.PictureBox();
             this.lblStatus = new System.Windows.Forms.Label();
@@ -275,6 +264,19 @@
             this.progBarRefACESload = new System.Windows.Forms.ProgressBar();
             this.lblPrimeACESLoadStatus = new System.Windows.Forms.Label();
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
+            this.dgLogicProblemsDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsGroup = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsAppId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsReference = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsBaseVehicleId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsMake = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsModel = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsYear = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsPartType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsPosition = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsQty = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsPart = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsFitment = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -454,6 +456,7 @@
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(1242, 462);
             this.tabControl1.TabIndex = 12;
+            this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             // 
             // tabPageStats
             // 
@@ -2470,8 +2473,10 @@
             this.dgFitmentLogicProblems.AllowUserToDeleteRows = false;
             this.dgFitmentLogicProblems.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgFitmentLogicProblems.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dgLogicProblemsDescription,
             this.dgLogicProblemsGroup,
             this.dgLogicProblemsAppId,
+            this.dgLogicProblemsReference,
             this.dgLogicProblemsBaseVehicleId,
             this.dgLogicProblemsMake,
             this.dgLogicProblemsModel,
@@ -2486,94 +2491,6 @@
             this.dgFitmentLogicProblems.Size = new System.Drawing.Size(1228, 258);
             this.dgFitmentLogicProblems.TabIndex = 4;
             this.dgFitmentLogicProblems.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgFitmentLogicProblems_CellEnter);
-            // 
-            // dgLogicProblemsGroup
-            // 
-            this.dgLogicProblemsGroup.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsGroup.HeaderText = "App Group";
-            this.dgLogicProblemsGroup.Name = "dgLogicProblemsGroup";
-            this.dgLogicProblemsGroup.ReadOnly = true;
-            this.dgLogicProblemsGroup.Width = 77;
-            // 
-            // dgLogicProblemsAppId
-            // 
-            this.dgLogicProblemsAppId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsAppId.HeaderText = "App id";
-            this.dgLogicProblemsAppId.Name = "dgLogicProblemsAppId";
-            this.dgLogicProblemsAppId.ReadOnly = true;
-            this.dgLogicProblemsAppId.Width = 51;
-            // 
-            // dgLogicProblemsBaseVehicleId
-            // 
-            this.dgLogicProblemsBaseVehicleId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsBaseVehicleId.HeaderText = "Base Vehicle id";
-            this.dgLogicProblemsBaseVehicleId.Name = "dgLogicProblemsBaseVehicleId";
-            this.dgLogicProblemsBaseVehicleId.ReadOnly = true;
-            this.dgLogicProblemsBaseVehicleId.Width = 87;
-            // 
-            // dgLogicProblemsMake
-            // 
-            this.dgLogicProblemsMake.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsMake.HeaderText = "Make";
-            this.dgLogicProblemsMake.Name = "dgLogicProblemsMake";
-            this.dgLogicProblemsMake.ReadOnly = true;
-            this.dgLogicProblemsMake.Width = 59;
-            // 
-            // dgLogicProblemsModel
-            // 
-            this.dgLogicProblemsModel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsModel.HeaderText = "Model";
-            this.dgLogicProblemsModel.Name = "dgLogicProblemsModel";
-            this.dgLogicProblemsModel.ReadOnly = true;
-            this.dgLogicProblemsModel.Width = 61;
-            // 
-            // dgLogicProblemsYear
-            // 
-            this.dgLogicProblemsYear.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsYear.HeaderText = "Year";
-            this.dgLogicProblemsYear.Name = "dgLogicProblemsYear";
-            this.dgLogicProblemsYear.ReadOnly = true;
-            this.dgLogicProblemsYear.Width = 54;
-            // 
-            // dgLogicProblemsPartType
-            // 
-            this.dgLogicProblemsPartType.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsPartType.HeaderText = "Part Type";
-            this.dgLogicProblemsPartType.Name = "dgLogicProblemsPartType";
-            this.dgLogicProblemsPartType.ReadOnly = true;
-            this.dgLogicProblemsPartType.Width = 72;
-            // 
-            // dgLogicProblemsPosition
-            // 
-            this.dgLogicProblemsPosition.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsPosition.HeaderText = "Position";
-            this.dgLogicProblemsPosition.Name = "dgLogicProblemsPosition";
-            this.dgLogicProblemsPosition.ReadOnly = true;
-            this.dgLogicProblemsPosition.Width = 69;
-            // 
-            // dgLogicProblemsQty
-            // 
-            this.dgLogicProblemsQty.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsQty.HeaderText = "Qty";
-            this.dgLogicProblemsQty.Name = "dgLogicProblemsQty";
-            this.dgLogicProblemsQty.ReadOnly = true;
-            this.dgLogicProblemsQty.Width = 48;
-            // 
-            // dgLogicProblemsPart
-            // 
-            this.dgLogicProblemsPart.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsPart.HeaderText = "Part";
-            this.dgLogicProblemsPart.Name = "dgLogicProblemsPart";
-            this.dgLogicProblemsPart.ReadOnly = true;
-            this.dgLogicProblemsPart.Width = 51;
-            // 
-            // dgLogicProblemsFitment
-            // 
-            this.dgLogicProblemsFitment.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsFitment.HeaderText = "Fitment";
-            this.dgLogicProblemsFitment.Name = "dgLogicProblemsFitment";
-            this.dgLogicProblemsFitment.ReadOnly = true;
-            this.dgLogicProblemsFitment.Width = 66;
             // 
             // listBoxFitmentLogicElements
             // 
@@ -2811,6 +2728,108 @@
             this.lblRefACESLoadStatus.Size = new System.Drawing.Size(35, 13);
             this.lblRefACESLoadStatus.TabIndex = 53;
             this.lblRefACESLoadStatus.Text = "label1";
+            // 
+            // dgLogicProblemsDescription
+            // 
+            this.dgLogicProblemsDescription.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsDescription.HeaderText = "Problem";
+            this.dgLogicProblemsDescription.Name = "dgLogicProblemsDescription";
+            this.dgLogicProblemsDescription.Width = 70;
+            // 
+            // dgLogicProblemsGroup
+            // 
+            this.dgLogicProblemsGroup.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsGroup.HeaderText = "App Group";
+            this.dgLogicProblemsGroup.Name = "dgLogicProblemsGroup";
+            this.dgLogicProblemsGroup.ReadOnly = true;
+            this.dgLogicProblemsGroup.Width = 83;
+            // 
+            // dgLogicProblemsAppId
+            // 
+            this.dgLogicProblemsAppId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsAppId.HeaderText = "App id";
+            this.dgLogicProblemsAppId.Name = "dgLogicProblemsAppId";
+            this.dgLogicProblemsAppId.ReadOnly = true;
+            this.dgLogicProblemsAppId.Width = 62;
+            // 
+            // dgLogicProblemsReference
+            // 
+            this.dgLogicProblemsReference.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsReference.HeaderText = "Reference";
+            this.dgLogicProblemsReference.Name = "dgLogicProblemsReference";
+            this.dgLogicProblemsReference.Width = 82;
+            // 
+            // dgLogicProblemsBaseVehicleId
+            // 
+            this.dgLogicProblemsBaseVehicleId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsBaseVehicleId.HeaderText = "Base Vehicle id";
+            this.dgLogicProblemsBaseVehicleId.Name = "dgLogicProblemsBaseVehicleId";
+            this.dgLogicProblemsBaseVehicleId.ReadOnly = true;
+            this.dgLogicProblemsBaseVehicleId.Width = 87;
+            // 
+            // dgLogicProblemsMake
+            // 
+            this.dgLogicProblemsMake.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsMake.HeaderText = "Make";
+            this.dgLogicProblemsMake.Name = "dgLogicProblemsMake";
+            this.dgLogicProblemsMake.ReadOnly = true;
+            this.dgLogicProblemsMake.Width = 59;
+            // 
+            // dgLogicProblemsModel
+            // 
+            this.dgLogicProblemsModel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsModel.HeaderText = "Model";
+            this.dgLogicProblemsModel.Name = "dgLogicProblemsModel";
+            this.dgLogicProblemsModel.ReadOnly = true;
+            this.dgLogicProblemsModel.Width = 61;
+            // 
+            // dgLogicProblemsYear
+            // 
+            this.dgLogicProblemsYear.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsYear.HeaderText = "Year";
+            this.dgLogicProblemsYear.Name = "dgLogicProblemsYear";
+            this.dgLogicProblemsYear.ReadOnly = true;
+            this.dgLogicProblemsYear.Width = 54;
+            // 
+            // dgLogicProblemsPartType
+            // 
+            this.dgLogicProblemsPartType.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsPartType.HeaderText = "Part Type";
+            this.dgLogicProblemsPartType.Name = "dgLogicProblemsPartType";
+            this.dgLogicProblemsPartType.ReadOnly = true;
+            this.dgLogicProblemsPartType.Width = 72;
+            // 
+            // dgLogicProblemsPosition
+            // 
+            this.dgLogicProblemsPosition.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsPosition.HeaderText = "Position";
+            this.dgLogicProblemsPosition.Name = "dgLogicProblemsPosition";
+            this.dgLogicProblemsPosition.ReadOnly = true;
+            this.dgLogicProblemsPosition.Width = 69;
+            // 
+            // dgLogicProblemsQty
+            // 
+            this.dgLogicProblemsQty.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsQty.HeaderText = "Qty";
+            this.dgLogicProblemsQty.Name = "dgLogicProblemsQty";
+            this.dgLogicProblemsQty.ReadOnly = true;
+            this.dgLogicProblemsQty.Width = 48;
+            // 
+            // dgLogicProblemsPart
+            // 
+            this.dgLogicProblemsPart.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsPart.HeaderText = "Part";
+            this.dgLogicProblemsPart.Name = "dgLogicProblemsPart";
+            this.dgLogicProblemsPart.ReadOnly = true;
+            this.dgLogicProblemsPart.Width = 51;
+            // 
+            // dgLogicProblemsFitment
+            // 
+            this.dgLogicProblemsFitment.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsFitment.HeaderText = "Fitment";
+            this.dgLogicProblemsFitment.Name = "dgLogicProblemsFitment";
+            this.dgLogicProblemsFitment.ReadOnly = true;
+            this.dgLogicProblemsFitment.Width = 66;
             // 
             // Form1
             // 
@@ -3144,8 +3163,18 @@
         private System.Windows.Forms.Button buttonMySQLloadPCdb;
         private System.Windows.Forms.ComboBox comboBoxMySQLqdbVersion;
         private System.Windows.Forms.Button buttonMySQLloadQdb;
+        private System.Windows.Forms.Label lblVCdbLoadStatus;
+        private System.Windows.Forms.ProgressBar progBarPrimeACESload;
+        private System.Windows.Forms.ProgressBar progBarRefACESload;
+        private System.Windows.Forms.Label lblPrimeACESLoadStatus;
+        private System.Windows.Forms.Label lblRefACESLoadStatus;
+        private System.Windows.Forms.ProgressBar progBarExportBuyersGuide;
+        private System.Windows.Forms.ProgressBar progBarExportFlatApps;
+        private System.Windows.Forms.ProgressBar progBarExportRelatedParts;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsDescription;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsGroup;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsAppId;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsReference;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsBaseVehicleId;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsMake;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsModel;
@@ -3155,14 +3184,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsQty;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsPart;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsFitment;
-        private System.Windows.Forms.Label lblVCdbLoadStatus;
-        private System.Windows.Forms.ProgressBar progBarPrimeACESload;
-        private System.Windows.Forms.ProgressBar progBarRefACESload;
-        private System.Windows.Forms.Label lblPrimeACESLoadStatus;
-        private System.Windows.Forms.Label lblRefACESLoadStatus;
-        private System.Windows.Forms.ProgressBar progBarExportBuyersGuide;
-        private System.Windows.Forms.ProgressBar progBarExportFlatApps;
-        private System.Windows.Forms.ProgressBar progBarExportRelatedParts;
     }
 }
 

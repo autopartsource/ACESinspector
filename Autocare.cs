@@ -2794,6 +2794,10 @@ namespace ACESinspector
 
                 appTemp.validate = true; if (respectValidateNoTag && (string)appElement.Attribute("action").Value == "no") { appTemp.validate = false; }
 
+                if (appElement.Attribute("ref") != null)
+                {
+                    appTemp.reference = (string)appElement.Attribute("ref").Value;
+                }
 
                 appTemp.part = (string)appElement.Element("Part");
                 if (appTemp.part == "NA") { continue; }
@@ -2980,6 +2984,7 @@ namespace ACESinspector
                     App appToAdd = new App();
                     appToAdd.basevehilceid = basevid;
                     appToAdd.action = appTemp.action;
+                    appToAdd.reference = appTemp.reference;
                     appToAdd.asset = appTemp.asset;
                     appToAdd.assetitemorder = appTemp.assetitemorder;
                     appToAdd.assetitemref = appTemp.assetitemref;

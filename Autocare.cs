@@ -1727,13 +1727,6 @@ namespace ACESinspector
 
                         break;
                     }
-
-
-                    if(returnValue==6)
-                    {
-                        int xxx = 9;
-                    }
-
                 }
                 else
                 {// thi scenario covers VCdbSysX - VCdbSysX
@@ -2346,18 +2339,35 @@ namespace ACESinspector
             cacheFilename = chunk.cachefile + "_qtyOutliers.txt";
             using (StreamWriter sw = new StreamWriter(cacheFilename))
             {
+                bool alreadyFlaggedThisApp = false; int typicalQty;
                 foreach (App app in chunk.appsList)
                 {
+                    alreadyFlaggedThisApp = false;
                     hashKey = app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.quantity.ToString();
                     hashKeyTypePosition = app.parttypeid.ToString() + "\t" + app.positionid.ToString();
                     if (parttypePositionQtyPrevelence[hashKey] < outliernessThreshold && parttypePositionDict[hashKeyTypePosition] >= qtyOutlierSampleSize)
                     {
-                        chunk.qtyOutlierCount++;
-                        sw.WriteLine("Quantity (" + app.quantity.ToString() + ") is unusual for this part-type and position\t" + app.id.ToString() + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + app.niceQdbQualifierString(qdb) + "\t" + string.Join(";", app.notes));
+                        chunk.qtyOutlierCount++; alreadyFlaggedThisApp = true;
+                        sw.WriteLine("Quantity of " + app.quantity.ToString() + " is in the minority for this part-type and position\t" + app.id.ToString() + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + app.niceQdbQualifierString(qdb) + "\t" + string.Join(";", app.notes));
                     }
+
+                    //also check "typical" quantities alos
+                    typicalQty=typicalAppQty(app.parttypeid, app.positionid);
+                    if (!alreadyFlaggedThisApp && typicalQty !=0 && app.quantity != typicalQty)
+                    {
+                        chunk.qtyOutlierCount++;
+                        sw.WriteLine("Quantity of " + app.quantity.ToString() + " is not typical for this part-type and position\t" + app.id.ToString() + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + app.niceQdbQualifierString(qdb) + "\t" + string.Join(";", app.notes));
+                    }
+
+
                 }
             }
             if (chunk.qtyOutlierCount == 0) { File.Delete(cacheFilename); } else { logHistoryEvent("", "5\tWarning: " + warningsCount.ToString() + " qty outliers"); } // delete cache file if empty
+
+
+
+
+
             chunk.complete = true;
         }
         
@@ -2472,6 +2482,76 @@ namespace ACESinspector
 
             differentialsSummary = "Parts: +" + partsAddedCount.ToString() + ", -" + partsDroppedCount.ToString() + "   Vehicles: +" + vehiclesAddedCount.ToString() + ", -" + vehiclesDroppedCount.ToString();
         }
+
+        public int typicalAppQty(int parttypeid, int positionid)
+        {
+            string key = parttypeid.ToString() + "_" + positionid.ToString();
+            switch(key)
+            {
+
+                //pad sets
+                case "1684_22": return 1;
+                case "1684_103": return 1;
+                case "1684_104": return 1;
+                case "1684_30": return 1;
+                case "1684_105": return 1;
+                case "1684_106": return 1;
+
+                //rotors
+                case "1896_22": return 2;
+                case "1896_103": return 1;
+                case "1896_104": return 1;
+                case "1896_30": return 2;
+                case "1896_105": return 1;
+                case "1896_106": return 1;
+
+                //electronic wear sensors
+                case "1920_22": return 2;
+                case "1920_103": return 1;
+                case "1920_104": return 1;
+                case "1920_30": return 2;
+                case "1920_105": return 1;
+                case "1920_106": return 1;
+
+                //brake drums
+                case "1744_22": return 2;
+                case "1744_103": return 1;
+                case "1744_104": return 1;
+                case "1744_30": return 2;
+                case "1744_105": return 1;
+                case "1744_106": return 1;
+
+/*
+2 | Left |
+12 | Right |
+22 | Front |
+30 | Rear |
+87 | Front Left Upper    |
+88 | Front Left Lower    |
+89 | Front Right Upper   |
+90 | Front Right Lower   |
+91 | Rear Left Upper     |
+92 | Rear Left Lower     |
+93 | Rear Right Lower    |
+94 | Rear Right Upper    |
+103 | Front Left |
+104 | Front Right |
+105 | Rear Left |
+106 | Rear Right |
+3974 | Front Right Forward |
+4136 | Rear Left Forward   |
+4137 | Rear Left Rearward  |
+4138 | Rear Right Forward  |
+4139 | Rear Right Rearward |
+*/
+
+
+
+
+default: return 0;
+            }
+        }
+
 
 
         public int importInterchange(string interchangeFile)
@@ -3282,7 +3362,57 @@ namespace ACESinspector
                 return ex.ToString();
             }
         }
+
+
         
+        public string exportVCdbUsageReport(VCdb vcdb, string _filePath)
+        {
+            Dictionary<string, int> vcdbDict = new Dictionary<string, int>();
+
+            string key = "";
+
+            foreach (App app in apps)
+            {
+                foreach(VCdbAttribute myAttribute in app.VCdbAttributes)
+                {
+                    key = myAttribute.name + ":" + myAttribute.value.ToString();
+                    if(vcdbDict.ContainsKey(key)){vcdbDict[key]++;}else{vcdbDict.Add(key, 1);}
+                }
+            }
+
+            var sortedVCbDict = vcdbDict.ToList(); sortedVCbDict.Sort((pair2, pair1) => pair1.Value.CompareTo(pair2.Value));
+            VCdbAttribute VCdbAttributeTemp = new VCdbAttribute();
+
+            try
+            {
+                using (StreamWriter sw = new StreamWriter(_filePath))
+                {
+                    string lineString = "Attribute Name\tAttribute Value\tAttribute Text\tOccurrence Count";
+                    sw.WriteLine(lineString);
+                    foreach (KeyValuePair<string, int> entry in sortedVCbDict)
+                    {
+                        VCdbAttributeTemp.name = ""; VCdbAttributeTemp.value = 0;
+                        string[] attributePieces = entry.Key.Split(':');
+                        if (attributePieces.Count() == 2)
+                        {
+                            VCdbAttributeTemp.name = attributePieces[0]; VCdbAttributeTemp.value = Convert.ToInt32(attributePieces[1]);
+                            lineString = VCdbAttributeTemp.name + "\t" + VCdbAttributeTemp.value.ToString() + "\t" + vcdb.niceAttribute(VCdbAttributeTemp) + "\t" + entry.Value.ToString();
+                            sw.WriteLine(lineString);
+                        }
+                    }
+                }
+                return "VCdb usage stats exported to " + _filePath;
+            }
+            catch (Exception ex)
+            {
+                return ex.ToString();
+            }
+        }
+
+
+
+
+
         // if cipherFilepath is populated, or anonymize is set, the partnumbers will be enciphered
         // the purpose of "anonymize" is for uploading xml datasets made purely of VCdb-configuration errors to AutoCare's "assessmentErrorReporting" API.
         public string exportXMLApps(string _filePath, string _SubmissionType, string cipherFilePath,bool anonymize)
@@ -4420,8 +4550,6 @@ namespace ACESinspector
                 reader.Close();
                 importProgress = 5;
 
-                //xxx
-
                 // populuate basevehicle lookup dict [makeid_modelid_yearid]=>basevidid  
 
                 string mmyKeyTemp = "";
@@ -4458,11 +4586,6 @@ namespace ACESinspector
                             vcdbVehicleTemp.PublicationStageID = Convert.ToInt32(reader.GetValue(4).ToString());
                             vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.Add(vehicleidTemp, vcdbVehicleTemp);
                         }
-                        else
-                        {
-                            int xxx = 5;
-                        }
-
                     }
                 }
                 reader.Close();
@@ -4477,11 +4600,6 @@ namespace ACESinspector
                     {
                         vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].DriveTypeIDlist.Add(Convert.ToInt32(reader.GetValue(2).ToString()));
                     }
-                    else
-                    {
-                        int xxx = 5;
-                    }
-
                 }
                 reader.Close();
 
@@ -4496,11 +4614,6 @@ namespace ACESinspector
                     {
                         vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].WheelBaseIDlist.Add(Convert.ToInt32(reader.GetValue(2).ToString()));
                     }
-                    else
-                    {
-                        int xxx = 5;
-                    }
-
                 }
                 reader.Close();
                 importProgress = 20;
@@ -4531,11 +4644,6 @@ namespace ACESinspector
                         vcdbBedConfigTemp.BedTypeID = Convert.ToInt32(reader.GetValue(3).ToString());
                         vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].BedConfigList.Add(vcdbBedConfigTemp);
                     }
-                    else
-                    {
-                        int xxx = 5;
-                    }
-
                 }
                 reader.Close();
 
@@ -4552,11 +4660,6 @@ namespace ACESinspector
                         vcdbBodyStyleConfigTemp.BodyNumDoorsID = Convert.ToInt32(reader.GetValue(3).ToString());
                         vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].BodyStyleConfigList.Add(vcdbBodyStyleConfigTemp);
                     }
-                    else
-                    {
-                        int xxx = 5;
-                    }
-
                 }
                 reader.Close();
 
@@ -4575,11 +4678,6 @@ namespace ACESinspector
                         vcdbBrakeConfigTemp.BrakeABSID = Convert.ToInt32(reader.GetValue(5).ToString());
                         vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].BrakeConfigList.Add(vcdbBrakeConfigTemp);
                     }
-                    else
-                    {
-                        int xxx = 5;
-                    }
-
                 }
                 reader.Close();
                 importProgress = 40;
@@ -4597,11 +4695,6 @@ namespace ACESinspector
                         vcdbSpringTypeConfigTemp.RearSpringTypeID = Convert.ToInt32(reader.GetValue(3).ToString());
                         vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].SpringTypeConfigList.Add(vcdbSpringTypeConfigTemp);
                     }
-                    else
-                    {
-                        int xxx = 5;
-                    }
-
                 }
                 reader.Close();
 
@@ -4618,11 +4711,6 @@ namespace ACESinspector
                         vcdbSteeringConfigTemp.SteeringSystemID = Convert.ToInt32(reader.GetValue(3).ToString());
                         vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].SteeringConfigList.Add(vcdbSteeringConfigTemp);
                     }
-                    else
-                    {
-                        int xxx = 5;
-                    }
-
                 }
                 reader.Close();
 
@@ -4654,11 +4742,6 @@ namespace ACESinspector
                         vcdbEngineConfigTemp.FuelSystemDesignID = Convert.ToInt32(reader.GetValue(16).ToString());
                         vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].EngineConfigList.Add(vcdbEngineConfigTemp);
                     }
-                    else
-                    {
-                        int xxx = 5;
-                    }
-
                 }
                 reader.Close();
                 importProgress = 70;
@@ -4843,12 +4926,6 @@ namespace ACESinspector
                 command.CommandText = "select PowerOutputID,HorsePower from PowerOutput;"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); poweroutputDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close(); importProgress = 100;
-
-
-                //xxx
-
-
-
 
                 importSuccess = true;
 
@@ -5568,9 +5645,6 @@ namespace ACESinspector
             }
             return "";
         }
-
-
-        //xxx
 
         public string connectLocalOLEDB(string path)
         {

@@ -7,6 +7,13 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.15 (released 5/23/2018)
+Added header line to VCdb code stats export file. Fixed cosmetic stuff around progress bar for ACES files loading.
+
+
+1.2.0.14 (released 5/23/2018)
+Added export of VCdb code stats feature
+
 
 1.2.0.13 (released 5/18/2018)
 Added "Problem Description" and "Reference" attribute to dataGrid in FitmentLogicProblems

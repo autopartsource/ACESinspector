@@ -691,6 +691,7 @@ namespace ACESinspector
             }
             else
             {// file open dialog result was not "OK" (probably candeled) 
+                progBarPrimeACESload.Visible = false;
                 btnSelectACESfile.Enabled = true; // re-enable the select button for primary aces file
                 btnSelectPartInterchange.Enabled = true;
                 btnSelectNoteTranslationFile.Enabled = true;
@@ -756,6 +757,11 @@ namespace ACESinspector
                     progBarRefACESload.Visible = false; progBarRefACESload.Value = 0; lblRefACESLoadStatus.Text = ""; lblRefACESLoadStatus.Visible = false;
                     lblReferenceACESfilePath.Left = 352;
                 }
+            }
+            else
+            {// dialog was canceled
+                progBarRefACESload.Visible = false;
+
             }
 
         }
@@ -3731,6 +3737,24 @@ namespace ACESinspector
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
+        }
+
+        private void btnDistinctVCdbExportSave_Click(object sender, EventArgs e)
+        {
+            string result = "";
+            using (var fbd = new FolderBrowserDialog())
+            {
+                DialogResult dialogResult = fbd.ShowDialog();
+                if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                {
+                    RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
+                    key.CreateSubKey("ACESinspector");
+                    key = key.OpenSubKey("ACESinspector", true);
+                    key.SetValue("lastHolesDirectoryPath", fbd.SelectedPath);
+                    result = aces.exportVCdbUsageReport(vcdb, fbd.SelectedPath + @"\VCdbUsageStats.txt");
+                    MessageBox.Show(result);
+                }
+            }
         }
 
         private string escapeXMLspecialChars(string inputString)

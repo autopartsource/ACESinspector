@@ -238,6 +238,19 @@
             this.splitContainerFitmentLogic = new System.Windows.Forms.SplitContainer();
             this.lblFitmentLogicProblemsTabRedirect = new System.Windows.Forms.Label();
             this.dgFitmentLogicProblems = new System.Windows.Forms.DataGridView();
+            this.dgLogicProblemsDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsGroup = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsAppId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsReference = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsBaseVehicleId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsMake = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsModel = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsYear = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsPartType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsPosition = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsQty = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsPart = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgLogicProblemsFitment = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.listBoxFitmentLogicElements = new System.Windows.Forms.ListBox();
             this.pictureBoxFitmentTree = new System.Windows.Forms.PictureBox();
             this.lblStatus = new System.Windows.Forms.Label();
@@ -264,19 +277,7 @@
             this.progBarRefACESload = new System.Windows.Forms.ProgressBar();
             this.lblPrimeACESLoadStatus = new System.Windows.Forms.Label();
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
-            this.dgLogicProblemsDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsGroup = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsAppId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsReference = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsBaseVehicleId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsMake = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsModel = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsYear = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsPartType = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsPosition = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsQty = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsPart = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgLogicProblemsFitment = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.btnDistinctVCdbExportSave = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -1235,6 +1236,7 @@
             // 
             // tabPageExports
             // 
+            this.tabPageExports.Controls.Add(this.btnDistinctVCdbExportSave);
             this.tabPageExports.Controls.Add(this.progBarExportRelatedParts);
             this.tabPageExports.Controls.Add(this.progBarExportFlatApps);
             this.tabPageExports.Controls.Add(this.progBarExportBuyersGuide);
@@ -1264,7 +1266,7 @@
             // 
             // progBarExportRelatedParts
             // 
-            this.progBarExportRelatedParts.Location = new System.Drawing.Point(879, 117);
+            this.progBarExportRelatedParts.Location = new System.Drawing.Point(879, 143);
             this.progBarExportRelatedParts.Name = "progBarExportRelatedParts";
             this.progBarExportRelatedParts.Size = new System.Drawing.Size(144, 18);
             this.progBarExportRelatedParts.TabIndex = 56;
@@ -1286,7 +1288,7 @@
             // checkBoxAnonymizeErrorsACES
             // 
             this.checkBoxAnonymizeErrorsACES.AutoSize = true;
-            this.checkBoxAnonymizeErrorsACES.Location = new System.Drawing.Point(164, 171);
+            this.checkBoxAnonymizeErrorsACES.Location = new System.Drawing.Point(164, 197);
             this.checkBoxAnonymizeErrorsACES.Name = "checkBoxAnonymizeErrorsACES";
             this.checkBoxAnonymizeErrorsACES.Size = new System.Drawing.Size(110, 17);
             this.checkBoxAnonymizeErrorsACES.TabIndex = 21;
@@ -1295,9 +1297,9 @@
             // 
             // btnExportConfigerrorsACES
             // 
-            this.btnExportConfigerrorsACES.Location = new System.Drawing.Point(8, 168);
+            this.btnExportConfigerrorsACES.Location = new System.Drawing.Point(8, 193);
             this.btnExportConfigerrorsACES.Name = "btnExportConfigerrorsACES";
-            this.btnExportConfigerrorsACES.Size = new System.Drawing.Size(139, 21);
+            this.btnExportConfigerrorsACES.Size = new System.Drawing.Size(140, 21);
             this.btnExportConfigerrorsACES.TabIndex = 20;
             this.btnExportConfigerrorsACES.Text = "Export errors ACES";
             this.btnExportConfigerrorsACES.UseVisualStyleBackColor = true;
@@ -1306,7 +1308,7 @@
             // checkBoxEncipherExport
             // 
             this.checkBoxEncipherExport.AutoSize = true;
-            this.checkBoxEncipherExport.Location = new System.Drawing.Point(164, 144);
+            this.checkBoxEncipherExport.Location = new System.Drawing.Point(164, 170);
             this.checkBoxEncipherExport.Name = "checkBoxEncipherExport";
             this.checkBoxEncipherExport.Size = new System.Drawing.Size(132, 17);
             this.checkBoxEncipherExport.TabIndex = 19;
@@ -1315,9 +1317,9 @@
             // 
             // btnExportPrimaryACES
             // 
-            this.btnExportPrimaryACES.Location = new System.Drawing.Point(8, 141);
+            this.btnExportPrimaryACES.Location = new System.Drawing.Point(8, 167);
             this.btnExportPrimaryACES.Name = "btnExportPrimaryACES";
-            this.btnExportPrimaryACES.Size = new System.Drawing.Size(139, 21);
+            this.btnExportPrimaryACES.Size = new System.Drawing.Size(140, 21);
             this.btnExportPrimaryACES.TabIndex = 18;
             this.btnExportPrimaryACES.Text = "Export Primary ACES";
             this.btnExportPrimaryACES.UseVisualStyleBackColor = true;
@@ -1388,7 +1390,7 @@
             // checkBoxRelatedPartsUseNotes
             // 
             this.checkBoxRelatedPartsUseNotes.AutoSize = true;
-            this.checkBoxRelatedPartsUseNotes.Location = new System.Drawing.Point(776, 119);
+            this.checkBoxRelatedPartsUseNotes.Location = new System.Drawing.Point(776, 145);
             this.checkBoxRelatedPartsUseNotes.Name = "checkBoxRelatedPartsUseNotes";
             this.checkBoxRelatedPartsUseNotes.Size = new System.Drawing.Size(97, 17);
             this.checkBoxRelatedPartsUseNotes.TabIndex = 14;
@@ -1398,7 +1400,7 @@
             // checkBoxRelatedPartsUseAttributes
             // 
             this.checkBoxRelatedPartsUseAttributes.AutoSize = true;
-            this.checkBoxRelatedPartsUseAttributes.Location = new System.Drawing.Point(628, 119);
+            this.checkBoxRelatedPartsUseAttributes.Location = new System.Drawing.Point(628, 145);
             this.checkBoxRelatedPartsUseAttributes.Name = "checkBoxRelatedPartsUseAttributes";
             this.checkBoxRelatedPartsUseAttributes.Size = new System.Drawing.Size(142, 17);
             this.checkBoxRelatedPartsUseAttributes.TabIndex = 13;
@@ -1408,7 +1410,7 @@
             // checkBoxRelatedPartsUsePosition
             // 
             this.checkBoxRelatedPartsUsePosition.AutoSize = true;
-            this.checkBoxRelatedPartsUsePosition.Location = new System.Drawing.Point(516, 119);
+            this.checkBoxRelatedPartsUsePosition.Location = new System.Drawing.Point(516, 145);
             this.checkBoxRelatedPartsUsePosition.Name = "checkBoxRelatedPartsUsePosition";
             this.checkBoxRelatedPartsUsePosition.Size = new System.Drawing.Size(106, 17);
             this.checkBoxRelatedPartsUsePosition.TabIndex = 12;
@@ -1418,7 +1420,7 @@
             // label22
             // 
             this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(317, 118);
+            this.label22.Location = new System.Drawing.Point(317, 144);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(44, 13);
             this.label22.TabIndex = 11;
@@ -1428,7 +1430,7 @@
             // 
             this.comboBoxRelatedTypesRight.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxRelatedTypesRight.FormattingEnabled = true;
-            this.comboBoxRelatedTypesRight.Location = new System.Drawing.Point(367, 115);
+            this.comboBoxRelatedTypesRight.Location = new System.Drawing.Point(367, 141);
             this.comboBoxRelatedTypesRight.Name = "comboBoxRelatedTypesRight";
             this.comboBoxRelatedTypesRight.Size = new System.Drawing.Size(143, 21);
             this.comboBoxRelatedTypesRight.TabIndex = 9;
@@ -1437,16 +1439,16 @@
             // 
             this.comboBoxRelatedTypesLeft.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxRelatedTypesLeft.FormattingEnabled = true;
-            this.comboBoxRelatedTypesLeft.Location = new System.Drawing.Point(167, 115);
+            this.comboBoxRelatedTypesLeft.Location = new System.Drawing.Point(167, 141);
             this.comboBoxRelatedTypesLeft.Name = "comboBoxRelatedTypesLeft";
             this.comboBoxRelatedTypesLeft.Size = new System.Drawing.Size(144, 21);
             this.comboBoxRelatedTypesLeft.TabIndex = 8;
             // 
             // btnExportRelatedParts
             // 
-            this.btnExportRelatedParts.Location = new System.Drawing.Point(7, 114);
+            this.btnExportRelatedParts.Location = new System.Drawing.Point(8, 140);
             this.btnExportRelatedParts.Name = "btnExportRelatedParts";
-            this.btnExportRelatedParts.Size = new System.Drawing.Size(141, 21);
+            this.btnExportRelatedParts.Size = new System.Drawing.Size(139, 21);
             this.btnExportRelatedParts.TabIndex = 7;
             this.btnExportRelatedParts.Text = "Export cross-type pairings";
             this.btnExportRelatedParts.UseVisualStyleBackColor = true;
@@ -2492,6 +2494,108 @@
             this.dgFitmentLogicProblems.TabIndex = 4;
             this.dgFitmentLogicProblems.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgFitmentLogicProblems_CellEnter);
             // 
+            // dgLogicProblemsDescription
+            // 
+            this.dgLogicProblemsDescription.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsDescription.HeaderText = "Problem";
+            this.dgLogicProblemsDescription.Name = "dgLogicProblemsDescription";
+            this.dgLogicProblemsDescription.Width = 70;
+            // 
+            // dgLogicProblemsGroup
+            // 
+            this.dgLogicProblemsGroup.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsGroup.HeaderText = "App Group";
+            this.dgLogicProblemsGroup.Name = "dgLogicProblemsGroup";
+            this.dgLogicProblemsGroup.ReadOnly = true;
+            this.dgLogicProblemsGroup.Width = 77;
+            // 
+            // dgLogicProblemsAppId
+            // 
+            this.dgLogicProblemsAppId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsAppId.HeaderText = "App id";
+            this.dgLogicProblemsAppId.Name = "dgLogicProblemsAppId";
+            this.dgLogicProblemsAppId.ReadOnly = true;
+            this.dgLogicProblemsAppId.Width = 51;
+            // 
+            // dgLogicProblemsReference
+            // 
+            this.dgLogicProblemsReference.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsReference.HeaderText = "Reference";
+            this.dgLogicProblemsReference.Name = "dgLogicProblemsReference";
+            this.dgLogicProblemsReference.Width = 82;
+            // 
+            // dgLogicProblemsBaseVehicleId
+            // 
+            this.dgLogicProblemsBaseVehicleId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsBaseVehicleId.HeaderText = "Base Vehicle id";
+            this.dgLogicProblemsBaseVehicleId.Name = "dgLogicProblemsBaseVehicleId";
+            this.dgLogicProblemsBaseVehicleId.ReadOnly = true;
+            this.dgLogicProblemsBaseVehicleId.Width = 87;
+            // 
+            // dgLogicProblemsMake
+            // 
+            this.dgLogicProblemsMake.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsMake.HeaderText = "Make";
+            this.dgLogicProblemsMake.Name = "dgLogicProblemsMake";
+            this.dgLogicProblemsMake.ReadOnly = true;
+            this.dgLogicProblemsMake.Width = 59;
+            // 
+            // dgLogicProblemsModel
+            // 
+            this.dgLogicProblemsModel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsModel.HeaderText = "Model";
+            this.dgLogicProblemsModel.Name = "dgLogicProblemsModel";
+            this.dgLogicProblemsModel.ReadOnly = true;
+            this.dgLogicProblemsModel.Width = 61;
+            // 
+            // dgLogicProblemsYear
+            // 
+            this.dgLogicProblemsYear.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsYear.HeaderText = "Year";
+            this.dgLogicProblemsYear.Name = "dgLogicProblemsYear";
+            this.dgLogicProblemsYear.ReadOnly = true;
+            this.dgLogicProblemsYear.Width = 54;
+            // 
+            // dgLogicProblemsPartType
+            // 
+            this.dgLogicProblemsPartType.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsPartType.HeaderText = "Part Type";
+            this.dgLogicProblemsPartType.Name = "dgLogicProblemsPartType";
+            this.dgLogicProblemsPartType.ReadOnly = true;
+            this.dgLogicProblemsPartType.Width = 72;
+            // 
+            // dgLogicProblemsPosition
+            // 
+            this.dgLogicProblemsPosition.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsPosition.HeaderText = "Position";
+            this.dgLogicProblemsPosition.Name = "dgLogicProblemsPosition";
+            this.dgLogicProblemsPosition.ReadOnly = true;
+            this.dgLogicProblemsPosition.Width = 69;
+            // 
+            // dgLogicProblemsQty
+            // 
+            this.dgLogicProblemsQty.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsQty.HeaderText = "Qty";
+            this.dgLogicProblemsQty.Name = "dgLogicProblemsQty";
+            this.dgLogicProblemsQty.ReadOnly = true;
+            this.dgLogicProblemsQty.Width = 48;
+            // 
+            // dgLogicProblemsPart
+            // 
+            this.dgLogicProblemsPart.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsPart.HeaderText = "Part";
+            this.dgLogicProblemsPart.Name = "dgLogicProblemsPart";
+            this.dgLogicProblemsPart.ReadOnly = true;
+            this.dgLogicProblemsPart.Width = 51;
+            // 
+            // dgLogicProblemsFitment
+            // 
+            this.dgLogicProblemsFitment.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgLogicProblemsFitment.HeaderText = "Fitment";
+            this.dgLogicProblemsFitment.Name = "dgLogicProblemsFitment";
+            this.dgLogicProblemsFitment.ReadOnly = true;
+            this.dgLogicProblemsFitment.Width = 66;
+            // 
             // listBoxFitmentLogicElements
             // 
             this.listBoxFitmentLogicElements.FormattingEnabled = true;
@@ -2729,107 +2833,15 @@
             this.lblRefACESLoadStatus.TabIndex = 53;
             this.lblRefACESLoadStatus.Text = "label1";
             // 
-            // dgLogicProblemsDescription
+            // btnDistinctVCdbExportSave
             // 
-            this.dgLogicProblemsDescription.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsDescription.HeaderText = "Problem";
-            this.dgLogicProblemsDescription.Name = "dgLogicProblemsDescription";
-            this.dgLogicProblemsDescription.Width = 70;
-            // 
-            // dgLogicProblemsGroup
-            // 
-            this.dgLogicProblemsGroup.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsGroup.HeaderText = "App Group";
-            this.dgLogicProblemsGroup.Name = "dgLogicProblemsGroup";
-            this.dgLogicProblemsGroup.ReadOnly = true;
-            this.dgLogicProblemsGroup.Width = 83;
-            // 
-            // dgLogicProblemsAppId
-            // 
-            this.dgLogicProblemsAppId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsAppId.HeaderText = "App id";
-            this.dgLogicProblemsAppId.Name = "dgLogicProblemsAppId";
-            this.dgLogicProblemsAppId.ReadOnly = true;
-            this.dgLogicProblemsAppId.Width = 62;
-            // 
-            // dgLogicProblemsReference
-            // 
-            this.dgLogicProblemsReference.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsReference.HeaderText = "Reference";
-            this.dgLogicProblemsReference.Name = "dgLogicProblemsReference";
-            this.dgLogicProblemsReference.Width = 82;
-            // 
-            // dgLogicProblemsBaseVehicleId
-            // 
-            this.dgLogicProblemsBaseVehicleId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsBaseVehicleId.HeaderText = "Base Vehicle id";
-            this.dgLogicProblemsBaseVehicleId.Name = "dgLogicProblemsBaseVehicleId";
-            this.dgLogicProblemsBaseVehicleId.ReadOnly = true;
-            this.dgLogicProblemsBaseVehicleId.Width = 87;
-            // 
-            // dgLogicProblemsMake
-            // 
-            this.dgLogicProblemsMake.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsMake.HeaderText = "Make";
-            this.dgLogicProblemsMake.Name = "dgLogicProblemsMake";
-            this.dgLogicProblemsMake.ReadOnly = true;
-            this.dgLogicProblemsMake.Width = 59;
-            // 
-            // dgLogicProblemsModel
-            // 
-            this.dgLogicProblemsModel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsModel.HeaderText = "Model";
-            this.dgLogicProblemsModel.Name = "dgLogicProblemsModel";
-            this.dgLogicProblemsModel.ReadOnly = true;
-            this.dgLogicProblemsModel.Width = 61;
-            // 
-            // dgLogicProblemsYear
-            // 
-            this.dgLogicProblemsYear.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsYear.HeaderText = "Year";
-            this.dgLogicProblemsYear.Name = "dgLogicProblemsYear";
-            this.dgLogicProblemsYear.ReadOnly = true;
-            this.dgLogicProblemsYear.Width = 54;
-            // 
-            // dgLogicProblemsPartType
-            // 
-            this.dgLogicProblemsPartType.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsPartType.HeaderText = "Part Type";
-            this.dgLogicProblemsPartType.Name = "dgLogicProblemsPartType";
-            this.dgLogicProblemsPartType.ReadOnly = true;
-            this.dgLogicProblemsPartType.Width = 72;
-            // 
-            // dgLogicProblemsPosition
-            // 
-            this.dgLogicProblemsPosition.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsPosition.HeaderText = "Position";
-            this.dgLogicProblemsPosition.Name = "dgLogicProblemsPosition";
-            this.dgLogicProblemsPosition.ReadOnly = true;
-            this.dgLogicProblemsPosition.Width = 69;
-            // 
-            // dgLogicProblemsQty
-            // 
-            this.dgLogicProblemsQty.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsQty.HeaderText = "Qty";
-            this.dgLogicProblemsQty.Name = "dgLogicProblemsQty";
-            this.dgLogicProblemsQty.ReadOnly = true;
-            this.dgLogicProblemsQty.Width = 48;
-            // 
-            // dgLogicProblemsPart
-            // 
-            this.dgLogicProblemsPart.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsPart.HeaderText = "Part";
-            this.dgLogicProblemsPart.Name = "dgLogicProblemsPart";
-            this.dgLogicProblemsPart.ReadOnly = true;
-            this.dgLogicProblemsPart.Width = 51;
-            // 
-            // dgLogicProblemsFitment
-            // 
-            this.dgLogicProblemsFitment.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgLogicProblemsFitment.HeaderText = "Fitment";
-            this.dgLogicProblemsFitment.Name = "dgLogicProblemsFitment";
-            this.dgLogicProblemsFitment.ReadOnly = true;
-            this.dgLogicProblemsFitment.Width = 66;
+            this.btnDistinctVCdbExportSave.Location = new System.Drawing.Point(8, 114);
+            this.btnDistinctVCdbExportSave.Name = "btnDistinctVCdbExportSave";
+            this.btnDistinctVCdbExportSave.Size = new System.Drawing.Size(139, 20);
+            this.btnDistinctVCdbExportSave.TabIndex = 57;
+            this.btnDistinctVCdbExportSave.Text = "Export VCdb code stats";
+            this.btnDistinctVCdbExportSave.UseVisualStyleBackColor = true;
+            this.btnDistinctVCdbExportSave.Click += new System.EventHandler(this.btnDistinctVCdbExportSave_Click);
             // 
             // Form1
             // 
@@ -3184,6 +3196,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsQty;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsPart;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsFitment;
+        private System.Windows.Forms.Button btnDistinctVCdbExportSave;
     }
 }
 

@@ -704,9 +704,10 @@ namespace ACESinspector
         public List<analysisChunk> individualAnanlysisChunksList = new List<analysisChunk>();
         public List<analysisChunk> outlierAnanlysisChunksList = new List<analysisChunk>();
         public List<analysisChunk> fitmentAnalysisChunksList = new List<analysisChunk>(); 
-        public List<analysisChunkGroup> fitmentAnalysisChunksGroups = new List<analysisChunkGroup>(); 
-
-
+        public List<analysisChunkGroup> fitmentAnalysisChunksGroups = new List<analysisChunkGroup>();
+        public Dictionary<string, int> vcdbUsageStatsDict = new Dictionary<string, int>();
+        public int vcdbUsageStatsTotalApps=0;
+        public List<string> vcdbUsageStatsFileList = new List<string>();
 
         public List<string> analysisHistory = new List<string>();
         public int logLevel;
@@ -3021,6 +3022,7 @@ default: return 0;
                         VCdbAttributeTemp.name = VCdbAttributeName;
                         VCdbAttributeTemp.value = Convert.ToInt32(appElement.Element(VCdbAttributeName).Attribute("id").Value);
                         appTemp.VCdbAttributes.Add(VCdbAttributeTemp);
+                        if (vcdbUsageStatsDict.ContainsKey(VCdbAttributeTemp.name)) { vcdbUsageStatsDict[VCdbAttributeTemp.name]++; } else { vcdbUsageStatsDict.Add(VCdbAttributeTemp.name, 1); } //record usage stats for VCdb tags for later export. This dict is not cleared upon new ACES file load so that all files analyzed within a session are totaled
                     }
                 }
 
@@ -3078,6 +3080,7 @@ default: return 0;
                     appToAdd.quantity = appTemp.quantity;
                     appToAdd.VCdbAttributes = appTemp.VCdbAttributes;
                     apps.Add(appToAdd);
+                    vcdbUsageStatsTotalApps++;
                 }
 
               
@@ -3093,7 +3096,11 @@ default: return 0;
             }
 
             logHistoryEvent("", "1\tImported "+apps.Count().ToString() + " apps");
-            if(xmlValidationErrors.Count==0 && apps.Count > 0){ successfulImport = true; }
+            if(xmlValidationErrors.Count==0 && apps.Count > 0)
+            {
+                vcdbUsageStatsFileList.Add(_filePath);
+                successfulImport = true;
+            }
             return apps.Count;
         }
 
@@ -3206,27 +3213,65 @@ default: return 0;
 
 
 
-        public string exportFlatApps(string _filePath, VCdb vcdb, PCdb pcdb, Qdb qdb, string delimiter, IProgress<int> progress)
+        public string exportFlatApps(string _filePath, VCdb vcdb, PCdb pcdb, Qdb qdb, string delimiter, string format, IProgress<int> progress)
         {
             BaseVehicle basevehicle = new BaseVehicle();
             int percentProgress = 0;
             int i = 0;
-
+            //xxx
             try
             {
                 using (StreamWriter sw = new StreamWriter(_filePath))
                 {
-                    sw.WriteLine("Application id" + delimiter + "Base Vehicle id" + delimiter + "Make" + delimiter + "Model" + delimiter + "Year" + delimiter + "Part" + delimiter + "Part Type" + delimiter + "Position" + delimiter + "Quantity" + delimiter + "VCdb-coded Attributes" + delimiter + "Qdb-coded Qualifiers" + delimiter + "Notes" + delimiter + "Mfr Label" + delimiter + "Asset");
-                    foreach (App app in apps)
-                    {
-                        sw.WriteLine(app.id.ToString() + delimiter + app.basevehilceid.ToString() + delimiter + vcdb.niceMakeOfBasevid(app.basevehilceid) + delimiter + vcdb.niceModelOfBasevid(app.basevehilceid) + delimiter + vcdb.niceYearOfBasevid(app.basevehilceid) + delimiter + app.part + delimiter + pcdb.niceParttype(app.parttypeid) + delimiter + pcdb.nicePosition(app.positionid) + delimiter + app.quantity.ToString() + delimiter + app.niceAttributesString(vcdb, false) + delimiter + app.niceQdbQualifierString(qdb) + delimiter + string.Join(";", app.notes) + delimiter + app.mfrlabel + delimiter + app.asset);
 
-                        if (progress != null)
-                        {// only report progress on whole percentage steps (100 total reports). reporting on every iteration is too process intensive
-                            percentProgress = Convert.ToInt32(((double)i / (double)apps.Count()) * 100);
-                            if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }
-                        }
-                    }
+                    switch (format)
+                    {
+                        case "Exploded VCdb tag columns":
+
+                            Dictionary<string, int> tagDict = new Dictionary<string, int>(){
+                            {"SubModel",0},{"MfrBodyCode",1},{"BodyNumDoors",2},{"BodyType",3},{"DriveType",4},{"EngineBase",5},{"EngineDesignation",6},
+                            {"EngineVIN",7},{"EngineVersion",8},{"EngineMfr",9},{"PowerOutput",10},{"ValvesPerEngine",11},{"FuelDeliveryType",12},
+                            {"FuelDeliverySubType",13},{"FuelSystemControlType",14},{"FuelSystemDesign",15},{"Aspiration",16},{"CylinderHeadType",17},
+                            {"FuelType",18},{"IgnitionSystemType",19},{"TransmissionMfrCode",20},{"TransmissionBase",21},{"TransmissionType",22},
+                            {"TransmissionControlType",23},{"TransmissionNumSpeeds",24},{"TransElecControlled",25},{"TransmissionMfr",26},
+                            {"BedLength",27},{"BedType",28},{"WheelBase",29},{"BrakeSystem",30},{"FrontBrakeType",31},{"RearBrakeType",32},
+                            {"BrakeABS",33},{"FrontSpringType",34},{"RearSpringType",35},{"SteeringSystem",36},{"SteeringType",37},{"Region",38}};
+
+                            string[] VCdbAttributeFields = new string[39];
+                            string VCdbTagHeaders = ""; foreach (KeyValuePair<string, int> entry in tagDict) { VCdbTagHeaders += "\t" + entry.Key; }
+                            sw.WriteLine("Application id" + delimiter + "Base Vehicle id" + delimiter + "Make" + delimiter + "Model" + delimiter + "Year" + delimiter + "Part" + delimiter + "Part Type" + delimiter + "Position" + delimiter + "Quantity" + delimiter + "Qdb-coded Qualifiers" + delimiter + "Notes" + delimiter + "Mfr Label" + delimiter + "Asset" + VCdbTagHeaders);
+
+                            foreach (App app in apps)
+                            {
+                                for (int j = 0; j <= 37; j++) { VCdbAttributeFields[j] = ""; }
+
+                                foreach (VCdbAttribute myAttribute in app.VCdbAttributes)
+                                {
+                                    if (tagDict.ContainsKey(myAttribute.name))
+                                    {
+                                        VCdbAttributeFields[tagDict[myAttribute.name]] = myAttribute.value.ToString();
+                                    }
+                                }
+
+                                sw.WriteLine(app.id.ToString() + delimiter + app.basevehilceid.ToString() + delimiter + vcdb.niceMakeOfBasevid(app.basevehilceid) + delimiter + vcdb.niceModelOfBasevid(app.basevehilceid) + delimiter + vcdb.niceYearOfBasevid(app.basevehilceid) + delimiter + app.part + delimiter + pcdb.niceParttype(app.parttypeid) + delimiter + pcdb.nicePosition(app.positionid) + delimiter + app.quantity.ToString() + delimiter + app.niceQdbQualifierString(qdb) + delimiter + string.Join(";", app.notes) + delimiter + app.mfrlabel + delimiter + app.asset + delimiter + string.Join(delimiter, VCdbAttributeFields.ToList()));
+                                if (progress != null) { percentProgress = Convert.ToInt32(((double)i / (double)apps.Count()) * 100); if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); } }
+                            }
+                            break;
+
+                        case "Default":
+                            sw.WriteLine("Application id" + delimiter + "Base Vehicle id" + delimiter + "Make" + delimiter + "Model" + delimiter + "Year" + delimiter + "Part" + delimiter + "Part Type" + delimiter + "Position" + delimiter + "Quantity" + delimiter + "VCdb-coded Attributes" + delimiter + "Qdb-coded Qualifiers" + delimiter + "Notes" + delimiter + "Mfr Label" + delimiter + "Asset");
+                            foreach (App app in apps)
+                            {
+                                sw.WriteLine(app.id.ToString() + delimiter + app.basevehilceid.ToString() + delimiter + vcdb.niceMakeOfBasevid(app.basevehilceid) + delimiter + vcdb.niceModelOfBasevid(app.basevehilceid) + delimiter + vcdb.niceYearOfBasevid(app.basevehilceid) + delimiter + app.part + delimiter + pcdb.niceParttype(app.parttypeid) + delimiter + pcdb.nicePosition(app.positionid) + delimiter + app.quantity.ToString() + delimiter + app.niceAttributesString(vcdb, false) + delimiter + app.niceQdbQualifierString(qdb) + delimiter + string.Join(";", app.notes) + delimiter + app.mfrlabel + delimiter + app.asset);
+                                if (progress != null){percentProgress = Convert.ToInt32(((double)i / (double)apps.Count()) * 100); if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }}
+                            }
+                            break;
+
+                        default:break;
+                    }   
+
+
+
                 }
                 return  apps.Count().ToString() + " flat applications exported to " + _filePath;
             }
@@ -3234,6 +3279,15 @@ default: return 0;
             {
                 return ex.ToString();
             }
+
+
+
+
+
+
+
+
+
         }
 
 
@@ -3367,39 +3421,26 @@ default: return 0;
         
         public string exportVCdbUsageReport(VCdb vcdb, string _filePath)
         {
-            Dictionary<string, int> vcdbDict = new Dictionary<string, int>();
+            //xxx
 
-            string key = "";
-
-            foreach (App app in apps)
-            {
-                foreach(VCdbAttribute myAttribute in app.VCdbAttributes)
-                {
-                    key = myAttribute.name + ":" + myAttribute.value.ToString();
-                    if(vcdbDict.ContainsKey(key)){vcdbDict[key]++;}else{vcdbDict.Add(key, 1);}
-                }
-            }
-
-            var sortedVCbDict = vcdbDict.ToList(); sortedVCbDict.Sort((pair2, pair1) => pair1.Value.CompareTo(pair2.Value));
+            var sortedVCbDict = vcdbUsageStatsDict.ToList(); sortedVCbDict.Sort((pair2, pair1) => pair1.Value.CompareTo(pair2.Value));
             VCdbAttribute VCdbAttributeTemp = new VCdbAttribute();
 
             try
             {
                 using (StreamWriter sw = new StreamWriter(_filePath))
                 {
-                    string lineString = "Attribute Name\tAttribute Value\tAttribute Text\tOccurrence Count";
+                    string lineString = "\t\t"+ vcdbUsageStatsTotalApps.ToString();
+                    sw.WriteLine(lineString);
+                    lineString = "Attribute Name\tOccurrence Count\t% of Records";
                     sw.WriteLine(lineString);
                     foreach (KeyValuePair<string, int> entry in sortedVCbDict)
                     {
-                        VCdbAttributeTemp.name = ""; VCdbAttributeTemp.value = 0;
-                        string[] attributePieces = entry.Key.Split(':');
-                        if (attributePieces.Count() == 2)
-                        {
-                            VCdbAttributeTemp.name = attributePieces[0]; VCdbAttributeTemp.value = Convert.ToInt32(attributePieces[1]);
-                            lineString = VCdbAttributeTemp.name + "\t" + VCdbAttributeTemp.value.ToString() + "\t" + vcdb.niceAttribute(VCdbAttributeTemp) + "\t" + entry.Value.ToString();
-                            sw.WriteLine(lineString);
-                        }
+                        lineString = entry.Key + "\t" + entry.Value.ToString() + "\t" + (Convert.ToDouble(entry.Value*100)/Convert.ToDouble(vcdbUsageStatsTotalApps)).ToString("F2");
+                        sw.WriteLine(lineString);
                     }
+                    sw.WriteLine("\r\n\r\n\r\n");
+                    foreach(string fileName in vcdbUsageStatsFileList){sw.WriteLine(fileName);}
                 }
                 return "VCdb usage stats exported to " + _filePath;
             }

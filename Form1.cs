@@ -176,6 +176,7 @@ namespace ACESinspector
             pictureBoxFitmentTree.Visible = false;
 
             comboBoxExportDelimiter.SelectedIndex = 0;
+            comboBoxFlatExportFormat.SelectedIndex = 0;
 
             tabControl1.Width = this.Width - 18;
             tabControl1.Height = this.Height - 288;
@@ -2182,6 +2183,7 @@ namespace ACESinspector
             if (comboBoxExportDelimiter.SelectedIndex == 0) { delimiter = "\t"; }
             if (comboBoxExportDelimiter.SelectedIndex == 1) { delimiter = "|"; }
             if (comboBoxExportDelimiter.SelectedIndex == 2) { delimiter = "~"; }
+            string exportFormat = comboBoxFlatExportFormat.Items[comboBoxFlatExportFormat.SelectedIndex].ToString();
 
             using (var fbd = new FolderBrowserDialog())
             {
@@ -2193,7 +2195,7 @@ namespace ACESinspector
                 if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath) && aces.apps.Count > 0)
                 {
                     key.SetValue("lastAppExportDirectoryPath", fbd.SelectedPath);
-                    result = await Task.Run(() => aces.exportFlatApps(fbd.SelectedPath + "\\"+ Path.GetFileNameWithoutExtension(aces.filePath) + "_flattened.txt", vcdb, pcdb, qdb, delimiter, progressIndicator));
+                    result = await Task.Run(() => aces.exportFlatApps(fbd.SelectedPath + "\\"+ Path.GetFileNameWithoutExtension(aces.filePath) + "_flattened.txt", vcdb, pcdb, qdb, delimiter,exportFormat, progressIndicator));
                     MessageBox.Show(result);
                 }
             }
@@ -3751,7 +3753,9 @@ namespace ACESinspector
                     key.CreateSubKey("ACESinspector");
                     key = key.OpenSubKey("ACESinspector", true);
                     key.SetValue("lastHolesDirectoryPath", fbd.SelectedPath);
-                    result = aces.exportVCdbUsageReport(vcdb, fbd.SelectedPath + @"\VCdbUsageStats.txt");
+                    string VCdbCodeStatsFilename = fbd.SelectedPath + "\\" + Path.GetFileNameWithoutExtension(aces.filePath) + "_VCdbCodeStats.txt";
+                    if (aces.vcdbUsageStatsFileList.Count>1){VCdbCodeStatsFilename = fbd.SelectedPath + "\\VCdbCodeStats.txt";}
+                    result = aces.exportVCdbUsageReport(vcdb, VCdbCodeStatsFilename);
                     MessageBox.Show(result);
                 }
             }

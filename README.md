@@ -7,6 +7,14 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.18 (released 5/25/2018)
+Re-worked the layout of the VCdb Usage stats export
+
+
+1.2.0.17 (released 5/24/2018)
+Added format selection to "flat" export at the request of Joe at Tenneco.
+
+
 1.2.0.15 (released 5/23/2018)
 Added header line to VCdb code stats export file. Fixed cosmetic stuff around progress bar for ACES files loading.
 

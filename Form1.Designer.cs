@@ -110,6 +110,7 @@
             this.label24 = new System.Windows.Forms.Label();
             this.numericUpDownTreeConfigLimit = new System.Windows.Forms.NumericUpDown();
             this.tabPageExports = new System.Windows.Forms.TabPage();
+            this.btnDistinctVCdbExportSave = new System.Windows.Forms.Button();
             this.progBarExportRelatedParts = new System.Windows.Forms.ProgressBar();
             this.progBarExportFlatApps = new System.Windows.Forms.ProgressBar();
             this.progBarExportBuyersGuide = new System.Windows.Forms.ProgressBar();
@@ -277,7 +278,8 @@
             this.progBarRefACESload = new System.Windows.Forms.ProgressBar();
             this.lblPrimeACESLoadStatus = new System.Windows.Forms.Label();
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
-            this.btnDistinctVCdbExportSave = new System.Windows.Forms.Button();
+            this.comboBoxFlatExportFormat = new System.Windows.Forms.ComboBox();
+            this.label11 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -1236,6 +1238,8 @@
             // 
             // tabPageExports
             // 
+            this.tabPageExports.Controls.Add(this.label11);
+            this.tabPageExports.Controls.Add(this.comboBoxFlatExportFormat);
             this.tabPageExports.Controls.Add(this.btnDistinctVCdbExportSave);
             this.tabPageExports.Controls.Add(this.progBarExportRelatedParts);
             this.tabPageExports.Controls.Add(this.progBarExportFlatApps);
@@ -1264,6 +1268,16 @@
             this.tabPageExports.Text = "Exports";
             this.tabPageExports.UseVisualStyleBackColor = true;
             // 
+            // btnDistinctVCdbExportSave
+            // 
+            this.btnDistinctVCdbExportSave.Location = new System.Drawing.Point(8, 114);
+            this.btnDistinctVCdbExportSave.Name = "btnDistinctVCdbExportSave";
+            this.btnDistinctVCdbExportSave.Size = new System.Drawing.Size(139, 20);
+            this.btnDistinctVCdbExportSave.TabIndex = 57;
+            this.btnDistinctVCdbExportSave.Text = "Export VCdb code stats";
+            this.btnDistinctVCdbExportSave.UseVisualStyleBackColor = true;
+            this.btnDistinctVCdbExportSave.Click += new System.EventHandler(this.btnDistinctVCdbExportSave_Click);
+            // 
             // progBarExportRelatedParts
             // 
             this.progBarExportRelatedParts.Location = new System.Drawing.Point(879, 143);
@@ -1273,7 +1287,7 @@
             // 
             // progBarExportFlatApps
             // 
-            this.progBarExportFlatApps.Location = new System.Drawing.Point(287, 10);
+            this.progBarExportFlatApps.Location = new System.Drawing.Point(493, 10);
             this.progBarExportFlatApps.Name = "progBarExportFlatApps";
             this.progBarExportFlatApps.Size = new System.Drawing.Size(144, 18);
             this.progBarExportFlatApps.TabIndex = 55;
@@ -1338,7 +1352,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(161, 11);
+            this.label1.Location = new System.Drawing.Point(367, 10);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(47, 13);
             this.label1.TabIndex = 17;
@@ -1372,7 +1386,7 @@
             "Tab",
             "Pipe (|)",
             "Tilde (~)"});
-            this.comboBoxExportDelimiter.Location = new System.Drawing.Point(214, 8);
+            this.comboBoxExportDelimiter.Location = new System.Drawing.Point(420, 7);
             this.comboBoxExportDelimiter.Name = "comboBoxExportDelimiter";
             this.comboBoxExportDelimiter.Size = new System.Drawing.Size(67, 21);
             this.comboBoxExportDelimiter.TabIndex = 16;
@@ -2833,15 +2847,26 @@
             this.lblRefACESLoadStatus.TabIndex = 53;
             this.lblRefACESLoadStatus.Text = "label1";
             // 
-            // btnDistinctVCdbExportSave
+            // comboBoxFlatExportFormat
             // 
-            this.btnDistinctVCdbExportSave.Location = new System.Drawing.Point(8, 114);
-            this.btnDistinctVCdbExportSave.Name = "btnDistinctVCdbExportSave";
-            this.btnDistinctVCdbExportSave.Size = new System.Drawing.Size(139, 20);
-            this.btnDistinctVCdbExportSave.TabIndex = 57;
-            this.btnDistinctVCdbExportSave.Text = "Export VCdb code stats";
-            this.btnDistinctVCdbExportSave.UseVisualStyleBackColor = true;
-            this.btnDistinctVCdbExportSave.Click += new System.EventHandler(this.btnDistinctVCdbExportSave_Click);
+            this.comboBoxFlatExportFormat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxFlatExportFormat.FormattingEnabled = true;
+            this.comboBoxFlatExportFormat.Items.AddRange(new object[] {
+            "Default",
+            "Exploded VCdb tag columns"});
+            this.comboBoxFlatExportFormat.Location = new System.Drawing.Point(209, 7);
+            this.comboBoxFlatExportFormat.Name = "comboBoxFlatExportFormat";
+            this.comboBoxFlatExportFormat.Size = new System.Drawing.Size(152, 21);
+            this.comboBoxFlatExportFormat.TabIndex = 58;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(164, 11);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(39, 13);
+            this.label11.TabIndex = 59;
+            this.label11.Text = "Format";
             // 
             // Form1
             // 
@@ -3197,6 +3222,8 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsPart;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgLogicProblemsFitment;
         private System.Windows.Forms.Button btnDistinctVCdbExportSave;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.ComboBox comboBoxFlatExportFormat;
     }
 }
 

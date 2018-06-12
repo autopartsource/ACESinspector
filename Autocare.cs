@@ -4592,7 +4592,6 @@ default: return 0;
                 importProgress = 5;
 
                 // populuate basevehicle lookup dict [makeid_modelid_yearid]=>basevidid  
-
                 string mmyKeyTemp = "";
                 command.CommandText = "select Make.MakeID, Model.ModelID, YearID, BaseVehicleID from Make,Model,BaseVehicle where Make.MakeID=BaseVehicle.MakeID and Model.ModelID =BaseVehicle.ModelID;"; reader = command.ExecuteReader();
                 while (reader.Read())
@@ -4981,7 +4980,7 @@ default: return 0;
             return "";
         }
 
-
+        //xxx
 
         public string importMySQLdata()
         {
@@ -5004,7 +5003,21 @@ default: return 0;
                     vcdbBasevhicleDict.Add(i, basevidTemp);
                 }
                 reader.Close();
-                importProgress = 5;
+                importProgress = 3;
+
+                // populuate basevehicle reverse lookup dict [makeid_modelid_yearid]=>basevidid  
+                string mmyKeyTemp = "";
+                command.CommandText = "select Make.MakeID, Model.ModelID, YearID, BaseVehicleID from Make,Model,BaseVehicle where Make.MakeID=BaseVehicle.MakeID and Model.ModelID =BaseVehicle.ModelID;"; reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    mmyKeyTemp = reader.GetValue(0).ToString() + "_" + reader.GetValue(1).ToString() + "_" + reader.GetValue(2).ToString();
+                    if (!vcdbReverseBasevhicleDict.ContainsKey(mmyKeyTemp))
+                    {
+                        vcdbReverseBasevhicleDict.Add(mmyKeyTemp, Convert.ToInt32(reader.GetValue(3).ToString()));
+                    }
+                }
+                reader.Close();
+                importProgress = 6;
 
                 // instance and populeate all the "Vehicle" table stuff (VehicleID,BaseVehicleID,SubmodelID,RegionID,PublicationStageID) and put it in the basevid-keyed dict
                 int basevehicleidTemp, vehicleidTemp;

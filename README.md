@@ -7,6 +7,11 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.19 (released 6/12/2018)
+Fixed a MySQL-specific VCdb-import problem where the reverse-lookup dictionary for converting year-range style apps to legit basevehicle apps was not being populated. This was causing 
+year-range apps to not work when MySQL reference source was in use.
+
+
 1.2.0.18 (released 5/25/2018)
 Re-worked the layout of the VCdb Usage stats export
 

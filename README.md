@@ -7,6 +7,10 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.20 (released 6/15/2018)
+Added "Questionable Note" detection (only outputs to assessment file - not UI). Made user-selected folder for assessment files and cache files apply to both on one being empty
+
+
 1.2.0.19 (released 6/12/2018)
 Fixed a MySQL-specific VCdb-import problem where the reverse-lookup dictionary for converting year-range style apps to legit basevehicle apps was not being populated. This was causing 
 year-range apps to not work when MySQL reference source was in use.

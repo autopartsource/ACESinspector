@@ -1147,6 +1147,14 @@ namespace ACESinspector
                 return;
             }
 
+            if (lblAssessmentsPath.Text == "")
+            {
+                MessageBox.Show("Please select a folder where ACESinspector can write assessment files. This can be done in the Settings tab");
+                return;
+            }
+
+
+
             aces.logHistoryEvent("", "5\tAnalysis started");
 
             btnAnalyze.Enabled = false;
@@ -1255,6 +1263,7 @@ namespace ACESinspector
 
             cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_parttypePositionErrors1.txt");
             cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_QdbErrors1.txt");
+            cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_questionableNotes1.txt");
             cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_invalidBasevehicles1.txt");
             cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_invalidVCdbCodes1.txt");
             cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_configurationErrors1.txt");
@@ -1270,6 +1279,7 @@ namespace ACESinspector
                     aces.individualAnanlysisChunksList.Last().appsList = new List<App>();
                     cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_parttypePositionErrors" + sectionNumber.ToString() + ".txt");
                     cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_QdbErrors" + sectionNumber.ToString() + ".txt");
+                    cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_questionableNotes" + sectionNumber.ToString() + ".txt");
                     cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_invalidBasevehicles" + sectionNumber.ToString() + ".txt");
                     cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_invalidVCdbCodes" + sectionNumber.ToString() + ".txt");
                     cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_configurationErrors" + sectionNumber.ToString() + ".txt");
@@ -1335,11 +1345,12 @@ namespace ACESinspector
 
             //-------------------------------------------- all analysis is done and recorded at this point (all tasks terminated) -------------------------------------------------
             // compile the total warning and errors counts 
-            aces.parttypePositionErrorsCount = 0; aces.qdbErrorsCount = 0;aces.basevehicleidsErrorsCount = 0; aces.vcdbCodesErrorsCount = 0; aces.vcdbConfigurationsErrorsCount = 0; aces.parttypeDisagreementCount = 0; aces.qtyOutlierCount = 0; 
+            aces.parttypePositionErrorsCount = 0; aces.qdbErrorsCount = 0; aces.questionableNotesCount = 0; aces.basevehicleidsErrorsCount = 0; aces.vcdbCodesErrorsCount = 0; aces.vcdbConfigurationsErrorsCount = 0; aces.parttypeDisagreementCount = 0; aces.qtyOutlierCount = 0; 
             foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
             {
                 aces.parttypePositionErrorsCount +=chunk.parttypePositionErrorsCount;
                 aces.qdbErrorsCount += chunk.qdbErrorsCount;
+                aces.questionableNotesCount += chunk.questionableNotesCount;
                 aces.basevehicleidsErrorsCount += chunk.basevehicleidsErrorsCount;
                 aces.vcdbCodesErrorsCount +=chunk.vcdbCodesErrorsCount;
                 aces.vcdbConfigurationsErrorsCount += chunk.vcdbConfigurationsErrorsCount;
@@ -1377,7 +1388,7 @@ namespace ACESinspector
                 }
             }
 
-            lblIndividualErrors.Text = (aces.basevehicleidsErrorsCount + aces.vcdbCodesErrorsCount + aces.vcdbConfigurationsErrorsCount + aces.qdbErrorsCount + aces.parttypePositionErrorsCount).ToString() + " errors";
+            lblIndividualErrors.Text = (aces.basevehicleidsErrorsCount + aces.vcdbCodesErrorsCount + aces.vcdbConfigurationsErrorsCount + aces.qdbErrorsCount + aces.questionableNotesCount + aces.parttypePositionErrorsCount).ToString() + " errors";
 
             List<string> problemsListTemp = new List<string>();
             if (aces.fitmentLogicProblemsCount > 0) { problemsListTemp.Add(aces.fitmentLogicProblemsCount.ToString() + " logic flaws"); }
@@ -1518,6 +1529,34 @@ namespace ACESinspector
                         excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
                         sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                     }
+
+
+                    if (aces.questionableNotesCount > 0)
+                    {
+                        sw.Write("<Worksheet ss:Name=\"Questionable Notes\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"115\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
+                        foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                        {
+                            if (chunk.questionableNotesCount > 0)
+                            {
+                                try
+                                {
+                                    using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_questionableNotes" + chunk.id.ToString() + ".txt"))
+                                    {
+                                        while (!reader.EndOfStream)
+                                        {
+                                            string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                            sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell></Row>");
+                                        }
+                                    }
+                                }
+                                catch (Exception ex) { }
+                            }
+                        }
+                        excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                    }
+
+
 
                     if (aces.basevehicleidsErrorsCount > 0)
                     {
@@ -3023,9 +3062,13 @@ namespace ACESinspector
                 {
                     key.SetValue("cacheDirectoryPath", fbd.SelectedPath);
                     lblCachePath.Text = fbd.SelectedPath;
+                    if(lblAssessmentsPath.Text == "")
+                    {
+                        lblAssessmentsPath.Text = fbd.SelectedPath;
+                        key.SetValue("assessmentDirectoryPath", fbd.SelectedPath);
+                    }
                 }
             }
-
         }
 
         private void checkBoxRespectValidateTag_CheckedChanged(object sender, EventArgs e)
@@ -3472,6 +3515,11 @@ namespace ACESinspector
                 {
                     key.SetValue("assessmentDirectoryPath", fbd.SelectedPath);
                     lblAssessmentsPath.Text = fbd.SelectedPath;
+                    if(lblCachePath.Text=="")
+                    {
+                        key.SetValue("cacheDirectoryPath", fbd.SelectedPath);
+                        lblCachePath.Text = fbd.SelectedPath;
+                    }
                 }
             }
         }

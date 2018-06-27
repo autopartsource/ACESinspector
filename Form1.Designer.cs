@@ -110,6 +110,8 @@
             this.label24 = new System.Windows.Forms.Label();
             this.numericUpDownTreeConfigLimit = new System.Windows.Forms.NumericUpDown();
             this.tabPageExports = new System.Windows.Forms.TabPage();
+            this.label11 = new System.Windows.Forms.Label();
+            this.comboBoxFlatExportFormat = new System.Windows.Forms.ComboBox();
             this.btnDistinctVCdbExportSave = new System.Windows.Forms.Button();
             this.progBarExportRelatedParts = new System.Windows.Forms.ProgressBar();
             this.progBarExportFlatApps = new System.Windows.Forms.ProgressBar();
@@ -206,19 +208,8 @@
             this.dgVCdbConfigsNotes = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPageAddsDropsParts = new System.Windows.Forms.TabPage();
             this.dgAddsDropsParts = new System.Windows.Forms.DataGridView();
-            this.dgAddsDropsPartsAction = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridViewTextBoxPart = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPageAddsDropsVehicles = new System.Windows.Forms.TabPage();
             this.dgAddsDropsVehicles = new System.Windows.Forms.DataGridView();
-            this.dgAddsDropsVehiclesAction = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesBaseVid = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesMake = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesModel = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesYear = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesParttype = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesPosition = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesQualifiers = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesMfrLabel = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPageQuantityWarnings = new System.Windows.Forms.TabPage();
             this.lblQtyWarningsRedirect = new System.Windows.Forms.Label();
             this.dgQuantityWarnings = new System.Windows.Forms.DataGridView();
@@ -278,8 +269,19 @@
             this.progBarRefACESload = new System.Windows.Forms.ProgressBar();
             this.lblPrimeACESLoadStatus = new System.Windows.Forms.Label();
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
-            this.comboBoxFlatExportFormat = new System.Windows.Forms.ComboBox();
-            this.label11 = new System.Windows.Forms.Label();
+            this.dgAddsDropsVehiclesAction = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesBaseVid = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesMake = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesModel = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesYear = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesParttype = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesPosition = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesQualifiers = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesMfrLabel = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsPartsAction = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxPart = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.lblAddsDropsPartsErrorRedirect = new System.Windows.Forms.Label();
+            this.lblAddsDropsVehiclesErrorRedirect = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -1268,6 +1270,27 @@
             this.tabPageExports.Text = "Exports";
             this.tabPageExports.UseVisualStyleBackColor = true;
             // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(164, 11);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(39, 13);
+            this.label11.TabIndex = 59;
+            this.label11.Text = "Format";
+            // 
+            // comboBoxFlatExportFormat
+            // 
+            this.comboBoxFlatExportFormat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxFlatExportFormat.FormattingEnabled = true;
+            this.comboBoxFlatExportFormat.Items.AddRange(new object[] {
+            "Default",
+            "Exploded VCdb tag columns"});
+            this.comboBoxFlatExportFormat.Location = new System.Drawing.Point(209, 7);
+            this.comboBoxFlatExportFormat.Name = "comboBoxFlatExportFormat";
+            this.comboBoxFlatExportFormat.Size = new System.Drawing.Size(152, 21);
+            this.comboBoxFlatExportFormat.TabIndex = 58;
+            // 
             // btnDistinctVCdbExportSave
             // 
             this.btnDistinctVCdbExportSave.Location = new System.Drawing.Point(8, 114);
@@ -2156,6 +2179,7 @@
             // 
             // tabPageAddsDropsParts
             // 
+            this.tabPageAddsDropsParts.Controls.Add(this.lblAddsDropsPartsErrorRedirect);
             this.tabPageAddsDropsParts.Controls.Add(this.dgAddsDropsParts);
             this.tabPageAddsDropsParts.Location = new System.Drawing.Point(4, 22);
             this.tabPageAddsDropsParts.Name = "tabPageAddsDropsParts";
@@ -2177,24 +2201,9 @@
             this.dgAddsDropsParts.Size = new System.Drawing.Size(1228, 480);
             this.dgAddsDropsParts.TabIndex = 2;
             // 
-            // dgAddsDropsPartsAction
-            // 
-            this.dgAddsDropsPartsAction.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsPartsAction.HeaderText = "Action";
-            this.dgAddsDropsPartsAction.Name = "dgAddsDropsPartsAction";
-            this.dgAddsDropsPartsAction.ReadOnly = true;
-            this.dgAddsDropsPartsAction.Width = 62;
-            // 
-            // dataGridViewTextBoxPart
-            // 
-            this.dataGridViewTextBoxPart.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dataGridViewTextBoxPart.HeaderText = "Part";
-            this.dataGridViewTextBoxPart.Name = "dataGridViewTextBoxPart";
-            this.dataGridViewTextBoxPart.ReadOnly = true;
-            this.dataGridViewTextBoxPart.Width = 51;
-            // 
             // tabPageAddsDropsVehicles
             // 
+            this.tabPageAddsDropsVehicles.Controls.Add(this.lblAddsDropsVehiclesErrorRedirect);
             this.tabPageAddsDropsVehicles.Controls.Add(this.dgAddsDropsVehicles);
             this.tabPageAddsDropsVehicles.Location = new System.Drawing.Point(4, 22);
             this.tabPageAddsDropsVehicles.Name = "tabPageAddsDropsVehicles";
@@ -2222,78 +2231,6 @@
             this.dgAddsDropsVehicles.Name = "dgAddsDropsVehicles";
             this.dgAddsDropsVehicles.Size = new System.Drawing.Size(1228, 480);
             this.dgAddsDropsVehicles.TabIndex = 3;
-            // 
-            // dgAddsDropsVehiclesAction
-            // 
-            this.dgAddsDropsVehiclesAction.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesAction.HeaderText = "Action";
-            this.dgAddsDropsVehiclesAction.Name = "dgAddsDropsVehiclesAction";
-            this.dgAddsDropsVehiclesAction.ReadOnly = true;
-            this.dgAddsDropsVehiclesAction.Width = 62;
-            // 
-            // dgAddsDropsVehiclesBaseVid
-            // 
-            this.dgAddsDropsVehiclesBaseVid.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesBaseVid.HeaderText = "BaseVehicle id";
-            this.dgAddsDropsVehiclesBaseVid.Name = "dgAddsDropsVehiclesBaseVid";
-            this.dgAddsDropsVehiclesBaseVid.ReadOnly = true;
-            this.dgAddsDropsVehiclesBaseVid.Width = 102;
-            // 
-            // dgAddsDropsVehiclesMake
-            // 
-            this.dgAddsDropsVehiclesMake.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesMake.HeaderText = "Make";
-            this.dgAddsDropsVehiclesMake.Name = "dgAddsDropsVehiclesMake";
-            this.dgAddsDropsVehiclesMake.ReadOnly = true;
-            this.dgAddsDropsVehiclesMake.Width = 59;
-            // 
-            // dgAddsDropsVehiclesModel
-            // 
-            this.dgAddsDropsVehiclesModel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesModel.HeaderText = "Model";
-            this.dgAddsDropsVehiclesModel.Name = "dgAddsDropsVehiclesModel";
-            this.dgAddsDropsVehiclesModel.ReadOnly = true;
-            this.dgAddsDropsVehiclesModel.Width = 61;
-            // 
-            // dgAddsDropsVehiclesYear
-            // 
-            this.dgAddsDropsVehiclesYear.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesYear.HeaderText = "Year";
-            this.dgAddsDropsVehiclesYear.Name = "dgAddsDropsVehiclesYear";
-            this.dgAddsDropsVehiclesYear.ReadOnly = true;
-            this.dgAddsDropsVehiclesYear.Width = 54;
-            // 
-            // dgAddsDropsVehiclesParttype
-            // 
-            this.dgAddsDropsVehiclesParttype.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesParttype.HeaderText = "Part Type";
-            this.dgAddsDropsVehiclesParttype.Name = "dgAddsDropsVehiclesParttype";
-            this.dgAddsDropsVehiclesParttype.ReadOnly = true;
-            this.dgAddsDropsVehiclesParttype.Width = 78;
-            // 
-            // dgAddsDropsVehiclesPosition
-            // 
-            this.dgAddsDropsVehiclesPosition.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesPosition.HeaderText = "Position";
-            this.dgAddsDropsVehiclesPosition.Name = "dgAddsDropsVehiclesPosition";
-            this.dgAddsDropsVehiclesPosition.ReadOnly = true;
-            this.dgAddsDropsVehiclesPosition.Width = 69;
-            // 
-            // dgAddsDropsVehiclesQualifiers
-            // 
-            this.dgAddsDropsVehiclesQualifiers.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesQualifiers.HeaderText = "Fitment";
-            this.dgAddsDropsVehiclesQualifiers.Name = "dgAddsDropsVehiclesQualifiers";
-            this.dgAddsDropsVehiclesQualifiers.ReadOnly = true;
-            this.dgAddsDropsVehiclesQualifiers.Width = 66;
-            // 
-            // dgAddsDropsVehiclesMfrLabel
-            // 
-            this.dgAddsDropsVehiclesMfrLabel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesMfrLabel.HeaderText = "MfrLabel";
-            this.dgAddsDropsVehiclesMfrLabel.Name = "dgAddsDropsVehiclesMfrLabel";
-            this.dgAddsDropsVehiclesMfrLabel.ReadOnly = true;
-            this.dgAddsDropsVehiclesMfrLabel.Width = 73;
             // 
             // tabPageQuantityWarnings
             // 
@@ -2847,26 +2784,113 @@
             this.lblRefACESLoadStatus.TabIndex = 53;
             this.lblRefACESLoadStatus.Text = "label1";
             // 
-            // comboBoxFlatExportFormat
+            // dgAddsDropsVehiclesAction
             // 
-            this.comboBoxFlatExportFormat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxFlatExportFormat.FormattingEnabled = true;
-            this.comboBoxFlatExportFormat.Items.AddRange(new object[] {
-            "Default",
-            "Exploded VCdb tag columns"});
-            this.comboBoxFlatExportFormat.Location = new System.Drawing.Point(209, 7);
-            this.comboBoxFlatExportFormat.Name = "comboBoxFlatExportFormat";
-            this.comboBoxFlatExportFormat.Size = new System.Drawing.Size(152, 21);
-            this.comboBoxFlatExportFormat.TabIndex = 58;
+            this.dgAddsDropsVehiclesAction.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesAction.HeaderText = "Add/Drop";
+            this.dgAddsDropsVehiclesAction.Name = "dgAddsDropsVehiclesAction";
+            this.dgAddsDropsVehiclesAction.ReadOnly = true;
+            this.dgAddsDropsVehiclesAction.Width = 79;
             // 
-            // label11
+            // dgAddsDropsVehiclesBaseVid
             // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(164, 11);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(39, 13);
-            this.label11.TabIndex = 59;
-            this.label11.Text = "Format";
+            this.dgAddsDropsVehiclesBaseVid.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesBaseVid.HeaderText = "BaseVehicle id";
+            this.dgAddsDropsVehiclesBaseVid.Name = "dgAddsDropsVehiclesBaseVid";
+            this.dgAddsDropsVehiclesBaseVid.ReadOnly = true;
+            this.dgAddsDropsVehiclesBaseVid.Width = 102;
+            // 
+            // dgAddsDropsVehiclesMake
+            // 
+            this.dgAddsDropsVehiclesMake.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesMake.HeaderText = "Make";
+            this.dgAddsDropsVehiclesMake.Name = "dgAddsDropsVehiclesMake";
+            this.dgAddsDropsVehiclesMake.ReadOnly = true;
+            this.dgAddsDropsVehiclesMake.Width = 59;
+            // 
+            // dgAddsDropsVehiclesModel
+            // 
+            this.dgAddsDropsVehiclesModel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesModel.HeaderText = "Model";
+            this.dgAddsDropsVehiclesModel.Name = "dgAddsDropsVehiclesModel";
+            this.dgAddsDropsVehiclesModel.ReadOnly = true;
+            this.dgAddsDropsVehiclesModel.Width = 61;
+            // 
+            // dgAddsDropsVehiclesYear
+            // 
+            this.dgAddsDropsVehiclesYear.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesYear.HeaderText = "Year";
+            this.dgAddsDropsVehiclesYear.Name = "dgAddsDropsVehiclesYear";
+            this.dgAddsDropsVehiclesYear.ReadOnly = true;
+            this.dgAddsDropsVehiclesYear.Width = 54;
+            // 
+            // dgAddsDropsVehiclesParttype
+            // 
+            this.dgAddsDropsVehiclesParttype.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesParttype.HeaderText = "Part Type";
+            this.dgAddsDropsVehiclesParttype.Name = "dgAddsDropsVehiclesParttype";
+            this.dgAddsDropsVehiclesParttype.ReadOnly = true;
+            this.dgAddsDropsVehiclesParttype.Width = 78;
+            // 
+            // dgAddsDropsVehiclesPosition
+            // 
+            this.dgAddsDropsVehiclesPosition.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesPosition.HeaderText = "Position";
+            this.dgAddsDropsVehiclesPosition.Name = "dgAddsDropsVehiclesPosition";
+            this.dgAddsDropsVehiclesPosition.ReadOnly = true;
+            this.dgAddsDropsVehiclesPosition.Width = 69;
+            // 
+            // dgAddsDropsVehiclesQualifiers
+            // 
+            this.dgAddsDropsVehiclesQualifiers.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesQualifiers.HeaderText = "Fitment";
+            this.dgAddsDropsVehiclesQualifiers.Name = "dgAddsDropsVehiclesQualifiers";
+            this.dgAddsDropsVehiclesQualifiers.ReadOnly = true;
+            this.dgAddsDropsVehiclesQualifiers.Width = 66;
+            // 
+            // dgAddsDropsVehiclesMfrLabel
+            // 
+            this.dgAddsDropsVehiclesMfrLabel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesMfrLabel.HeaderText = "MfrLabel";
+            this.dgAddsDropsVehiclesMfrLabel.Name = "dgAddsDropsVehiclesMfrLabel";
+            this.dgAddsDropsVehiclesMfrLabel.ReadOnly = true;
+            this.dgAddsDropsVehiclesMfrLabel.Width = 73;
+            // 
+            // dgAddsDropsPartsAction
+            // 
+            this.dgAddsDropsPartsAction.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsPartsAction.HeaderText = "Add/Drop";
+            this.dgAddsDropsPartsAction.Name = "dgAddsDropsPartsAction";
+            this.dgAddsDropsPartsAction.ReadOnly = true;
+            this.dgAddsDropsPartsAction.Width = 79;
+            // 
+            // dataGridViewTextBoxPart
+            // 
+            this.dataGridViewTextBoxPart.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dataGridViewTextBoxPart.HeaderText = "Part";
+            this.dataGridViewTextBoxPart.Name = "dataGridViewTextBoxPart";
+            this.dataGridViewTextBoxPart.ReadOnly = true;
+            this.dataGridViewTextBoxPart.Width = 51;
+            // 
+            // lblAddsDropsPartsErrorRedirect
+            // 
+            this.lblAddsDropsPartsErrorRedirect.AutoSize = true;
+            this.lblAddsDropsPartsErrorRedirect.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblAddsDropsPartsErrorRedirect.Location = new System.Drawing.Point(46, 24);
+            this.lblAddsDropsPartsErrorRedirect.Name = "lblAddsDropsPartsErrorRedirect";
+            this.lblAddsDropsPartsErrorRedirect.Size = new System.Drawing.Size(256, 20);
+            this.lblAddsDropsPartsErrorRedirect.TabIndex = 5;
+            this.lblAddsDropsPartsErrorRedirect.Text = "Too many adds/drops to show here";
+            // 
+            // lblAddsDropsVehiclesErrorRedirect
+            // 
+            this.lblAddsDropsVehiclesErrorRedirect.AutoSize = true;
+            this.lblAddsDropsVehiclesErrorRedirect.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblAddsDropsVehiclesErrorRedirect.Location = new System.Drawing.Point(43, 24);
+            this.lblAddsDropsVehiclesErrorRedirect.Name = "lblAddsDropsVehiclesErrorRedirect";
+            this.lblAddsDropsVehiclesErrorRedirect.Size = new System.Drawing.Size(256, 20);
+            this.lblAddsDropsVehiclesErrorRedirect.TabIndex = 6;
+            this.lblAddsDropsVehiclesErrorRedirect.Text = "Too many adds/drops to show here";
             // 
             // Form1
             // 
@@ -2954,8 +2978,10 @@
             this.tabPageInvalidConfigs.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgVCdbConfigs)).EndInit();
             this.tabPageAddsDropsParts.ResumeLayout(false);
+            this.tabPageAddsDropsParts.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgAddsDropsParts)).EndInit();
             this.tabPageAddsDropsVehicles.ResumeLayout(false);
+            this.tabPageAddsDropsVehicles.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgAddsDropsVehicles)).EndInit();
             this.tabPageQuantityWarnings.ResumeLayout(false);
             this.tabPageQuantityWarnings.PerformLayout();
@@ -3039,8 +3065,6 @@
         private System.Windows.Forms.Label lblDifferentialsLabel;
         private System.Windows.Forms.TabPage tabPageAddsDropsParts;
         private System.Windows.Forms.DataGridView dgAddsDropsParts;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsPartsAction;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxPart;
         private System.Windows.Forms.TabPage tabPageAddsDropsVehicles;
         private System.Windows.Forms.DataGridView dgAddsDropsVehicles;
         private System.Windows.Forms.Button btnNetChangeExportSave;
@@ -3068,15 +3092,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dgBasevidsQty;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgBasevidsPart;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgBasevidsQualifiers;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesAction;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesBaseVid;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesMake;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesModel;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesYear;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesParttype;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesPosition;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesQualifiers;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesMfrLabel;
         private System.Windows.Forms.DataGridView dgQdbErrors;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgVCdbConfigsApplicationid;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgVCdbConfigsBasevehicleid;
@@ -3224,6 +3239,19 @@
         private System.Windows.Forms.Button btnDistinctVCdbExportSave;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.ComboBox comboBoxFlatExportFormat;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsPartsAction;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxPart;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesAction;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesBaseVid;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesMake;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesModel;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesYear;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesParttype;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesPosition;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesQualifiers;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesMfrLabel;
+        private System.Windows.Forms.Label lblAddsDropsPartsErrorRedirect;
+        private System.Windows.Forms.Label lblAddsDropsVehiclesErrorRedirect;
     }
 }
 

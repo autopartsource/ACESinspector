@@ -118,6 +118,8 @@ namespace ACESinspector
             lblQdbErrorsRedirect.Visible = false;
             lblIndividualErrorsTitle.Visible = false;
             lblMacroProblemsTitle.Visible = false;
+            lblAddsDropsPartsErrorRedirect.Visible = false;
+            lblAddsDropsVehiclesErrorRedirect.Visible = false;
 
             btnAppExportSave.Enabled = false;
             btnBgExportSave.Enabled = false;
@@ -500,6 +502,8 @@ namespace ACESinspector
                 lblVCdbConfigErrorRedirect.Visible = false;
                 lblInvalidVCdbCodesRedirect.Visible = false;
                 lblInvalidBasevehiclesRedirect.Visible = false;
+                lblAddsDropsPartsErrorRedirect.Visible = false;
+                lblAddsDropsVehiclesErrorRedirect.Visible = false;
 
                 //progressBarCommonErrors.Value = 0;
                 //progressBarLogicProblems.Value = 0;
@@ -1388,7 +1392,7 @@ namespace ACESinspector
                 }
             }
 
-            lblIndividualErrors.Text = (aces.basevehicleidsErrorsCount + aces.vcdbCodesErrorsCount + aces.vcdbConfigurationsErrorsCount + aces.qdbErrorsCount + aces.questionableNotesCount + aces.parttypePositionErrorsCount).ToString() + " errors";
+            lblIndividualErrors.Text = (aces.basevehicleidsErrorsCount + aces.vcdbCodesErrorsCount + aces.vcdbConfigurationsErrorsCount + aces.qdbErrorsCount + aces.parttypePositionErrorsCount).ToString() + " errors";
 
             List<string> problemsListTemp = new List<string>();
             if (aces.fitmentLogicProblemsCount > 0) { problemsListTemp.Add(aces.fitmentLogicProblemsCount.ToString() + " logic flaws"); }
@@ -2108,6 +2112,8 @@ namespace ACESinspector
                     if (checkBoxLimitDataGridRows.Checked)
                     {
                         // show the "not here" lable
+                        lblAddsDropsPartsErrorRedirect.Visible = true;
+                        lblAddsDropsPartsErrorRedirect.Text = "Part adds/drops list is too large to show here (" + diffaces.differentialParts.Count.ToString() + "). See assessment file for full list.";
                     }
                 }
                 else
@@ -2120,6 +2126,8 @@ namespace ACESinspector
                     if (checkBoxLimitDataGridRows.Checked)
                     {
                         // show the "not here" lable
+                        lblAddsDropsPartsErrorRedirect.Visible = true;
+                        lblAddsDropsPartsErrorRedirect.Text = "Part adds/drops list is too large to show here (" + diffaces.differentialParts.Count.ToString() + "). See assessment file for full list.";
                     }
                 }
                 else

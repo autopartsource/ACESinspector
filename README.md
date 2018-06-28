@@ -7,7 +7,7 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
-1.2.0.21 (released 6/27/2018)
+1.2.0.21 (released 6/28/2018)
 Removed the "Questionable Note" count from the total of individual app errors. Changed the header on Add/Drop vehicles and parts datagrids to say "Add/Drop" instead of "Action". Added 
 logic in to show the "too big to display here" message to add/drop parts and vehicles.
 

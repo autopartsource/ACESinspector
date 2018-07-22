@@ -16,12 +16,85 @@ using MySql.Data.MySqlClient;
 
 namespace ACESinspector
 {
+
+    public class Asset
+    {
+        public int id;
+        public string action;
+        public int basevehilceid;
+        public string assetName;
+        public List<VCdbAttribute> VCdbAttributes;
+        public List<QdbQualifier> QdbQualifiers;
+        public List<String> notes;
+
+        public Asset()
+        {
+
+            VCdbAttributes = new List<VCdbAttribute>();
+            VCdbAttributes.Clear();
+            QdbQualifiers = new List<QdbQualifier>();
+            QdbQualifiers.Clear();
+            notes = new List<string>();
+            notes.Clear();
+        }
+
+        public string niceFullFitmentString(VCdb vcdb, Qdb qdb)
+        {
+            List<string> stringList = new List<string>();
+            if (VCdbAttributes.Count() > 0) { stringList.Add(this.niceAttributesString(vcdb, false)); }
+            if (QdbQualifiers.Count() > 0) { stringList.Add(this.niceQdbQualifierString(qdb)); }
+            if (notes.Count() > 0) { stringList.AddRange(notes); }
+            return String.Join(";", stringList.ToArray());
+        }
+
+        public string niceAttributesString(VCdb vcdb, bool includeNotes)
+        {// returns human-readable (Limited; V6 2.3L;) rendition of VCdb-coded attributes (and optionally the notes) from this app 
+            List<string> stringList = new List<string>();
+            foreach (VCdbAttribute myAttribute in VCdbAttributes) { stringList.Add(vcdb.niceAttribute(myAttribute)); }
+            if (includeNotes) { stringList.AddRange(notes); }
+            return string.Join(";", stringList);
+        }
+
+        public string niceQdbQualifierString(Qdb qdb)
+        {
+            string returnString = "";
+            foreach (QdbQualifier myQdbQualifier in QdbQualifiers)
+            {
+                returnString += qdb.niceQdbQualifier(myQdbQualifier.qualifierId, myQdbQualifier.qualifierParameters);
+
+            }
+            return returnString;
+        }
+
+    }
+
+
     /// <summary>
     ///  Each instance of App contains data derived from one App node in the ACES xml file
     /// </summary>
     public class App : IComparable<App>
     {
+
+        /*
+          As of ACES 4.0, there are 4 ways an app can communicate a "vehicle":
+          	- Base Vehicle ID
+			- Make / Year-Range 
+			- Base Equipment ID
+			- Mfr / Equipment Model / Vehicle Type
+         
+          during import, apps of the second type (make/year-range) will be dynamically converted to basevehicle-type apps. So for the purposes of ACESinspector, there are three types of
+          apps:
+            1 - Base Vehicle ID
+			2 - Base Equipment ID
+			3 - Mfr / Equipment Model / Vehicle Type
+
+
+
+
+         */
+
         public int id;
+        public int type; //1=basevehicle, 2=equipmentbase, 3=Mfr / Equipment Model / Vehicle Type
         public string reference;
         public string action;
         public bool validate;
@@ -130,6 +203,15 @@ namespace ACESinspector
         {
             return vcdb.niceMakeOfBasevid(this.basevehilceid) + ", " + vcdb.niceModelOfBasevid(this.basevehilceid) + ", " + vcdb.niceYearOfBasevid(this.basevehilceid);
         }
+
+/*        public string MMYstringOfdeletedBasevid(VCdb vcdb)
+        {
+
+
+
+
+        }
+        */
 
 
         public int CompareTo(App other)
@@ -271,6 +353,7 @@ namespace ACESinspector
         public int vcdbCodesErrorsCount = 0;
         public int vcdbConfigurationsErrorsCount = 0;
         public int parttypeDisagreementErrorsCount = 0;
+        public int assetProblemsCount = 0;
         public int qtyOutlierCount = 0;
         public List<string> problems = new List<string>(); // only used in context of macroanalysis
         public List<string> lowestBadnessPermutation = new List<string>(); // only used in context of macroanalysis
@@ -661,8 +744,10 @@ namespace ACESinspector
         public Decimal qtyOutlierSampleSize;
         public bool allowGraceForWildcardConfigs;
         public int xmlAppNodeCount;
+        public int xmlAssetNodeCount;
 
         public int qtyOutlierCount;
+        public int assetProblemsCount;
         public int parttypePositionErrorsCount;
         public int qdbErrorsCount;
         public int questionableNotesCount;
@@ -684,6 +769,8 @@ namespace ACESinspector
         
 
         public List<App> apps = new List<App>();
+        public List<Asset> assets = new List<Asset>();
+
         public Dictionary<string, int> partsAppCounts = new Dictionary<string, int>();
         public Dictionary<string, string> interchange = new Dictionary<string, string>();
         Dictionary<int, List<String>> groupKeyedNoteLists = new Dictionary<int, List<String>>();
@@ -694,6 +781,8 @@ namespace ACESinspector
         public List<string> distinctAssets = new List<string>();
         public List<string> distinctMfrLabels = new List<string>();
         public List<int> distinctPartTypes = new List<int>();
+        public List<String> distinctAssetNames = new List<String>();
+
 
         public List<string> differentialParts = new List<string>();
         public List<string> differentialVehicles = new List<string>();
@@ -725,6 +814,8 @@ namespace ACESinspector
             ACESschemas.Add("3.0.1", "<? xml version =\"1.0\" encoding=\"UTF-8\"?><xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" version=\"3.0.1\" xml:lang=\"en\"><xs:annotation><xs:documentation>AAIA ACES xml schema version 3.0.1 for exchanging Automotive Aftermarket catalog application data.	(c)2003-2013 AAIA All rights reserved.	We do not enforce a default namespace or \"targetNamespace\" with this release to minimize the changes	required to existing instance documents and procedures.</xs:documentation></xs:annotation><xs:simpleType name=\"acesVersionType\"><xs:annotation><xs:documentation source=\"http://www.xfront.com/Versioning.pdf\">Ties the instance document to a schema version.</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"1.0\"/><xs:enumeration value=\"2.0\"/><xs:enumeration value=\"3.0\"/><xs:enumeration value=\"3.0.1\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"actionType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"A\"/><xs:enumeration value=\"D\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"assetNameType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:minLength value=\"1\"/><xs:maxLength value=\"45\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"brandType\"><xs:annotation><xs:documentation source=\"http://www.regular-expressions.info/xmlcharclass.html\">Ideally four uppercase chars without vowels but legacy included some vowels so we	exclude just the ones necessary for each character position.</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:pattern value=\"[B-Z-[EIOU]][B-Z-[EIO]][B-Z-[OU]][A-Z]\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"idType\"><xs:restriction base=\"xs:positiveInteger\"/></xs:simpleType><xs:simpleType name=\"partNumberBaseType\"><xs:restriction base=\"xs:token\"><xs:minLength value=\"0\"/><xs:maxLength value=\"45\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"uomType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"mm\"/><xs:enumeration value=\"cm\"/><xs:enumeration value=\"in\"/><xs:enumeration value=\"ft\"/><xs:enumeration value=\"mg\"/><xs:enumeration value=\"g\"/><xs:enumeration value=\"kg\"/><xs:enumeration value=\"oz\"/><xs:enumeration value=\"lb\"/><xs:enumeration value=\"ton\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"yearType\"><xs:restriction base=\"xs:positiveInteger\"><xs:minInclusive value=\"1896\"/><xs:maxInclusive value=\"2015\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"yesnoType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"yes\"/><xs:enumeration value=\"no\"/></xs:restriction></xs:simpleType><xs:complexType name=\"appItemsBaseType\" abstract=\"true\"><xs:sequence><xs:group ref=\"vehicleIdentGroup\"/><xs:element ref=\"MfrBodyCode\" minOccurs=\"0\"/><xs:element ref=\"BodyNumDoors\" minOccurs=\"0\"/><xs:element ref=\"BodyType\" minOccurs=\"0\"/><xs:element ref=\"DriveType\" minOccurs=\"0\"/><xs:element ref=\"EngineBase\" minOccurs=\"0\"/><xs:element ref=\"EngineDesignation\" minOccurs=\"0\"/><xs:element ref=\"EngineVIN\" minOccurs=\"0\"/><xs:element ref=\"EngineVersion\" minOccurs=\"0\"/><xs:element ref=\"EngineMfr\" minOccurs=\"0\"/><xs:element ref=\"PowerOutput\" minOccurs=\"0\"/><xs:element ref=\"ValvesPerEngine\" minOccurs=\"0\"/><xs:element ref=\"FuelDeliveryType\" minOccurs=\"0\"/><xs:element ref=\"FuelDeliverySubType\" minOccurs=\"0\"/><xs:element ref=\"FuelSystemControlType\" minOccurs=\"0\"/><xs:element ref=\"FuelSystemDesign\" minOccurs=\"0\"/><xs:element ref=\"Aspiration\" minOccurs=\"0\"/><xs:element ref=\"CylinderHeadType\" minOccurs=\"0\"/><xs:element ref=\"FuelType\" minOccurs=\"0\"/><xs:element ref=\"IgnitionSystemType\" minOccurs=\"0\"/><xs:element ref=\"TransmissionMfrCode\" minOccurs=\"0\"/><xs:group ref=\"transGroup\" minOccurs=\"0\"/><xs:element ref=\"TransElecControlled\" minOccurs=\"0\"/><xs:element ref=\"TransmissionMfr\" minOccurs=\"0\"/><xs:element ref=\"BedLength\" minOccurs=\"0\"/><xs:element ref=\"BedType\" minOccurs=\"0\"/><xs:element ref=\"WheelBase\" minOccurs=\"0\"/><xs:element ref=\"BrakeSystem\" minOccurs=\"0\"/><xs:element ref=\"FrontBrakeType\" minOccurs=\"0\"/><xs:element ref=\"RearBrakeType\" minOccurs=\"0\"/><xs:element ref=\"BrakeABS\" minOccurs=\"0\"/><xs:element ref=\"FrontSpringType\" minOccurs=\"0\"/><xs:element ref=\"RearSpringType\" minOccurs=\"0\"/><xs:element ref=\"SteeringSystem\" minOccurs=\"0\"/><xs:element ref=\"SteeringType\" minOccurs=\"0\"/><xs:element ref=\"Region\" minOccurs=\"0\"/><xs:element ref=\"Qual\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element ref=\"Note\" minOccurs=\"0\" maxOccurs=\"unbounded\"/></xs:sequence><xs:attribute name=\"action\" type=\"actionType\" use=\"required\"/><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/><xs:attribute name=\"ref\" type=\"xs:string\"/><xs:attribute name=\"validate\" type=\"yesnoType\" default=\"yes\"/></xs:complexType><xs:complexType name=\"appType\"><xs:complexContent><xs:extension base=\"appItemsBaseType\"><xs:sequence><xs:element ref=\"Qty\"/><xs:element ref=\"PartType\"/><xs:element ref=\"MfrLabel\" minOccurs=\"0\"/><xs:element ref=\"Position\" minOccurs=\"0\"/><xs:element ref=\"Part\"/><xs:element ref=\"DisplayOrder\" minOccurs=\"0\"/><xs:sequence minOccurs=\"0\"><xs:element ref=\"AssetName\"/><xs:element ref=\"AssetItemOrder\" minOccurs=\"0\"/><xs:element ref=\"AssetItemRef\" minOccurs=\"0\"/></xs:sequence></xs:sequence></xs:extension></xs:complexContent></xs:complexType><xs:complexType name=\"assetType\"><xs:complexContent><xs:extension base=\"appItemsBaseType\"><xs:sequence><xs:element ref=\"AssetName\" minOccurs=\"1\"/></xs:sequence></xs:extension></xs:complexContent></xs:complexType><xs:complexType name=\"noteType\"><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\"/><xs:attribute name=\"lang\"><xs:simpleType><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"en\"/><xs:enumeration value=\"fr\"/><xs:enumeration value=\"sp\"/></xs:restriction></xs:simpleType></xs:attribute></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"partNumberType\"><xs:simpleContent><xs:extension base=\"partNumberBaseType\"><xs:attribute name=\"BrandAAIAID\" type=\"brandType\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"partTypeType\"><xs:annotation><xs:documentation source=\"http://www.aftermarket.org/aces3.0/#section_5.7.2\">A Part Type references the primary key in the Parts PCdb table.</xs:documentation></xs:annotation><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"positionType\"><xs:annotation><xs:documentation source=\"http://www.aftermarket.org/aces3.0/#section_5.7.14\">A Position references the primary key in the Position PCdb table.</xs:documentation></xs:annotation><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"qualType\"><xs:sequence><xs:element name=\"param\" type=\"paramType\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element name=\"text\" type=\"xs:string\"/></xs:sequence><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:complexType><xs:complexType name=\"paramType\"><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"value\" type=\"xs:string\" use=\"required\"/><xs:attribute name=\"uom\" type=\"uomType\"/><xs:attribute name=\"altvalue\" type=\"xs:string\"/><xs:attribute name=\"altuom\" type=\"uomType\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"vehAttrType\"><xs:annotation><xs:documentation source=\"http://www.aftermarket.org/aces3.0/#section_5.7.5\">Vehicle Attributes reference the primary key in the associated VCdb table.</xs:documentation></xs:annotation><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"yearRangeType\"><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"from\" type=\"yearType\" use=\"required\"/><xs:attribute name=\"to\" type=\"yearType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:element name=\"ACES\"><xs:complexType><xs:sequence><xs:element ref=\"Header\"/><xs:element ref=\"App\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element ref=\"Asset\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element ref=\"Footer\"/></xs:sequence><xs:attribute name=\"version\" type=\"acesVersionType\" use=\"required\"/></xs:complexType></xs:element><xs:element name=\"Header\"><xs:complexType><xs:sequence><xs:element name=\"Company\" type=\"xs:string\"/><xs:element name=\"SenderName\" type=\"xs:string\"/><xs:element name=\"SenderPhone\" type=\"xs:string\"/><xs:element name=\"SenderPhoneExt\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"TransferDate\" type=\"xs:date\"/><xs:element name=\"MfrCode\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"BrandAAIAID\" type=\"brandType\" minOccurs=\"0\"/><xs:element name=\"DocumentTitle\" type=\"xs:string\"/><xs:element name=\"DocFormNumber\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"EffectiveDate\" type=\"xs:date\"/><xs:element name=\"ApprovedFor\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"SubmissionType\" type=\"xs:string\"/><xs:element name=\"MapperCompany\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperContact\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperPhone\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperPhoneExt\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperEmail\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"VcdbVersionDate\" type=\"xs:date\"/><xs:element name=\"QdbVersionDate\" type=\"xs:date\"/><xs:element name=\"PcdbVersionDate\" type=\"xs:date\"/></xs:sequence></xs:complexType></xs:element><xs:group name=\"vehicleIdentGroup\"><xs:annotation><xs:documentation source=\"http://www.aftermarket.org/aces3.0/#section_5.7.1\">Either a Base Vehicle (which includes a year) or a Make / Year-Range combination	must be included with each application. </xs:documentation></xs:annotation><xs:choice><xs:sequence><xs:element ref=\"BaseVehicle\"/><xs:element ref=\"SubModel\" minOccurs=\"0\"/></xs:sequence><xs:sequence><xs:element ref=\"Years\"/><xs:element ref=\"Make\"/><xs:choice minOccurs=\"0\"><xs:element ref=\"VehicleType\"/><xs:sequence minOccurs=\"0\"><xs:element ref=\"Model\"/><xs:element ref=\"SubModel\" minOccurs=\"0\"/></xs:sequence></xs:choice></xs:sequence></xs:choice></xs:group><xs:group name=\"transGroup\"><xs:choice><xs:element ref=\"TransmissionBase\"/><xs:sequence><xs:element ref=\"TransmissionType\" minOccurs=\"0\"/><xs:element ref=\"TransmissionControlType\" minOccurs=\"0\"/><xs:element ref=\"TransmissionNumSpeeds\" minOccurs=\"0\"/></xs:sequence></xs:choice></xs:group><xs:element name=\"App\" type=\"appType\"/><xs:element name=\"Aspiration\" type=\"vehAttrType\"/><xs:element name=\"Asset\" type=\"assetType\"/><xs:element name=\"AssetItemOrder\" type=\"xs:positiveInteger\"/><xs:element name=\"AssetItemRef\" type=\"xs:string\"/><xs:element name=\"AssetName\" type=\"assetNameType\"/><xs:element name=\"BaseVehicle\" type=\"vehAttrType\"/><xs:element name=\"BedLength\" type=\"vehAttrType\"/><xs:element name=\"BedType\" type=\"vehAttrType\"/><xs:element name=\"BodyNumDoors\" type=\"vehAttrType\"/><xs:element name=\"BodyType\" type=\"vehAttrType\"/><xs:element name=\"BrakeABS\" type=\"vehAttrType\"/><xs:element name=\"BrakeSystem\" type=\"vehAttrType\"/><xs:element name=\"CylinderHeadType\" type=\"vehAttrType\"/><xs:element name=\"DisplayOrder\" type=\"xs:positiveInteger\"/><xs:element name=\"DriveType\" type=\"vehAttrType\"/><xs:element name=\"EngineBase\" type=\"vehAttrType\"/><xs:element name=\"EngineDesignation\" type=\"vehAttrType\"/><xs:element name=\"EngineMfr\" type=\"vehAttrType\"/><xs:element name=\"EngineVIN\" type=\"vehAttrType\"/><xs:element name=\"EngineVersion\" type=\"vehAttrType\"/><xs:element name=\"FrontBrakeType\" type=\"vehAttrType\"/><xs:element name=\"FrontSpringType\" type=\"vehAttrType\"/><xs:element name=\"FuelDeliverySubType\" type=\"vehAttrType\"/><xs:element name=\"FuelDeliveryType\" type=\"vehAttrType\"/><xs:element name=\"FuelSystemControlType\" type=\"vehAttrType\"/><xs:element name=\"FuelSystemDesign\" type=\"vehAttrType\"/><xs:element name=\"FuelType\" type=\"vehAttrType\"/><xs:element name=\"IgnitionSystemType\" type=\"vehAttrType\"/><xs:element name=\"Make\" type=\"vehAttrType\"/><xs:element name=\"MfrBodyCode\" type=\"vehAttrType\"/><xs:element name=\"MfrLabel\" type=\"xs:string\"/><xs:element name=\"Model\" type=\"vehAttrType\"/><xs:element name=\"Note\" type=\"noteType\"/><xs:element name=\"Part\" type=\"partNumberType\"/><xs:element name=\"PartType\" type=\"partTypeType\"/><xs:element name=\"Position\" type=\"positionType\"/><xs:element name=\"PowerOutput\" type=\"vehAttrType\"/><xs:element name=\"Qty\" type=\"xs:string\"/><xs:element name=\"Qual\" type=\"qualType\"/><xs:element name=\"RearBrakeType\" type=\"vehAttrType\"/><xs:element name=\"RearSpringType\" type=\"vehAttrType\"/><xs:element name=\"Region\" type=\"vehAttrType\"/><xs:element name=\"SteeringSystem\" type=\"vehAttrType\"/><xs:element name=\"SteeringType\" type=\"vehAttrType\"/><xs:element name=\"SubModel\" type=\"vehAttrType\"/><xs:element name=\"TransElecControlled\" type=\"vehAttrType\"/><xs:element name=\"TransferDate\" type=\"xs:date\"/><xs:element name=\"TransmissionBase\" type=\"vehAttrType\"/><xs:element name=\"TransmissionControlType\" type=\"vehAttrType\"/><xs:element name=\"TransmissionMfr\" type=\"vehAttrType\"/><xs:element name=\"TransmissionMfrCode\" type=\"vehAttrType\"/><xs:element name=\"TransmissionNumSpeeds\" type=\"vehAttrType\"/><xs:element name=\"TransmissionType\" type=\"vehAttrType\"/><xs:element name=\"ValvesPerEngine\" type=\"vehAttrType\"/><xs:element name=\"VehicleType\" type=\"vehAttrType\"/><xs:element name=\"WheelBase\" type=\"vehAttrType\"/><xs:element name=\"Years\" type=\"yearRangeType\"/><xs:element name=\"Footer\"><xs:complexType><xs:sequence><xs:element name=\"RecordCount\" type=\"xs:string\"/></xs:sequence></xs:complexType></xs:element></xs:schema>");
             ACESschemas.Add("3.1", "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" version=\"3.1\" xml:lang=\"en\"><xs:annotation><xs:documentation>AAIA ACES xml schema version 3.1 for exchanging Automotive Aftermarket catalog application data.	(c)2003-2013 AAIA All rights reserved.	We do not enforce a default namespace or \"targetNamespace\" with this release to minimize the changes	required to existing instance documents and procedures.</xs:documentation></xs:annotation><xs:simpleType name=\"acesVersionType\"><xs:annotation><xs:documentation source=\"http://www.xfront.com/Versioning.pdf\">Ties the instance document to a schema version.</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"1.0\"/><xs:enumeration value=\"2.0\"/><xs:enumeration value=\"3.0\"/><xs:enumeration value=\"3.0.1\"/><xs:enumeration value=\"3.1\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"actionType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"A\"/><xs:enumeration value=\"D\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"assetNameType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:minLength value=\"1\"/><xs:maxLength value=\"45\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"brandType\"><xs:annotation><xs:documentation source=\"http://www.regular-expressions.info/xmlcharclass.html\">Ideally four uppercase chars without vowels but legacy included some vowels so we	exclude just the ones necessary for each character position.</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:pattern value=\"[B-Z-[EIOU]][B-Z-[EIO]][B-Z-[OU]][A-Z]\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"idType\"><xs:restriction base=\"xs:positiveInteger\"/></xs:simpleType><xs:simpleType name=\"partNumberBaseType\"><xs:restriction base=\"xs:token\"><xs:minLength value=\"0\"/><xs:maxLength value=\"45\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"uomType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"mm\"/><xs:enumeration value=\"cm\"/><xs:enumeration value=\"in\"/><xs:enumeration value=\"ft\"/><xs:enumeration value=\"mg\"/><xs:enumeration value=\"g\"/><xs:enumeration value=\"kg\"/><xs:enumeration value=\"oz\"/><xs:enumeration value=\"lb\"/><xs:enumeration value=\"ton\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"yearType\"><xs:restriction base=\"xs:positiveInteger\"><xs:minInclusive value=\"1896\"/><xs:maxInclusive value=\"2015\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"yesnoType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"yes\"/><xs:enumeration value=\"no\"/></xs:restriction></xs:simpleType><xs:complexType name=\"appItemsBaseType\" abstract=\"true\"><xs:sequence><xs:group ref=\"vehicleIdentGroup\"/><xs:element ref=\"MfrBodyCode\" minOccurs=\"0\"/><xs:element ref=\"BodyNumDoors\" minOccurs=\"0\"/><xs:element ref=\"BodyType\" minOccurs=\"0\"/><xs:element ref=\"DriveType\" minOccurs=\"0\"/><xs:element ref=\"EngineBase\" minOccurs=\"0\"/><xs:element ref=\"EngineDesignation\" minOccurs=\"0\"/><xs:element ref=\"EngineVIN\" minOccurs=\"0\"/><xs:element ref=\"EngineVersion\" minOccurs=\"0\"/><xs:element ref=\"EngineMfr\" minOccurs=\"0\"/><xs:element ref=\"PowerOutput\" minOccurs=\"0\"/><xs:element ref=\"ValvesPerEngine\" minOccurs=\"0\"/><xs:element ref=\"FuelDeliveryType\" minOccurs=\"0\"/><xs:element ref=\"FuelDeliverySubType\" minOccurs=\"0\"/><xs:element ref=\"FuelSystemControlType\" minOccurs=\"0\"/><xs:element ref=\"FuelSystemDesign\" minOccurs=\"0\"/><xs:element ref=\"Aspiration\" minOccurs=\"0\"/><xs:element ref=\"CylinderHeadType\" minOccurs=\"0\"/><xs:element ref=\"FuelType\" minOccurs=\"0\"/><xs:element ref=\"IgnitionSystemType\" minOccurs=\"0\"/><xs:element ref=\"TransmissionMfrCode\" minOccurs=\"0\"/><xs:group ref=\"transGroup\" minOccurs=\"0\"/><xs:element ref=\"TransElecControlled\" minOccurs=\"0\"/><xs:element ref=\"TransmissionMfr\" minOccurs=\"0\"/><xs:element ref=\"BedLength\" minOccurs=\"0\"/><xs:element ref=\"BedType\" minOccurs=\"0\"/><xs:element ref=\"WheelBase\" minOccurs=\"0\"/><xs:element ref=\"BrakeSystem\" minOccurs=\"0\"/><xs:element ref=\"FrontBrakeType\" minOccurs=\"0\"/><xs:element ref=\"RearBrakeType\" minOccurs=\"0\"/><xs:element ref=\"BrakeABS\" minOccurs=\"0\"/><xs:element ref=\"FrontSpringType\" minOccurs=\"0\"/><xs:element ref=\"RearSpringType\" minOccurs=\"0\"/><xs:element ref=\"SteeringSystem\" minOccurs=\"0\"/><xs:element ref=\"SteeringType\" minOccurs=\"0\"/><xs:element ref=\"Region\" minOccurs=\"0\"/><xs:element ref=\"Qual\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element ref=\"Note\" minOccurs=\"0\" maxOccurs=\"unbounded\"/></xs:sequence><xs:attribute name=\"action\" type=\"actionType\" use=\"required\"/><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/><xs:attribute name=\"ref\" type=\"xs:string\"/><xs:attribute name=\"validate\" type=\"yesnoType\" default=\"yes\"/></xs:complexType><xs:complexType name=\"appType\"><xs:complexContent><xs:extension base=\"appItemsBaseType\"><xs:sequence><xs:element ref=\"Qty\"/><xs:element ref=\"PartType\"/><xs:element ref=\"MfrLabel\" minOccurs=\"0\"/><xs:element ref=\"Position\" minOccurs=\"0\"/><xs:element ref=\"Part\"/><xs:element ref=\"DisplayOrder\" minOccurs=\"0\"/><xs:sequence minOccurs=\"0\"><xs:element ref=\"AssetName\"/><xs:element ref=\"AssetItemOrder\" minOccurs=\"0\"/><xs:element ref=\"AssetItemRef\" minOccurs=\"0\"/></xs:sequence></xs:sequence></xs:extension></xs:complexContent></xs:complexType><xs:complexType name=\"assetType\"><xs:complexContent><xs:extension base=\"appItemsBaseType\"><xs:sequence><xs:element ref=\"AssetName\" minOccurs=\"1\"/></xs:sequence></xs:extension></xs:complexContent></xs:complexType><xs:complexType name=\"noteType\"><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\"/><xs:attribute name=\"lang\"><xs:simpleType><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"en\"/><xs:enumeration value=\"fr\"/><xs:enumeration value=\"sp\"/></xs:restriction></xs:simpleType></xs:attribute></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"partNumberType\"><xs:simpleContent><xs:extension base=\"partNumberBaseType\"><xs:attribute name=\"BrandAAIAID\" type=\"brandType\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"partTypeType\"><xs:annotation><xs:documentation source=\"http://www.aftermarket.org/aces3.0/#section_5.7.2\">A Part Type references the primary key in the Parts PCdb table.</xs:documentation></xs:annotation><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"positionType\"><xs:annotation><xs:documentation source=\"http://www.aftermarket.org/aces3.0/#section_5.7.14\">A Position references the primary key in the Position PCdb table.</xs:documentation></xs:annotation><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"qualType\"><xs:sequence><xs:element name=\"param\" type=\"paramType\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element name=\"text\" type=\"xs:string\"/></xs:sequence><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:complexType><xs:complexType name=\"paramType\"><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"value\" type=\"xs:string\" use=\"required\"/><xs:attribute name=\"uom\" type=\"uomType\"/><xs:attribute name=\"altvalue\" type=\"xs:string\"/><xs:attribute name=\"altuom\" type=\"uomType\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"vehAttrType\"><xs:annotation><xs:documentation source=\"http://www.aftermarket.org/aces3.0/#section_5.7.5\">Vehicle Attributes reference the primary key in the associated VCdb table.</xs:documentation></xs:annotation><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"yearRangeType\"><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"from\" type=\"yearType\" use=\"required\"/><xs:attribute name=\"to\" type=\"yearType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:element name=\"ACES\"><xs:complexType><xs:sequence><xs:element ref=\"Header\"/><xs:element ref=\"App\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element ref=\"Asset\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element ref=\"Footer\"/></xs:sequence><xs:attribute name=\"version\" type=\"acesVersionType\" use=\"required\"/></xs:complexType></xs:element><xs:element name=\"Header\"><xs:complexType><xs:sequence><xs:element name=\"Company\" type=\"xs:string\"/><xs:element name=\"SenderName\" type=\"xs:string\"/><xs:element name=\"SenderPhone\" type=\"xs:string\"/><xs:element name=\"SenderPhoneExt\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"TransferDate\" type=\"xs:date\"/><xs:element name=\"MfrCode\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"BrandAAIAID\" type=\"brandType\" minOccurs=\"0\"/><xs:element name=\"DocumentTitle\" type=\"xs:string\"/><xs:element name=\"DocFormNumber\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"EffectiveDate\" type=\"xs:date\"/><xs:element name=\"ApprovedFor\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"SubmissionType\" type=\"xs:string\"/><xs:element name=\"MapperCompany\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperContact\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperPhone\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperPhoneExt\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperEmail\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"VcdbVersionDate\" type=\"xs:date\"/><xs:element name=\"QdbVersionDate\" type=\"xs:date\"/><xs:element name=\"PcdbVersionDate\" type=\"xs:date\"/></xs:sequence></xs:complexType></xs:element><xs:group name=\"vehicleIdentGroup\"><xs:annotation><xs:documentation source=\"http://www.aftermarket.org/aces3.0/#section_5.7.1\">Either a Base Vehicle (which includes a year) or a Make / Year-Range combination	must be included with each application. </xs:documentation></xs:annotation><xs:choice><xs:sequence><xs:element ref=\"BaseVehicle\"/><xs:element ref=\"SubModel\" minOccurs=\"0\"/></xs:sequence><xs:sequence><xs:element ref=\"Years\"/><xs:element ref=\"Make\"/><xs:choice minOccurs=\"0\"><xs:element ref=\"VehicleType\"/><xs:sequence minOccurs=\"0\"><xs:element ref=\"Model\"/><xs:element ref=\"SubModel\" minOccurs=\"0\"/></xs:sequence></xs:choice></xs:sequence></xs:choice></xs:group><xs:group name=\"transGroup\"><xs:choice><xs:element ref=\"TransmissionBase\"/><xs:sequence><xs:element ref=\"TransmissionType\" minOccurs=\"0\"/><xs:element ref=\"TransmissionControlType\" minOccurs=\"0\"/><xs:element ref=\"TransmissionNumSpeeds\" minOccurs=\"0\"/></xs:sequence></xs:choice></xs:group><xs:element name=\"App\" type=\"appType\"/><xs:element name=\"Aspiration\" type=\"vehAttrType\"/><xs:element name=\"Asset\" type=\"assetType\"/><xs:element name=\"AssetItemOrder\" type=\"xs:positiveInteger\"/><xs:element name=\"AssetItemRef\" type=\"xs:string\"/><xs:element name=\"AssetName\" type=\"assetNameType\"/><xs:element name=\"BaseVehicle\" type=\"vehAttrType\"/><xs:element name=\"BedLength\" type=\"vehAttrType\"/><xs:element name=\"BedType\" type=\"vehAttrType\"/><xs:element name=\"BodyNumDoors\" type=\"vehAttrType\"/><xs:element name=\"BodyType\" type=\"vehAttrType\"/><xs:element name=\"BrakeABS\" type=\"vehAttrType\"/><xs:element name=\"BrakeSystem\" type=\"vehAttrType\"/><xs:element name=\"CylinderHeadType\" type=\"vehAttrType\"/><xs:element name=\"DisplayOrder\" type=\"xs:positiveInteger\"/><xs:element name=\"DriveType\" type=\"vehAttrType\"/><xs:element name=\"EngineBase\" type=\"vehAttrType\"/><xs:element name=\"EngineDesignation\" type=\"vehAttrType\"/><xs:element name=\"EngineMfr\" type=\"vehAttrType\"/><xs:element name=\"EngineVIN\" type=\"vehAttrType\"/><xs:element name=\"EngineVersion\" type=\"vehAttrType\"/><xs:element name=\"FrontBrakeType\" type=\"vehAttrType\"/><xs:element name=\"FrontSpringType\" type=\"vehAttrType\"/><xs:element name=\"FuelDeliverySubType\" type=\"vehAttrType\"/><xs:element name=\"FuelDeliveryType\" type=\"vehAttrType\"/><xs:element name=\"FuelSystemControlType\" type=\"vehAttrType\"/><xs:element name=\"FuelSystemDesign\" type=\"vehAttrType\"/><xs:element name=\"FuelType\" type=\"vehAttrType\"/><xs:element name=\"IgnitionSystemType\" type=\"vehAttrType\"/><xs:element name=\"Make\" type=\"vehAttrType\"/><xs:element name=\"MfrBodyCode\" type=\"vehAttrType\"/><xs:element name=\"MfrLabel\" type=\"xs:string\"/><xs:element name=\"Model\" type=\"vehAttrType\"/><xs:element name=\"Note\" type=\"noteType\"/><xs:element name=\"Part\" type=\"partNumberType\"/><xs:element name=\"PartType\" type=\"partTypeType\"/><xs:element name=\"Position\" type=\"positionType\"/><xs:element name=\"PowerOutput\" type=\"vehAttrType\"/><xs:element name=\"Qty\" type=\"xs:string\"/><xs:element name=\"Qual\" type=\"qualType\"/><xs:element name=\"RearBrakeType\" type=\"vehAttrType\"/><xs:element name=\"RearSpringType\" type=\"vehAttrType\"/><xs:element name=\"Region\" type=\"vehAttrType\"/><xs:element name=\"SteeringSystem\" type=\"vehAttrType\"/><xs:element name=\"SteeringType\" type=\"vehAttrType\"/><xs:element name=\"SubModel\" type=\"vehAttrType\"/><xs:element name=\"TransElecControlled\" type=\"vehAttrType\"/><xs:element name=\"TransferDate\" type=\"xs:date\"/><xs:element name=\"TransmissionBase\" type=\"vehAttrType\"/><xs:element name=\"TransmissionControlType\" type=\"vehAttrType\"/><xs:element name=\"TransmissionMfr\" type=\"vehAttrType\"/><xs:element name=\"TransmissionMfrCode\" type=\"vehAttrType\"/><xs:element name=\"TransmissionNumSpeeds\" type=\"vehAttrType\"/><xs:element name=\"TransmissionType\" type=\"vehAttrType\"/><xs:element name=\"ValvesPerEngine\" type=\"vehAttrType\"/><xs:element name=\"VehicleType\" type=\"vehAttrType\"/><xs:element name=\"WheelBase\" type=\"vehAttrType\"/><xs:element name=\"Years\" type=\"yearRangeType\"/><xs:element name=\"Footer\"><xs:complexType><xs:sequence><xs:element name=\"RecordCount\" type=\"xs:string\"/></xs:sequence></xs:complexType></xs:element></xs:schema>");
             ACESschemas.Add("3.2", "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" version=\"3.2\" xml:lang=\"en\"><xs:annotation><xs:documentation>Auto Care Assocation ACES xml schema version 3.2 for exchanging catalog application data.	(c)2003-2016 Auto Care Assocation All rights reserved.	We do not enforce a default namespace or \"targetNamespace\" with this release to minimize the changes	required to existing instance documents and procedures.</xs:documentation></xs:annotation><!-- simple type definitions --><xs:simpleType name=\"acesVersionType\"><xs:annotation><xs:documentation source=\"http://www.xfront.com/Versioning.pdf\">Ties the instance document to a schema version.</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"1.0\"/><xs:enumeration value=\"2.0\"/><xs:enumeration value=\"3.0\"/><xs:enumeration value=\"3.0.1\"/><xs:enumeration value=\"3.1\"/><xs:enumeration value=\"3.2\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"actionType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"A\"/><xs:enumeration value=\"D\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"assetNameType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:minLength value=\"1\"/><xs:maxLength value=\"45\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"brandType\"><xs:annotation><xs:documentation source=\"http://www.regular-expressions.info/xmlcharclass.html\">Ideally four uppercase chars without vowels but legacy included some vowels so we	exclude just the ones necessary for each character position.</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:pattern value=\"[B-Z-[EIOU]][B-Z-[EIO]][B-Z-[OU]][A-Z]\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"idType\"><xs:restriction base=\"xs:positiveInteger\"/></xs:simpleType><xs:simpleType name=\"partNumberBaseType\"><xs:restriction base=\"xs:token\"><xs:minLength value=\"0\"/><xs:maxLength value=\"45\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"uomType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"mm\"/><xs:enumeration value=\"cm\"/><xs:enumeration value=\"in\"/><xs:enumeration value=\"ft\"/><xs:enumeration value=\"mg\"/><xs:enumeration value=\"g\"/><xs:enumeration value=\"kg\"/><xs:enumeration value=\"oz\"/><xs:enumeration value=\"lb\"/><xs:enumeration value=\"ton\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"yearType\"><xs:restriction base=\"xs:positiveInteger\"><xs:totalDigits value=\"4\"/><xs:minInclusive value=\"1896\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"yesnoType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"yes\"/><xs:enumeration value=\"no\"/></xs:restriction></xs:simpleType><!-- complex type definitions --><xs:complexType name=\"appItemsBaseType\" abstract=\"true\"><xs:sequence><xs:group ref=\"vehicleIdentGroup\"/><xs:element ref=\"MfrBodyCode\" minOccurs=\"0\"/><xs:element ref=\"BodyNumDoors\" minOccurs=\"0\"/><xs:element ref=\"BodyType\" minOccurs=\"0\"/><xs:element ref=\"DriveType\" minOccurs=\"0\"/><xs:element ref=\"EngineBase\" minOccurs=\"0\"/><xs:element ref=\"EngineDesignation\" minOccurs=\"0\"/><xs:element ref=\"EngineVIN\" minOccurs=\"0\"/><xs:element ref=\"EngineVersion\" minOccurs=\"0\"/><xs:element ref=\"EngineMfr\" minOccurs=\"0\"/><xs:element ref=\"PowerOutput\" minOccurs=\"0\"/><xs:element ref=\"ValvesPerEngine\" minOccurs=\"0\"/><xs:element ref=\"FuelDeliveryType\" minOccurs=\"0\"/><xs:element ref=\"FuelDeliverySubType\" minOccurs=\"0\"/><xs:element ref=\"FuelSystemControlType\" minOccurs=\"0\"/><xs:element ref=\"FuelSystemDesign\" minOccurs=\"0\"/><xs:element ref=\"Aspiration\" minOccurs=\"0\"/><xs:element ref=\"CylinderHeadType\" minOccurs=\"0\"/><xs:element ref=\"FuelType\" minOccurs=\"0\"/><xs:element ref=\"IgnitionSystemType\" minOccurs=\"0\"/><xs:element ref=\"TransmissionMfrCode\" minOccurs=\"0\"/><xs:group ref=\"transGroup\" minOccurs=\"0\"/><xs:element ref=\"TransElecControlled\" minOccurs=\"0\"/><xs:element ref=\"TransmissionMfr\" minOccurs=\"0\"/><xs:element ref=\"BedLength\" minOccurs=\"0\"/><xs:element ref=\"BedType\" minOccurs=\"0\"/><xs:element ref=\"WheelBase\" minOccurs=\"0\"/><xs:element ref=\"BrakeSystem\" minOccurs=\"0\"/><xs:element ref=\"FrontBrakeType\" minOccurs=\"0\"/><xs:element ref=\"RearBrakeType\" minOccurs=\"0\"/><xs:element ref=\"BrakeABS\" minOccurs=\"0\"/><xs:element ref=\"FrontSpringType\" minOccurs=\"0\"/><xs:element ref=\"RearSpringType\" minOccurs=\"0\"/><xs:element ref=\"SteeringSystem\" minOccurs=\"0\"/><xs:element ref=\"SteeringType\" minOccurs=\"0\"/><xs:element ref=\"Region\" minOccurs=\"0\"/><xs:element ref=\"Qual\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element ref=\"Note\" minOccurs=\"0\" maxOccurs=\"unbounded\"/></xs:sequence><xs:attribute name=\"action\" type=\"actionType\" use=\"required\"/><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/><xs:attribute name=\"ref\" type=\"xs:string\"/><xs:attribute name=\"validate\" type=\"yesnoType\" default=\"yes\"/></xs:complexType><xs:complexType name=\"appType\"><xs:complexContent><xs:extension base=\"appItemsBaseType\"><xs:sequence><xs:element ref=\"Qty\"/><xs:element ref=\"PartType\"/><xs:element ref=\"MfrLabel\" minOccurs=\"0\"/><xs:element ref=\"Position\" minOccurs=\"0\"/><xs:element ref=\"Part\"/><xs:element ref=\"DisplayOrder\" minOccurs=\"0\"/><xs:sequence minOccurs=\"0\"><xs:element ref=\"AssetName\"/><xs:element ref=\"AssetItemOrder\" minOccurs=\"0\"/><xs:element ref=\"AssetItemRef\" minOccurs=\"0\"/></xs:sequence></xs:sequence></xs:extension></xs:complexContent></xs:complexType><xs:complexType name=\"assetType\"><xs:complexContent><xs:extension base=\"appItemsBaseType\"/></xs:complexContent></xs:complexType><xs:complexType name=\"noteType\"><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\"/><xs:attribute name=\"lang\"><xs:simpleType><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"en\"/><xs:enumeration value=\"fr\"/><xs:enumeration value=\"sp\"/></xs:restriction></xs:simpleType></xs:attribute></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"partNumberType\"><xs:simpleContent><xs:extension base=\"partNumberBaseType\"><xs:attribute name=\"BrandAAIAID\" type=\"brandType\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"partTypeType\"><xs:annotation><xs:documentation>A Part Type references the primary key in the Parts PCdb table.</xs:documentation></xs:annotation><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"positionType\"><xs:annotation><xs:documentation>A Position references the primary key in the Position PCdb table.</xs:documentation></xs:annotation><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"qualType\"><xs:sequence><xs:element name=\"param\" type=\"paramType\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element name=\"text\" type=\"xs:string\"/></xs:sequence><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:complexType><xs:complexType name=\"paramType\"><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"value\" type=\"xs:string\" use=\"required\"/><xs:attribute name=\"uom\" type=\"uomType\"/><xs:attribute name=\"altvalue\" type=\"xs:string\"/><xs:attribute name=\"altuom\" type=\"uomType\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"vehAttrType\"><xs:annotation><xs:documentation>Vehicle Attributes reference the primary key in the associated VCdb table.</xs:documentation></xs:annotation><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"yearRangeType\"><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"from\" use=\"required\"><xs:simpleType><xs:restriction base=\"yearType\"/></xs:simpleType></xs:attribute><xs:attribute name=\"to\" type=\"yearType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><!-- document structure --><xs:element name=\"ACES\"><xs:complexType><xs:sequence><xs:element ref=\"Header\"/><xs:element ref=\"App\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element ref=\"Asset\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element ref=\"DigitalAsset\" minOccurs=\"0\" maxOccurs=\"1\"/><xs:element ref=\"Footer\"/></xs:sequence><xs:attribute name=\"version\" type=\"acesVersionType\" use=\"required\"/></xs:complexType></xs:element><!-- \"Header\" element definition --><xs:element name=\"Header\"><xs:complexType><xs:sequence><xs:element name=\"Company\" type=\"xs:string\"/><xs:element name=\"SenderName\" type=\"xs:string\"/><xs:element name=\"SenderPhone\" type=\"xs:string\"/><xs:element name=\"SenderPhoneExt\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"TransferDate\" type=\"xs:date\"/><xs:element name=\"MfrCode\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"BrandAAIAID\" type=\"brandType\" minOccurs=\"0\"/><xs:element name=\"DocumentTitle\" type=\"xs:string\"/><xs:element name=\"DocFormNumber\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"EffectiveDate\" type=\"xs:date\"/><xs:element name=\"ApprovedFor\" type=\"approvedForType\" minOccurs=\"0\"/><xs:element name=\"SubmissionType\" type=\"xs:string\"/><xs:element name=\"MapperCompany\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperContact\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperPhone\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperPhoneExt\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperEmail\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"VcdbVersionDate\" type=\"xs:date\"/><xs:element name=\"QdbVersionDate\" type=\"xs:date\"/><xs:element name=\"PcdbVersionDate\" type=\"xs:date\"/></xs:sequence></xs:complexType></xs:element><!-- Vehicle Identification Group definition --><xs:group name=\"vehicleIdentGroup\"><xs:annotation><xs:documentation>Either a Base Vehicle (which includes a year) or a Make / Year-Range combination	must be included with each application. </xs:documentation></xs:annotation><xs:choice><xs:sequence><xs:element ref=\"BaseVehicle\"/><xs:element ref=\"SubModel\" minOccurs=\"0\"/></xs:sequence><xs:sequence><xs:element ref=\"Years\"/><xs:element ref=\"Make\"/><xs:choice minOccurs=\"0\"><xs:element ref=\"VehicleType\"/><xs:sequence minOccurs=\"0\"><xs:element ref=\"Model\"/><xs:element ref=\"SubModel\" minOccurs=\"0\"/></xs:sequence></xs:choice></xs:sequence></xs:choice></xs:group><!-- Transmission Group dfinition --><xs:group name=\"transGroup\"><xs:choice><xs:element ref=\"TransmissionBase\"/><xs:sequence><xs:element ref=\"TransmissionType\" minOccurs=\"0\"/><xs:element ref=\"TransmissionControlType\" minOccurs=\"0\"/><xs:element ref=\"TransmissionNumSpeeds\" minOccurs=\"0\"/></xs:sequence></xs:choice></xs:group><!-- element definitions  --><xs:element name=\"App\" type=\"appType\"/><xs:element name=\"Aspiration\" type=\"vehAttrType\"/><xs:element name=\"Asset\"><xs:complexType><xs:complexContent><xs:extension base=\"assetType\"><xs:sequence><xs:element ref=\"AssetName\"/></xs:sequence></xs:extension></xs:complexContent></xs:complexType></xs:element><xs:element name=\"AssetItemOrder\" type=\"xs:positiveInteger\"/><xs:element name=\"AssetItemRef\" type=\"xs:string\"/><xs:element name=\"AssetName\" type=\"assetNameType\"/><xs:element name=\"BaseVehicle\" type=\"vehAttrType\"/><xs:element name=\"BedLength\" type=\"vehAttrType\"/><xs:element name=\"BedType\" type=\"vehAttrType\"/><xs:element name=\"BodyNumDoors\" type=\"vehAttrType\"/><xs:element name=\"BodyType\" type=\"vehAttrType\"/><xs:element name=\"BrakeABS\" type=\"vehAttrType\"/><xs:element name=\"BrakeSystem\" type=\"vehAttrType\"/><xs:element name=\"CylinderHeadType\" type=\"vehAttrType\"/><xs:element name=\"DisplayOrder\" type=\"xs:positiveInteger\"/><xs:element name=\"DriveType\" type=\"vehAttrType\"/><xs:element name=\"EngineBase\" type=\"vehAttrType\"/><xs:element name=\"EngineDesignation\" type=\"vehAttrType\"/><xs:element name=\"EngineMfr\" type=\"vehAttrType\"/><xs:element name=\"EngineVIN\" type=\"vehAttrType\"/><xs:element name=\"EngineVersion\" type=\"vehAttrType\"/><xs:element name=\"FrontBrakeType\" type=\"vehAttrType\"/><xs:element name=\"FrontSpringType\" type=\"vehAttrType\"/><xs:element name=\"FuelDeliverySubType\" type=\"vehAttrType\"/><xs:element name=\"FuelDeliveryType\" type=\"vehAttrType\"/><xs:element name=\"FuelSystemControlType\" type=\"vehAttrType\"/><xs:element name=\"FuelSystemDesign\" type=\"vehAttrType\"/><xs:element name=\"FuelType\" type=\"vehAttrType\"/><xs:element name=\"IgnitionSystemType\" type=\"vehAttrType\"/><xs:element name=\"Make\" type=\"vehAttrType\"/><xs:element name=\"MfrBodyCode\" type=\"vehAttrType\"/><xs:element name=\"MfrLabel\" type=\"xs:string\"/><xs:element name=\"Model\" type=\"vehAttrType\"/><xs:element name=\"Note\" type=\"noteType\"/><xs:element name=\"Part\" type=\"partNumberType\"/><xs:element name=\"PartType\" type=\"partTypeType\"/><xs:element name=\"Position\" type=\"positionType\"/><xs:element name=\"PowerOutput\" type=\"vehAttrType\"/><xs:element name=\"Qty\" type=\"xs:string\"/><xs:element name=\"Qual\" type=\"qualType\"/><xs:element name=\"RearBrakeType\" type=\"vehAttrType\"/><xs:element name=\"RearSpringType\" type=\"vehAttrType\"/><xs:element name=\"Region\" type=\"vehAttrType\"/><xs:element name=\"SteeringSystem\" type=\"vehAttrType\"/><xs:element name=\"SteeringType\" type=\"vehAttrType\"/><xs:element name=\"SubModel\" type=\"vehAttrType\"/><xs:element name=\"TransElecControlled\" type=\"vehAttrType\"/><xs:element name=\"TransferDate\" type=\"xs:date\"/><xs:element name=\"TransmissionBase\" type=\"vehAttrType\"/><xs:element name=\"TransmissionControlType\" type=\"vehAttrType\"/><xs:element name=\"TransmissionMfr\" type=\"vehAttrType\"/><xs:element name=\"TransmissionMfrCode\" type=\"vehAttrType\"/><xs:element name=\"TransmissionNumSpeeds\" type=\"vehAttrType\"/><xs:element name=\"TransmissionType\" type=\"vehAttrType\"/><xs:element name=\"ValvesPerEngine\" type=\"vehAttrType\"/><xs:element name=\"VehicleType\" type=\"vehAttrType\"/><xs:element name=\"WheelBase\" type=\"vehAttrType\"/><xs:element name=\"Years\" type=\"yearRangeType\"/><xs:complexType name=\"approvedForType\"><xs:sequence><xs:element name=\"Country\" maxOccurs=\"unbounded\"><xs:simpleType><xs:restriction base=\"xs:token\"><xs:length value=\"2\"/></xs:restriction></xs:simpleType></xs:element></xs:sequence></xs:complexType><xs:element name=\"DigitalAsset\"><xs:complexType><xs:sequence><xs:element name=\"DigitalFileInformation\" type=\"digitalFileInformationType\" minOccurs=\"1\" maxOccurs=\"unbounded\"/></xs:sequence></xs:complexType></xs:element><xs:complexType name=\"digitalFileInformationType\"><xs:sequence><xs:element name=\"FileName\"><xs:simpleType><xs:restriction base=\"xs:string\"><xs:minLength value=\"1\"/><xs:maxLength value=\"80\"/></xs:restriction></xs:simpleType></xs:element><xs:element name=\"AssetDetailType\" type=\"assetDetailType\"/><xs:element name=\"FileType\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"assetFileType\"><xs:maxLength value=\"4\"/><xs:minLength value=\"3\"/></xs:restriction></xs:simpleType></xs:element><xs:element name=\"Representation\" type=\"representationType\" minOccurs=\"0\"/><xs:element name=\"FileSize\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"xs:positiveInteger\"><xs:totalDigits value=\"10\"/></xs:restriction></xs:simpleType></xs:element><xs:element name=\"Resolution\" type=\"resolutionType\" minOccurs=\"0\"/><xs:element name=\"ColorMode\" type=\"colorModeType\" minOccurs=\"0\"/><xs:element name=\"Background\" type=\"backgroundType\" minOccurs=\"0\"/><xs:element name=\"OrientationView\" type=\"orientationViewType\" minOccurs=\"0\"/><xs:element name=\"AssetDimensions\" minOccurs=\"0\"><xs:complexType><xs:sequence><xs:element name=\"AssetHeight\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"xs:decimal\"><xs:minExclusive value=\"0\"/><xs:totalDigits value=\"6\"/><xs:fractionDigits value=\"4\"/></xs:restriction></xs:simpleType></xs:element><xs:element name=\"AssetWidth\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"xs:decimal\"><xs:minExclusive value=\"0\"/><xs:totalDigits value=\"6\"/><xs:fractionDigits value=\"4\"/></xs:restriction></xs:simpleType></xs:element></xs:sequence><xs:attribute name=\"UOM\" type=\"dimensionUOMType\" use=\"required\"/></xs:complexType></xs:element><xs:element name=\"AssetDescription\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"FilePath\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"xs:string\"><xs:minLength value=\"1\"/><xs:maxLength value=\"80\"/></xs:restriction></xs:simpleType></xs:element><xs:element name=\"URI\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"xs:anyURI\"><xs:maxLength value=\"2000\"/></xs:restriction></xs:simpleType></xs:element><xs:element name=\"FileDateModified\" type=\"xs:date\" minOccurs=\"0\"/><xs:element name=\"EffectiveDate\" type=\"xs:date\" minOccurs=\"0\"/><xs:element name=\"ExpirationDate\" type=\"xs:date\" minOccurs=\"0\"/><xs:element name=\"Country\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"xs:token\"><xs:length value=\"2\"/></xs:restriction></xs:simpleType></xs:element></xs:sequence><xs:attribute name=\"AssetName\" use=\"required\"/><xs:attribute name=\"action\" type=\"actionType\" use=\"required\"/><xs:attribute name=\"LanguageCode\" type=\"xs:string\"/></xs:complexType><xs:simpleType name=\"assetDetailType\"><xs:annotation><xs:documentation>Code	Description	360		360 Degree Image Set	APG		Application Guide	AUD		Audio File	BRO		Brochure	BUL		Technical Bulletin	BUY		Buyers Guide	CAS		Case Study	CAT		Catalog	CER		Certificate of Origin	DAS		Datasheet	DRW	Technical Drawing	EBK		Ebook	FAB		Features and Benefits	FED		Full Engineering Drawing 	HMS		Hazardous Materials Info Sheet	INS		Installation Instructions	ISG		Illustration Guide	LIN		Line Art	LGO		Logo Image	MSD		Material Safety Data Sheet	OWN	Owner's Manual	P01		Photo – out of package	P02		Photo – in package	P03		Photo – lifestyle view	P04		Photo - Primary	P05		Photo - Close Up	P06		Photo - Mounted	P07		Photo - Unmounted	PAG		Link To Manufacturer Page	PAL		Pallet Configuration Drawing	PDB		Product Brochure	PC1		Planogram Consumer Pack 1	PC2		Planogram Consumer Pack 2	PC3		Planogram Consumer Pack 3	PI1		Planogram Inner Pack 1	PI2		Planogram Inner Pack 2	PI3		Planogram Inner Pack 3	PP1		Planogram Case Pack 1	PP2		Planogram Case Pack 2	PP3		Planogram Case Pack 3	PSS		Product Specifications Sheet	PST		Price Sheet	RES		Research Bulletin	SPE		Specification Sheet Filename 	THU		Thumbnail	TON		Tone Art	WAR	Warranty	MHP		Whitepaper	ZZ1	User 1	ZZ2	User 2	ZZ3	User 3	ZZ4	User 4	ZZ5	User 5	ZZ6	User 6	ZZ7	User 7	ZZ8	User 8	ZZ9	User 9</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"360\"/><xs:enumeration value=\"APG\"/><xs:enumeration value=\"AUD\"/><xs:enumeration value=\"BRO\"/><xs:enumeration value=\"BUL\"/><xs:enumeration value=\"BUY\"/><xs:enumeration value=\"CAS\"/><xs:enumeration value=\"CAT\"/><xs:enumeration value=\"CER\"/><xs:enumeration value=\"DAS\"/><xs:enumeration value=\"DRW\"/><xs:enumeration value=\"EBK\"/><xs:enumeration value=\"FAB\"/><xs:enumeration value=\"FED\"/><xs:enumeration value=\"HMS\"/><xs:enumeration value=\"INS\"/><xs:enumeration value=\"ISG\"/><xs:enumeration value=\"LIN\"/><xs:enumeration value=\"LGO\"/><xs:enumeration value=\"MSD\"/><xs:enumeration value=\"OWN\"/><xs:enumeration value=\"P01\"/><xs:enumeration value=\"P02\"/><xs:enumeration value=\"P03\"/><xs:enumeration value=\"P04\"/><xs:enumeration value=\"P05\"/><xs:enumeration value=\"P06\"/><xs:enumeration value=\"P07\"/><xs:enumeration value=\"PAG\"/><xs:enumeration value=\"PAL\"/><xs:enumeration value=\"PDB\"/><xs:enumeration value=\"PC1\"/><xs:enumeration value=\"PC2\"/><xs:enumeration value=\"PC3\"/><xs:enumeration value=\"PI1\"/><xs:enumeration value=\"PI2\"/><xs:enumeration value=\"PI3\"/><xs:enumeration value=\"PP1\"/><xs:enumeration value=\"PP2\"/><xs:enumeration value=\"PP3\"/><xs:enumeration value=\"PSS\"/><xs:enumeration value=\"PST\"/><xs:enumeration value=\"RES\"/><xs:enumeration value=\"SPE\"/><xs:enumeration value=\"THU\"/><xs:enumeration value=\"TON\"/><xs:enumeration value=\"WAR\"/><xs:enumeration value=\"WHP\"/><xs:enumeration value=\"ZZ1\"/><xs:enumeration value=\"ZZ2\"/><xs:enumeration value=\"ZZ3\"/><xs:enumeration value=\"ZZ4\"/><xs:enumeration value=\"ZZ5\"/><xs:enumeration value=\"ZZ6\"/><xs:enumeration value=\"ZZ7\"/><xs:enumeration value=\"ZZ8\"/><xs:enumeration value=\"ZZ9\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"assetFileType\"><xs:annotation><xs:documentation>Code	Description	TIF		Tagged Image File	JPG		Joint Photographic Experts Group	EPS		Encapsulated PostScript	TXT		.txt TEXT FILE	FLV		.flv VIDEO FILE	F4V		.f4v VIDEO FILE	AVI		.avi VIDEO FILE	WEBM	.webm VIDEO FILE	OGV		.ogv VIDEO VILE	MP4		.mp4 VIDEO FILE	MKV		.mkv VIDEO FILE	AIF		.aif AUDIO FILE	WAV	.wav AUDIO FILE	WMA	.wma AUDIO FILE	OGG	.ogg AUDIO FILE	PCM		.pcm AUDIO FILE	AC3		.ac3 AUDIO FILE	MIDI		.mid AUDIO FILE	MP3		.mp3 AUDIO FILE	AAC		.aac AUDIO FILE	GIF		Graphics Interchange Format	BMP		Bitmap Image	PNG		Portable Network Graphics	PDF		Portable Document Format	DOC		MS Word	XLS		MS Excel</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"TIF\"/><xs:enumeration value=\"JPG\"/><xs:enumeration value=\"EPS\"/><xs:enumeration value=\"TXT\"/><xs:enumeration value=\"FLV\"/><xs:enumeration value=\"F4V\"/><xs:enumeration value=\"AVI\"/><xs:enumeration value=\"WEBM\"/><xs:enumeration value=\"OGV\"/><xs:enumeration value=\"MP4\"/><xs:enumeration value=\"MKV\"/><xs:enumeration value=\"AIF\"/><xs:enumeration value=\"WAV\"/><xs:enumeration value=\"WMA\"/><xs:enumeration value=\"OGG\"/><xs:enumeration value=\"PCM\"/><xs:enumeration value=\"AC3\"/><xs:enumeration value=\"MIDI\"/><xs:enumeration value=\"MP3\"/><xs:enumeration value=\"AAC\"/><xs:enumeration value=\"GIF\"/><xs:enumeration value=\"BMP\"/><xs:enumeration value=\"PNG\"/><xs:enumeration value=\"PDF\"/><xs:enumeration value=\"DOC\"/><xs:enumeration value=\"XLS\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"resolutionType\"><xs:annotation><xs:documentation>Code	Description	72	96	300	600	800	1200</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"72\"/><xs:enumeration value=\"96\"/><xs:enumeration value=\"300\"/><xs:enumeration value=\"600\"/><xs:enumeration value=\"800\"/><xs:enumeration value=\"1200\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"representationType\"><xs:annotation><xs:documentation>Code	Description	A	Actual	R	Representative</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"A\"/><xs:enumeration value=\"R\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"colorModeType\"><xs:annotation><xs:documentation>Code	Description	RGB	RGB	CMY	CMYK	GRA	Gray Scale	OTH	Other	WEB	Vector B/W	VEC	Vector Color	BIT	Bitmap</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"RGB\"/><xs:enumeration value=\"CMY\"/><xs:enumeration value=\"GRA\"/><xs:enumeration value=\"OTH\"/><xs:enumeration value=\"WEB\"/><xs:enumeration value=\"VEC\"/><xs:enumeration value=\"BIT\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"backgroundType\"><xs:annotation><xs:documentation>Code	Description	WHI	White	CLI	White w/clipping path	TRA	Transparent	OTH	Other	NUL	N/A</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"WHI\"/><xs:enumeration value=\"CLI\"/><xs:enumeration value=\"TRA\"/><xs:enumeration value=\"OTH\"/><xs:enumeration value=\"NUL\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"orientationViewType\"><xs:annotation><xs:documentation>Code	Description	ANG	Angle	BAC	Back	BOT	Bottom	CON	Connector	FRO	Front	KIT	Kit	LEF	Left	LIF	Lifestyle	NUL	Not Applicable	OTH	Other	RIT	Right	SID	Side	TOP	Top	ZZ1	User 1	ZZ2	User 2	ZZ3	User 3	ZZ4	User 4	ZZ5	User 5	ZZ6	User 6	ZZ7	User 7	ZZ8	User 8	ZZ9	User 9</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"ANG\"/><xs:enumeration value=\"BAC\"/><xs:enumeration value=\"BOT\"/><xs:enumeration value=\"CON\"/><xs:enumeration value=\"FRO\"/><xs:enumeration value=\"KIT\"/><xs:enumeration value=\"LEF\"/><xs:enumeration value=\"LIF\"/><xs:enumeration value=\"NUL\"/><xs:enumeration value=\"RIT\"/><xs:enumeration value=\"SID\"/><xs:enumeration value=\"TOP\"/><xs:enumeration value=\"ZZ1\"/><xs:enumeration value=\"ZZ2\"/><xs:enumeration value=\"ZZ3\"/><xs:enumeration value=\"ZZ4\"/><xs:enumeration value=\"ZZ5\"/><xs:enumeration value=\"ZZ6\"/><xs:enumeration value=\"ZZ7\"/><xs:enumeration value=\"ZZ8\"/><xs:enumeration value=\"ZZ9\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"dimensionUOMType\"><xs:annotation><xs:documentation>Code	Description	PX	Pixels	IN	Inches	CM	Centimeters</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"PX\"/><xs:enumeration value=\"IN\"/><xs:enumeration value=\"CM\"/></xs:restriction></xs:simpleType><!-- \"Footer\" element definition --><xs:element name=\"Footer\"><xs:complexType><xs:sequence><xs:element name=\"RecordCount\" type=\"xs:string\"/></xs:sequence></xs:complexType></xs:element></xs:schema>");
+            ACESschemas.Add("4.0", "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" version=\"4.0\" xml:lang=\"en\"><xs:annotation><xs:documentation>Auto Care Assocation ACES xml schema version 4.0 for exchanging catalog application data.	(c)2003-2018 Auto Care Assocation All rights reserved.	We do not enforce a default namespace or \"targetNamespace\" with this release to minimize the changes	required to existing instance documents and procedures.</xs:documentation></xs:annotation><!-- simple type definitions --><xs:simpleType name=\"acesVersionType\"><xs:annotation><xs:documentation source=\"http://www.xfront.com/Versioning.pdf\">Ties the instance document to a schema version.</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"1.0\"/><xs:enumeration value=\"2.0\"/><xs:enumeration value=\"3.0\"/><xs:enumeration value=\"3.0.1\"/><xs:enumeration value=\"3.1\"/><xs:enumeration value=\"3.2\"/><xs:enumeration value=\"4.0\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"actionType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"A\"/><xs:enumeration value=\"D\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"assetNameType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:minLength value=\"1\"/><xs:maxLength value=\"45\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"brandType\"><xs:annotation><xs:documentation source=\"http://www.regular-expressions.info/xmlcharclass.html\">Ideally four uppercase chars without vowels but legacy included some vowels so we	exclude just the ones necessary for each character position.</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:pattern value=\"[B-Z-[EIOU]][B-Z-[EIO]][B-Z-[OU]][A-Z]\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"idType\"><xs:restriction base=\"xs:positiveInteger\"/></xs:simpleType><xs:simpleType name=\"partNumberBaseType\"><xs:restriction base=\"xs:token\"><xs:minLength value=\"0\"/><xs:maxLength value=\"45\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"uomType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"mm\"/><xs:enumeration value=\"cm\"/><xs:enumeration value=\"in\"/><xs:enumeration value=\"ft\"/><xs:enumeration value=\"mg\"/><xs:enumeration value=\"g\"/><xs:enumeration value=\"kg\"/><xs:enumeration value=\"oz\"/><xs:enumeration value=\"lb\"/><xs:enumeration value=\"ton\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"yearType\"><xs:restriction base=\"xs:positiveInteger\"><xs:totalDigits value=\"4\"/><xs:minInclusive value=\"1896\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"yesnoType\"><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"yes\"/><xs:enumeration value=\"no\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"submissionType\"><xs:restriction base=\"xs:string\"><xs:enumeration value=\"FULL\"/><xs:enumeration value=\"UPDATE\"/><xs:enumeration value=\"TEST\"/></xs:restriction></xs:simpleType><!-- complex type definitions --><xs:complexType name=\"appItemsBaseType\" abstract=\"true\"><xs:sequence><xs:group ref=\"vehicleIdentGroup\"/><xs:element ref=\"MfrBodyCode\" minOccurs=\"0\"/><xs:element ref=\"BodyNumDoors\" minOccurs=\"0\"/><xs:element ref=\"BodyType\" minOccurs=\"0\"/><xs:element ref=\"DriveType\" minOccurs=\"0\"/><xs:element ref=\"EngineBase\" minOccurs=\"0\"/><xs:element ref=\"EngineBlock\" minOccurs=\"0\"/><xs:element ref=\"EngineBoreStroke\" minOccurs=\"0\"/><xs:element ref=\"EngineDesignation\" minOccurs=\"0\"/><xs:element ref=\"EngineVIN\" minOccurs=\"0\"/><xs:element ref=\"EngineVersion\" minOccurs=\"0\"/><xs:element ref=\"EngineMfr\" minOccurs=\"0\"/><xs:element ref=\"PowerOutput\" minOccurs=\"0\"/><xs:element ref=\"ValvesPerEngine\" minOccurs=\"0\"/><xs:element ref=\"FuelDeliveryType\" minOccurs=\"0\"/><xs:element ref=\"FuelDeliverySubType\" minOccurs=\"0\"/><xs:element ref=\"FuelSystemControlType\" minOccurs=\"0\"/><xs:element ref=\"FuelSystemDesign\" minOccurs=\"0\"/><xs:element ref=\"Aspiration\" minOccurs=\"0\"/><xs:element ref=\"CylinderHeadType\" minOccurs=\"0\"/><xs:element ref=\"FuelType\" minOccurs=\"0\"/><xs:element ref=\"IgnitionSystemType\" minOccurs=\"0\"/><xs:element ref=\"TransmissionMfrCode\" minOccurs=\"0\"/><xs:group ref=\"transGroup\" minOccurs=\"0\"/><xs:element ref=\"TransElecControlled\" minOccurs=\"0\"/><xs:element ref=\"TransmissionMfr\" minOccurs=\"0\"/><xs:element ref=\"BedLength\" minOccurs=\"0\"/><xs:element ref=\"BedType\" minOccurs=\"0\"/><xs:element ref=\"WheelBase\" minOccurs=\"0\"/><xs:element ref=\"BrakeSystem\" minOccurs=\"0\"/><xs:element ref=\"FrontBrakeType\" minOccurs=\"0\"/><xs:element ref=\"RearBrakeType\" minOccurs=\"0\"/><xs:element ref=\"BrakeABS\" minOccurs=\"0\"/><xs:element ref=\"FrontSpringType\" minOccurs=\"0\"/><xs:element ref=\"RearSpringType\" minOccurs=\"0\"/><xs:element ref=\"SteeringSystem\" minOccurs=\"0\"/><xs:element ref=\"SteeringType\" minOccurs=\"0\"/><xs:element ref=\"Region\" minOccurs=\"0\"/><xs:element ref=\"Qual\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element ref=\"Note\" minOccurs=\"0\" maxOccurs=\"unbounded\"/></xs:sequence><xs:attribute name=\"action\" type=\"actionType\" use=\"required\"/><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/><xs:attribute name=\"ref\" type=\"xs:string\"/><xs:attribute name=\"validate\" type=\"yesnoType\" default=\"yes\"/></xs:complexType><xs:complexType name=\"appType\"><xs:complexContent><xs:extension base=\"appItemsBaseType\"><xs:sequence><xs:element ref=\"Qty\"/><xs:element ref=\"PartType\"/><xs:element ref=\"MfrLabel\" minOccurs=\"0\"/><xs:element ref=\"Position\" minOccurs=\"0\"/><xs:element ref=\"Part\"/><xs:element ref=\"DisplayOrder\" minOccurs=\"0\"/><xs:sequence minOccurs=\"0\"><xs:element ref=\"AssetName\"/><xs:element ref=\"AssetItemOrder\" minOccurs=\"0\"/><xs:element ref=\"AssetItemRef\" minOccurs=\"0\"/></xs:sequence></xs:sequence></xs:extension></xs:complexContent></xs:complexType><xs:complexType name=\"assetType\"><xs:complexContent><xs:extension base=\"appItemsBaseType\"/></xs:complexContent></xs:complexType><xs:complexType name=\"noteType\"><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\"/><xs:attribute name=\"lang\"><xs:simpleType><xs:restriction base=\"xs:NMTOKEN\"><xs:enumeration value=\"en\"/><xs:enumeration value=\"fr\"/><xs:enumeration value=\"sp\"/></xs:restriction></xs:simpleType></xs:attribute></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"partNumberType\"><xs:simpleContent><xs:extension base=\"partNumberBaseType\"><xs:attribute name=\"BrandAAIAID\" type=\"brandType\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"partTypeType\"><xs:annotation><xs:documentation>A Part Type references the primary key in the Parts PCdb table.</xs:documentation></xs:annotation><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"positionType\"><xs:annotation><xs:documentation>A Position references the primary key in the Position PCdb table.</xs:documentation></xs:annotation><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"qualType\"><xs:sequence><xs:element name=\"param\" type=\"paramType\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element name=\"text\" type=\"xs:string\"/></xs:sequence><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:complexType><xs:complexType name=\"paramType\"><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"value\" type=\"xs:string\" use=\"required\"/><xs:attribute name=\"uom\" type=\"uomType\"/><xs:attribute name=\"altvalue\" type=\"xs:string\"/><xs:attribute name=\"altuom\" type=\"uomType\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"vehAttrType\"><xs:annotation><xs:documentation>Vehicle Attributes reference the primary key in the associated VCdb table.</xs:documentation></xs:annotation><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"id\" type=\"idType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><xs:complexType name=\"yearRangeType\"><xs:simpleContent><xs:extension base=\"xs:string\"><xs:attribute name=\"from\" use=\"required\"><xs:simpleType><xs:restriction base=\"yearType\"/></xs:simpleType></xs:attribute><xs:attribute name=\"to\" type=\"yearType\" use=\"required\"/></xs:extension></xs:simpleContent></xs:complexType><!-- document structure --><xs:element name=\"ACES\"><xs:complexType><xs:sequence><xs:element ref=\"Header\"/><xs:element ref=\"App\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element ref=\"Asset\" minOccurs=\"0\" maxOccurs=\"unbounded\"/><xs:element ref=\"DigitalAsset\" minOccurs=\"0\" maxOccurs=\"1\"/><xs:element ref=\"Footer\"/></xs:sequence><xs:attribute name=\"version\" type=\"acesVersionType\" use=\"required\"/></xs:complexType></xs:element><!-- \"Header\" element definition --><xs:element name=\"Header\"><xs:complexType><xs:sequence><xs:element name=\"Company\" type=\"xs:string\"/><xs:element name=\"SenderName\" type=\"xs:string\"/><xs:element name=\"SenderPhone\" type=\"xs:string\"/><xs:element name=\"SenderPhoneExt\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"TransferDate\" type=\"xs:date\"/><xs:element name=\"MfrCode\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"BrandAAIAID\" type=\"brandType\" minOccurs=\"0\"/><xs:element name=\"DocumentTitle\" type=\"xs:string\"/><xs:element name=\"DocFormNumber\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"EffectiveDate\" type=\"xs:date\"/><xs:element name=\"ApprovedFor\" type=\"approvedForType\" minOccurs=\"0\"/><xs:element name=\"SubmissionType\" type=\"submissionType\"/><xs:element name=\"MapperCompany\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperContact\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperPhone\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperPhoneExt\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"MapperEmail\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"VcdbVersionDate\" type=\"xs:date\"/><xs:element name=\"QdbVersionDate\" type=\"xs:date\"/><xs:element name=\"PcdbVersionDate\" type=\"xs:date\"/></xs:sequence></xs:complexType></xs:element><!-- Vehicle Identification Group definition --><xs:group name=\"vehicleIdentGroup\"><xs:annotation><xs:documentation>One of the following must be sent in the Vehicle Ident Group:	- A Base Vehicle ID	- A Make / Year or Make / Year-Range combination must be included with each application. 	- A Base Equipment ID	- A Mfr / Equipment Model / Vehicle Type</xs:documentation></xs:annotation><xs:choice><xs:sequence><xs:element ref=\"BaseVehicle\"/><xs:element ref=\"SubModel\" minOccurs=\"0\"/></xs:sequence><xs:sequence><xs:element ref=\"Years\"/><xs:element ref=\"Make\"/><xs:choice minOccurs=\"0\"><xs:element ref=\"VehicleType\"/><xs:sequence minOccurs=\"0\"><xs:element ref=\"Model\"/><xs:element ref=\"SubModel\" minOccurs=\"0\"/></xs:sequence></xs:choice></xs:sequence><xs:sequence><xs:element ref=\"EquipmentBase\"/></xs:sequence><xs:sequence><xs:element ref=\"Mfr\"/><xs:element ref=\"EquipmentModel\"/><xs:element ref=\"VehicleType\"/></xs:sequence></xs:choice></xs:group><!-- Transmission Group definition --><xs:group name=\"transGroup\"><xs:choice><xs:element ref=\"TransmissionBase\"/><xs:sequence><xs:element ref=\"TransmissionType\" minOccurs=\"0\"/><xs:element ref=\"TransmissionControlType\" minOccurs=\"0\"/><xs:element ref=\"TransmissionNumSpeeds\" minOccurs=\"0\"/></xs:sequence></xs:choice></xs:group><!-- element definitions  --><xs:element name=\"App\" type=\"appType\"/><xs:element name=\"Aspiration\" type=\"vehAttrType\"/><xs:element name=\"Asset\"><xs:complexType><xs:complexContent><xs:extension base=\"assetType\"><xs:sequence><xs:element ref=\"AssetName\"/></xs:sequence></xs:extension></xs:complexContent></xs:complexType></xs:element><xs:element name=\"AssetItemOrder\" type=\"xs:positiveInteger\"/><xs:element name=\"AssetItemRef\" type=\"xs:string\"/><xs:element name=\"AssetName\" type=\"assetNameType\"/><xs:element name=\"BaseVehicle\" type=\"vehAttrType\"/><xs:element name=\"BedLength\" type=\"vehAttrType\"/><xs:element name=\"BedType\" type=\"vehAttrType\"/><xs:element name=\"BodyNumDoors\" type=\"vehAttrType\"/><xs:element name=\"BodyType\" type=\"vehAttrType\"/><xs:element name=\"BrakeABS\" type=\"vehAttrType\"/><xs:element name=\"BrakeSystem\" type=\"vehAttrType\"/><xs:element name=\"CylinderHeadType\" type=\"vehAttrType\"/><xs:element name=\"DisplayOrder\" type=\"xs:positiveInteger\"/><xs:element name=\"DriveType\" type=\"vehAttrType\"/><xs:element name=\"EngineBase\" type=\"vehAttrType\"/><xs:element name=\"EngineBlock\" type=\"vehAttrType\"/><xs:element name=\"EngineBoreStroke\" type=\"vehAttrType\"/><xs:element name=\"EngineDesignation\" type=\"vehAttrType\"/><xs:element name=\"EngineMfr\" type=\"vehAttrType\"/><xs:element name=\"EngineVIN\" type=\"vehAttrType\"/><xs:element name=\"EngineVersion\" type=\"vehAttrType\"/><xs:element name=\"EquipmentBase\" type=\"vehAttrType\"/><xs:element name=\"EquipmentModel\" type=\"vehAttrType\"/><xs:element name=\"FrontBrakeType\" type=\"vehAttrType\"/><xs:element name=\"FrontSpringType\" type=\"vehAttrType\"/><xs:element name=\"FuelDeliverySubType\" type=\"vehAttrType\"/><xs:element name=\"FuelDeliveryType\" type=\"vehAttrType\"/><xs:element name=\"FuelSystemControlType\" type=\"vehAttrType\"/><xs:element name=\"FuelSystemDesign\" type=\"vehAttrType\"/><xs:element name=\"FuelType\" type=\"vehAttrType\"/><xs:element name=\"IgnitionSystemType\" type=\"vehAttrType\"/><xs:element name=\"Make\" type=\"vehAttrType\"/><xs:element name=\"Mfr\" type=\"vehAttrType\"/><xs:element name=\"MfrBodyCode\" type=\"vehAttrType\"/><xs:element name=\"MfrLabel\" type=\"xs:string\"/><xs:element name=\"Model\" type=\"vehAttrType\"/><xs:element name=\"Note\" type=\"noteType\"/><xs:element name=\"Part\" type=\"partNumberType\"/><xs:element name=\"PartType\" type=\"partTypeType\"/><xs:element name=\"Position\" type=\"positionType\"/><xs:element name=\"PowerOutput\" type=\"vehAttrType\"/><xs:element name=\"Qty\" type=\"xs:string\"/><xs:element name=\"Qual\" type=\"qualType\"/><xs:element name=\"RearBrakeType\" type=\"vehAttrType\"/><xs:element name=\"RearSpringType\" type=\"vehAttrType\"/><xs:element name=\"Region\" type=\"vehAttrType\"/><xs:element name=\"SteeringSystem\" type=\"vehAttrType\"/><xs:element name=\"SteeringType\" type=\"vehAttrType\"/><xs:element name=\"SubModel\" type=\"vehAttrType\"/><xs:element name=\"TransElecControlled\" type=\"vehAttrType\"/><xs:element name=\"TransferDate\" type=\"xs:date\"/><xs:element name=\"TransmissionBase\" type=\"vehAttrType\"/><xs:element name=\"TransmissionControlType\" type=\"vehAttrType\"/><xs:element name=\"TransmissionMfr\" type=\"vehAttrType\"/><xs:element name=\"TransmissionMfrCode\" type=\"vehAttrType\"/><xs:element name=\"TransmissionNumSpeeds\" type=\"vehAttrType\"/><xs:element name=\"TransmissionType\" type=\"vehAttrType\"/><xs:element name=\"ValvesPerEngine\" type=\"vehAttrType\"/><xs:element name=\"VehicleType\" type=\"vehAttrType\"/><xs:element name=\"WheelBase\" type=\"vehAttrType\"/><xs:element name=\"Years\" type=\"yearRangeType\"/><xs:complexType name=\"approvedForType\"><xs:sequence><xs:element name=\"Country\" maxOccurs=\"unbounded\"><xs:simpleType><xs:restriction base=\"xs:token\"><xs:length value=\"2\"/></xs:restriction></xs:simpleType></xs:element></xs:sequence></xs:complexType><xs:element name=\"DigitalAsset\"><xs:complexType><xs:sequence><xs:element name=\"DigitalFileInformation\" type=\"digitalFileInformationType\" minOccurs=\"1\" maxOccurs=\"unbounded\"/></xs:sequence></xs:complexType></xs:element><xs:complexType name=\"digitalFileInformationType\"><xs:sequence><xs:element name=\"FileName\"><xs:simpleType><xs:restriction base=\"xs:string\"><xs:minLength value=\"1\"/><xs:maxLength value=\"80\"/></xs:restriction></xs:simpleType></xs:element><xs:element name=\"AssetDetailType\" type=\"assetDetailType\"/><xs:element name=\"FileType\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"assetFileType\"><xs:maxLength value=\"4\"/><xs:minLength value=\"3\"/></xs:restriction></xs:simpleType></xs:element><xs:element name=\"Representation\" type=\"representationType\" minOccurs=\"0\"/><xs:element name=\"FileSize\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"xs:positiveInteger\"><xs:totalDigits value=\"10\"/></xs:restriction></xs:simpleType></xs:element><xs:element name=\"Resolution\" type=\"resolutionType\" minOccurs=\"0\"/><xs:element name=\"ColorMode\" type=\"colorModeType\" minOccurs=\"0\"/><xs:element name=\"Background\" type=\"backgroundType\" minOccurs=\"0\"/><xs:element name=\"OrientationView\" type=\"orientationViewType\" minOccurs=\"0\"/><xs:element name=\"AssetDimensions\" minOccurs=\"0\"><xs:complexType><xs:sequence><xs:element name=\"AssetHeight\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"xs:decimal\"><xs:minExclusive value=\"0\"/><xs:totalDigits value=\"6\"/><xs:fractionDigits value=\"4\"/></xs:restriction></xs:simpleType></xs:element><xs:element name=\"AssetWidth\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"xs:decimal\"><xs:minExclusive value=\"0\"/><xs:totalDigits value=\"6\"/><xs:fractionDigits value=\"4\"/></xs:restriction></xs:simpleType></xs:element></xs:sequence><xs:attribute name=\"UOM\" type=\"dimensionUOMType\" use=\"required\"/></xs:complexType></xs:element><xs:element name=\"AssetDescription\" type=\"xs:string\" minOccurs=\"0\"/><xs:element name=\"FilePath\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"xs:string\"><xs:minLength value=\"1\"/><xs:maxLength value=\"80\"/></xs:restriction></xs:simpleType></xs:element><xs:element name=\"URI\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"xs:anyURI\"><xs:maxLength value=\"2000\"/></xs:restriction></xs:simpleType></xs:element><xs:element name=\"FileDateModified\" type=\"xs:date\" minOccurs=\"0\"/><xs:element name=\"EffectiveDate\" type=\"xs:date\" minOccurs=\"0\"/><xs:element name=\"ExpirationDate\" type=\"xs:date\" minOccurs=\"0\"/><xs:element name=\"Country\" minOccurs=\"0\"><xs:simpleType><xs:restriction base=\"xs:token\"><xs:length value=\"2\"/></xs:restriction></xs:simpleType></xs:element></xs:sequence><xs:attribute name=\"AssetName\" use=\"required\"/><xs:attribute name=\"action\" type=\"actionType\" use=\"required\"/><xs:attribute name=\"LanguageCode\" type=\"xs:string\"/></xs:complexType><xs:simpleType name=\"assetDetailType\"><xs:annotation><xs:documentation>Code	Description	360		360 Degree Image Set	APG		Application Guide	AUD		Audio File	BRO		Brochure	BUL		Technical Bulletin	BUY		Buyers Guide	CAS		Case Study	CAT		Catalog	CER		Certificate of Origin	DAS		Datasheet	DRW	Technical Drawing	EBK		Ebook	FAB		Features and Benefits	FED		Full Engineering Drawing 	HMS		Hazardous Materials Info Sheet	INS		Installation Instructions	ISG		Illustration Guide	LIN		Line Art	LGO		Logo Image	MSD		Material Safety Data Sheet	OWN	Owner's Manual	P01		Photo – out of package	P02		Photo – in package	P03		Photo – lifestyle view	P04		Photo - Primary	P05		Photo - Close Up	P06		Photo - Mounted	P07		Photo - Unmounted	PAG		Link To Manufacturer Page	PAL		Pallet Configuration Drawing	PDB		Product Brochure	PC1		Planogram Consumer Pack 1	PC2		Planogram Consumer Pack 2	PC3		Planogram Consumer Pack 3	PI1		Planogram Inner Pack 1	PI2		Planogram Inner Pack 2	PI3		Planogram Inner Pack 3	PP1		Planogram Case Pack 1	PP2		Planogram Case Pack 2	PP3		Planogram Case Pack 3	PSS		Product Specifications Sheet	PST		Price Sheet	RES		Research Bulletin	SPE		Specification Sheet Filename 	THU		Thumbnail	TON		Tone Art	WAR	Warranty	MHP		Whitepaper	ZZ1	User 1	ZZ2	User 2	ZZ3	User 3	ZZ4	User 4	ZZ5	User 5	ZZ6	User 6	ZZ7	User 7	ZZ8	User 8	ZZ9	User 9</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"360\"/><xs:enumeration value=\"APG\"/><xs:enumeration value=\"AUD\"/><xs:enumeration value=\"BRO\"/><xs:enumeration value=\"BUL\"/><xs:enumeration value=\"BUY\"/><xs:enumeration value=\"CAS\"/><xs:enumeration value=\"CAT\"/><xs:enumeration value=\"CER\"/><xs:enumeration value=\"DAS\"/><xs:enumeration value=\"DRW\"/><xs:enumeration value=\"EBK\"/><xs:enumeration value=\"FAB\"/><xs:enumeration value=\"FED\"/><xs:enumeration value=\"HMS\"/><xs:enumeration value=\"INS\"/><xs:enumeration value=\"ISG\"/><xs:enumeration value=\"LIN\"/><xs:enumeration value=\"LGO\"/><xs:enumeration value=\"MSD\"/><xs:enumeration value=\"OWN\"/><xs:enumeration value=\"P01\"/><xs:enumeration value=\"P02\"/><xs:enumeration value=\"P03\"/><xs:enumeration value=\"P04\"/><xs:enumeration value=\"P05\"/><xs:enumeration value=\"P06\"/><xs:enumeration value=\"P07\"/><xs:enumeration value=\"PAG\"/><xs:enumeration value=\"PAL\"/><xs:enumeration value=\"PDB\"/><xs:enumeration value=\"PC1\"/><xs:enumeration value=\"PC2\"/><xs:enumeration value=\"PC3\"/><xs:enumeration value=\"PI1\"/><xs:enumeration value=\"PI2\"/><xs:enumeration value=\"PI3\"/><xs:enumeration value=\"PP1\"/><xs:enumeration value=\"PP2\"/><xs:enumeration value=\"PP3\"/><xs:enumeration value=\"PSS\"/><xs:enumeration value=\"PST\"/><xs:enumeration value=\"RES\"/><xs:enumeration value=\"SPE\"/><xs:enumeration value=\"THU\"/><xs:enumeration value=\"TON\"/><xs:enumeration value=\"WAR\"/><xs:enumeration value=\"WHP\"/><xs:enumeration value=\"ZZ1\"/><xs:enumeration value=\"ZZ2\"/><xs:enumeration value=\"ZZ3\"/><xs:enumeration value=\"ZZ4\"/><xs:enumeration value=\"ZZ5\"/><xs:enumeration value=\"ZZ6\"/><xs:enumeration value=\"ZZ7\"/><xs:enumeration value=\"ZZ8\"/><xs:enumeration value=\"ZZ9\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"assetFileType\"><xs:annotation><xs:documentation>Code	Description	TIF		Tagged Image File	JPG		Joint Photographic Experts Group	EPS		Encapsulated PostScript	TXT		.txt TEXT FILE	FLV		.flv VIDEO FILE	F4V		.f4v VIDEO FILE	AVI		.avi VIDEO FILE	WEBM	.webm VIDEO FILE	OGV		.ogv VIDEO VILE	MP4		.mp4 VIDEO FILE	MKV		.mkv VIDEO FILE	AIF		.aif AUDIO FILE	WAV	.wav AUDIO FILE	WMA	.wma AUDIO FILE	OGG	.ogg AUDIO FILE	PCM		.pcm AUDIO FILE	AC3		.ac3 AUDIO FILE	MIDI		.mid AUDIO FILE	MP3		.mp3 AUDIO FILE	AAC		.aac AUDIO FILE	GIF		Graphics Interchange Format	BMP		Bitmap Image	PNG		Portable Network Graphics	PDF		Portable Document Format	DOC		MS Word	XLS		MS Excel</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"TIF\"/><xs:enumeration value=\"JPG\"/><xs:enumeration value=\"EPS\"/><xs:enumeration value=\"TXT\"/><xs:enumeration value=\"FLV\"/><xs:enumeration value=\"F4V\"/><xs:enumeration value=\"AVI\"/><xs:enumeration value=\"WEBM\"/><xs:enumeration value=\"OGV\"/><xs:enumeration value=\"MP4\"/><xs:enumeration value=\"MKV\"/><xs:enumeration value=\"AIF\"/><xs:enumeration value=\"WAV\"/><xs:enumeration value=\"WMA\"/><xs:enumeration value=\"OGG\"/><xs:enumeration value=\"PCM\"/><xs:enumeration value=\"AC3\"/><xs:enumeration value=\"MIDI\"/><xs:enumeration value=\"MP3\"/><xs:enumeration value=\"AAC\"/><xs:enumeration value=\"GIF\"/><xs:enumeration value=\"BMP\"/><xs:enumeration value=\"PNG\"/><xs:enumeration value=\"PDF\"/><xs:enumeration value=\"DOC\"/><xs:enumeration value=\"XLS\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"resolutionType\"><xs:annotation><xs:documentation>Code	Description	72	96	300	600	800	1200</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"72\"/><xs:enumeration value=\"96\"/><xs:enumeration value=\"300\"/><xs:enumeration value=\"600\"/><xs:enumeration value=\"800\"/><xs:enumeration value=\"1200\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"representationType\"><xs:annotation><xs:documentation>Code	Description	A	Actual	R	Representative</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"A\"/><xs:enumeration value=\"R\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"colorModeType\"><xs:annotation><xs:documentation>Code	Description	RGB	RGB	CMY	CMYK	GRA	Gray Scale	OTH	Other	WEB	Vector B/W	VEC	Vector Color	BIT	Bitmap</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"RGB\"/><xs:enumeration value=\"CMY\"/><xs:enumeration value=\"GRA\"/><xs:enumeration value=\"OTH\"/><xs:enumeration value=\"WEB\"/><xs:enumeration value=\"VEC\"/><xs:enumeration value=\"BIT\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"backgroundType\"><xs:annotation><xs:documentation>Code	Description	WHI	White	CLI	White w/clipping path	TRA	Transparent	OTH	Other	NUL	N/A</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"WHI\"/><xs:enumeration value=\"CLI\"/><xs:enumeration value=\"TRA\"/><xs:enumeration value=\"OTH\"/><xs:enumeration value=\"NUL\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"orientationViewType\"><xs:annotation><xs:documentation>Code	Description	ANG	Angle	BAC	Back	BOT	Bottom	CON	Connector	FRO	Front	KIT	Kit	LEF	Left	LIF	Lifestyle	NUL	Not Applicable	OTH	Other	RIT	Right	SID	Side	TOP	Top	ZZ1	User 1	ZZ2	User 2	ZZ3	User 3	ZZ4	User 4	ZZ5	User 5	ZZ6	User 6	ZZ7	User 7	ZZ8	User 8	ZZ9	User 9</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"ANG\"/><xs:enumeration value=\"BAC\"/><xs:enumeration value=\"BOT\"/><xs:enumeration value=\"CON\"/><xs:enumeration value=\"FRO\"/><xs:enumeration value=\"KIT\"/><xs:enumeration value=\"LEF\"/><xs:enumeration value=\"LIF\"/><xs:enumeration value=\"NUL\"/><xs:enumeration value=\"RIT\"/><xs:enumeration value=\"SID\"/><xs:enumeration value=\"TOP\"/><xs:enumeration value=\"ZZ1\"/><xs:enumeration value=\"ZZ2\"/><xs:enumeration value=\"ZZ3\"/><xs:enumeration value=\"ZZ4\"/><xs:enumeration value=\"ZZ5\"/><xs:enumeration value=\"ZZ6\"/><xs:enumeration value=\"ZZ7\"/><xs:enumeration value=\"ZZ8\"/><xs:enumeration value=\"ZZ9\"/></xs:restriction></xs:simpleType><xs:simpleType name=\"dimensionUOMType\"><xs:annotation><xs:documentation>Code	Description	PX	Pixels	IN	Inches	CM	Centimeters</xs:documentation></xs:annotation><xs:restriction base=\"xs:string\"><xs:enumeration value=\"PX\"/><xs:enumeration value=\"IN\"/><xs:enumeration value=\"CM\"/></xs:restriction></xs:simpleType><!-- \"Footer\" element definition --><xs:element name=\"Footer\"><xs:complexType><xs:sequence><xs:element name=\"RecordCount\" type=\"xs:string\"/></xs:sequence></xs:complexType></xs:element></xs:schema>");
+
 
             noteBlacklist.Add("RWD", false); noteBlacklist.Add("FWD", false); noteBlacklist.Add("2WD", false); noteBlacklist.Add("4WD", false); noteBlacklist.Add("AWD", false); noteBlacklist.Add("All-wheel Drive", false); noteBlacklist.Add("All Wheel Drive", false); noteBlacklist.Add("Allwheel Drive", false);
             noteBlacklist.Add("Turbo", false); noteBlacklist.Add("Aspirated", false); noteBlacklist.Add("Supercharge", false); noteBlacklist.Add("Hybrid", false); noteBlacklist.Add("Diesel", false); noteBlacklist.Add("CNG", false); noteBlacklist.Add("Flex Fuel", false); noteBlacklist.Add("Gas/Elec", false);
@@ -765,9 +856,12 @@ namespace ACESinspector
             QdbVersionDate = "";
             PcdbVersionDate = "";
             apps.Clear();
+            assets.Clear();
             xmlAppNodeCount = 0;
+            xmlAssetNodeCount = 0;
             partsAppCounts.Clear();
             distinctPartTypes.Clear();
+            distinctAssetNames.Clear();
             distinctMfrLabels.Clear();
             distinctAssets.Clear();
             basevidOccurrences.Clear();
@@ -2253,6 +2347,8 @@ namespace ACESinspector
             }
             if (chunk.vcdbCodesErrorsCount == 0) { File.Delete(cacheFilename); } else { logHistoryEvent("", "5\tError: " + chunk.vcdbCodesErrorsCount.ToString() + " invalid vcdb-coded values (task " + chunk.id.ToString() + ")"); } // delete cache file if empty
 
+            //xxx
+
 
             //------------------------------------------------ invalid vehicle configurations --------------------------------------------------
 
@@ -2415,10 +2511,66 @@ namespace ACESinspector
             }
             if (chunk.qtyOutlierCount == 0) { File.Delete(cacheFilename); } else { logHistoryEvent("", "5\tWarning: " + warningsCount.ToString() + " qty outliers"); } // delete cache file if empty
 
+            // asset/app analysis -- look for orphan assets and apps that have no supporting asset node (even though they claimed an asset)
+            logHistoryEvent("", "5\tLooking for asset problems");
+            cacheFilename = chunk.cachefile + "_assetProblems.txt";
+            using (StreamWriter sw = new StreamWriter(cacheFilename))
+            {
+                foreach (App app in chunk.appsList)
+                {// look for apps that refer to a missing asset name
+                    if(app.asset!=null && !distinctAssetNames.Contains(app.asset))
+                    {
+                        sw.WriteLine("Asset (" + app.asset + ") is not present in the file\t" + app.id.ToString() + "\t" + app.reference + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceFullFitmentString(vcdb, qdb));
+                        chunk.assetProblemsCount++;
+                    }
+                }
 
+                // look for assets that don't have a matching app
+                bool foundApp = false; bool foundFitmentElement = false;
+                foreach(Asset asset in assets)
+                {
+                    foundApp = false;
+                    if (asset.basevehilceid != 0)
+                    {// asset is basevehicle-style. look through all apps for ones that match vehicle and attributes
 
+                        foreach (App app in apps)
+                        {
+                            if (asset.basevehilceid == app.basevehilceid)
+                            {// found an app with a matching basevid - now see if assets's attributes are present in the found app
 
+                                if (asset.VCdbAttributes.Count != app.VCdbAttributes.Count) { continue; }
 
+                                // app and asset have same basevid and number of vcdb attributes - this may be a match 
+                                foundApp = true; foundFitmentElement = true;
+
+                                foreach (VCdbAttribute assetAttribute in asset.VCdbAttributes)
+                                {// look through all the assets VCdb addtributes looking for matches in the found app's vcdb attributes
+
+                                    foundFitmentElement = false;
+                                    foreach (VCdbAttribute appAttribute in app.VCdbAttributes)
+                                    {
+                                        if (appAttribute.name==assetAttribute.name && appAttribute.value == assetAttribute.value)
+                                        {
+                                            foundFitmentElement = true; break;
+                                        }
+                                    }
+                                }
+
+                                if (foundFitmentElement){break;}
+                            }
+                        }
+                    }
+                    //xxx
+                    if(!foundApp)
+                    {
+                        sw.WriteLine("Asset id " + asset.id.ToString() + " (" + asset.assetName + ") has no matching app\t0\t\t" + asset.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(asset.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(asset.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(asset.basevehilceid) + "\t\t\t\t\t" + asset.niceFullFitmentString(vcdb, qdb));
+                        chunk.assetProblemsCount++;
+                    }
+
+                }
+            }
+
+            if (chunk.assetProblemsCount == 0) { File.Delete(cacheFilename); } else { logHistoryEvent("", "5\tWarning: " + chunk.assetProblemsCount.ToString() + " asset problems"); } // delete cache file if empty
             chunk.complete = true;
         }
         
@@ -2836,6 +2988,8 @@ default: return 0;
             }
         }
 
+
+
         public int importXML(string _filePath, string _schemaString, bool respectValidateNoTag, Dictionary<string,string> noteTranslation, VCdb vcdb, IProgress<int> progress)
         {
             // if schema string is "", select XSD according to what ACES version is claimed by the XML
@@ -2913,12 +3067,141 @@ default: return 0;
                 QdbVersionDate = (string)HeaderElement.Element("QdbVersionDate");
                 DocumentTitle = (string)HeaderElement.Element("DocumentTitle");
             }
-            
+
+            //--assets
+            foreach (XElement assetElement in StreamAppElement(filePath, "Asset"))
+            {//xxx
+                Asset assetTemp = new Asset();
+                assetTemp.action = (string)assetElement.Attribute("action").Value;
+                if (assetTemp.action == "D") { discardedDeletsOnImport++; continue; }// skip deleted assets
+                assetTemp.assetName = (string)assetElement.Element("AssetName");
+                assetTemp.id = Convert.ToInt32(assetElement.Attribute("id").Value);
+                if (!distinctAssetNames.Contains(assetTemp.assetName)) { distinctAssetNames.Add(assetTemp.assetName); }
+                xmlAssetNodeCount++;
+
+                basevidsInRange.Clear();
+                if (assetElement.Element("BaseVehicle") != null)
+                {// standard base-vid style app
+                    basevidsInRange.Add(Convert.ToInt32(assetElement.Element("BaseVehicle").Attribute("id").Value));
+                }
+                else
+                {// this is a year-range style app (not a specific basevid)
+                    if (assetElement.Element("Years") != null)
+                    {// year-range style app
+                        if ((string)assetElement.Element("Make").Attribute("id").Value != null && (string)assetElement.Element("Model").Attribute("id").Value != null && (string)assetElement.Element("Years").Attribute("from").Value != null && (string)assetElement.Element("Years").Attribute("to").Value != null)
+                        {
+                            basevidsInRange = vcdb.basevidsFromYearRange(Convert.ToInt32((string)assetElement.Element("Make").Attribute("id").Value), Convert.ToInt32((string)assetElement.Element("Model").Attribute("id").Value), Convert.ToInt32((string)assetElement.Element("Years").Attribute("from").Value), Convert.ToInt32((string)assetElement.Element("Years").Attribute("to").Value));
+                        }
+                    }
+                    else
+                    {// equipment-style app (ACES 4.0+)
+                    }
+                }
+
+                foreach (XElement noteElement in assetElement.Descendants("Note"))
+                {
+                    noteTemp = (string)noteElement;
+                    if (noteTemp.Contains(";") && splitNotesBySemicolon)
+                    {
+                        foreach (string noteTempChunk in noteTemp.Split(';'))
+                        {
+                            if (!assetTemp.notes.Contains(noteTempChunk.Trim()))
+                            {
+                                assetTemp.notes.Add(noteTempChunk.Trim());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!assetTemp.notes.Contains(noteTemp.Trim()))
+                        {
+                            assetTemp.notes.Add(noteTemp.Trim());
+                        }
+                    }
+
+                    if (noteTranslation.Count > 0)
+                    {// we have a note translation file - search all the notes recently attached to to the temp app and translate/remove as required 
+                        string translationNoteOutput = "";
+                        List<String> noteListTemp = new List<string>();
+                        bool changedSomeNotes = false;
+                        foreach (string translationNoteInput in assetTemp.notes)
+                        {
+
+                            if (noteTranslation.ContainsKey(translationNoteInput))
+                            {// this note is called-out in the left column of our translation file
+                                translationNoteOutput = noteTranslation[translationNoteInput];
+                                changedSomeNotes = true;
+                                if (translationNoteOutput != "")
+                                {// right column of translation file is non-blank. use the translated value
+                                    noteListTemp.Add(translationNoteOutput);
+                                }
+                            }
+                            else
+                            {// this note is not present in the translations list - add it to the temp output list
+                                noteListTemp.Add(translationNoteInput);
+                            }
+
+                        }
+                        if (changedSomeNotes) { assetTemp.notes = noteListTemp; }
+                    }
+                }
+
+                foreach (string VCdbAttributeName in VCdbAttributeNames)
+                {// roll through the entire of list of possible VCdb attribute names looking for nodes like <SubModel id="13">
+                    if (assetElement.Element(VCdbAttributeName) != null)
+                    {
+                        VCdbAttribute VCdbAttributeTemp = new VCdbAttribute();
+                        VCdbAttributeTemp.name = VCdbAttributeName;
+                        VCdbAttributeTemp.value = Convert.ToInt32(assetElement.Element(VCdbAttributeName).Attribute("id").Value);
+                        assetTemp.VCdbAttributes.Add(VCdbAttributeTemp);
+                    }
+                }
+
+                assetTemp.VCdbAttributes.Sort();
+
+                // Qdb
+                foreach (XElement qualElement in assetElement.Elements("Qual"))
+                {
+                    QdbQualifier QdbQualifierTemp = new QdbQualifier();
+                    List<string> myParametersList = new List<string>();
+                    QdbQualifierTemp.qualifierId = Convert.ToInt32(qualElement.Attribute("id").Value);
+                    foreach (XElement paramElement in qualElement.Elements("param"))
+                    {
+                        if (paramElement.Attribute("uom") != null)
+                        {// no unit-of-measure attribute present
+                            myParametersList.Add((string)paramElement.Attribute("value").Value + " " + (string)paramElement.Attribute("uom").Value);
+                        }
+                        else
+                        {
+                            myParametersList.Add((string)paramElement.Attribute("value").Value);
+                        }
+                    }
+                    QdbQualifierTemp.qualifierParameters = myParametersList;
+                    assetTemp.QdbQualifiers.Add(QdbQualifierTemp);
+                }
+
+                foreach (int basevid in basevidsInRange)
+                {
+                    Asset assetToAdd = new Asset();
+                    assetToAdd.basevehilceid = basevid;
+                    assetToAdd.action = assetTemp.action;
+                    assetToAdd.assetName = assetTemp.assetName;
+                    assetToAdd.id = assetTemp.id;
+                    assetToAdd.notes = assetTemp.notes;
+                    assetToAdd.QdbQualifiers = assetTemp.QdbQualifiers;
+                    assetToAdd.VCdbAttributes = assetTemp.VCdbAttributes;
+                    assets.Add(assetToAdd);
+                }
+                
+            }
+
+            //--/assets
+
+
             int percentProgress = 0;
             
             foreach(XElement appElement in StreamAppElement(filePath,"App"))
             {
-                xmlAppNodeCount++;
                 App appTemp = new App();
                 appTemp.action = (string)appElement.Attribute("action").Value;
                 if (appTemp.action == "D") { discardedDeletsOnImport++; continue;}
@@ -2931,25 +3214,38 @@ default: return 0;
                 }
 
                 appTemp.part = (string)appElement.Element("Part");
-                if (appTemp.part == "NA") { continue; }
+                //if (appTemp.part == "NA" || appTemp.part == "NR" || appTemp.part == "N/A"|| appTemp.part == "N/R"|| appTemp.part == "") { continue; } // skip place-holder part numbers like "NA"
 
                 appTemp.id = Convert.ToInt32(appElement.Attribute("id").Value);
-
-
+                xmlAppNodeCount++;
 
                 basevidsInRange.Clear();
 
                 if (appElement.Element("BaseVehicle") != null)
-                {
+                {// standard base-vid style aoo
                     basevidsInRange.Add(Convert.ToInt32(appElement.Element("BaseVehicle").Attribute("id").Value));
                 }
                 else
                 {// this is a year-range style app (not a specific basevid)
 
-                    if ((string)appElement.Element("Make").Attribute("id").Value != null && (string)appElement.Element("Model").Attribute("id").Value != null && (string)appElement.Element("Years").Attribute("from").Value != null && (string)appElement.Element("Years").Attribute("to").Value != null)
-                    {
-                        basevidsInRange = vcdb.basevidsFromYearRange(Convert.ToInt32((string)appElement.Element("Make").Attribute("id").Value), Convert.ToInt32((string)appElement.Element("Model").Attribute("id").Value), Convert.ToInt32((string)appElement.Element("Years").Attribute("from").Value), Convert.ToInt32((string)appElement.Element("Years").Attribute("to").Value));
+                    if (appElement.Element("Years") != null)
+                    {// year-range style app
+
+                        if ((string)appElement.Element("Make").Attribute("id").Value != null && (string)appElement.Element("Model").Attribute("id").Value != null && (string)appElement.Element("Years").Attribute("from").Value != null && (string)appElement.Element("Years").Attribute("to").Value != null)
+                        {
+                            basevidsInRange = vcdb.basevidsFromYearRange(Convert.ToInt32((string)appElement.Element("Make").Attribute("id").Value), Convert.ToInt32((string)appElement.Element("Model").Attribute("id").Value), Convert.ToInt32((string)appElement.Element("Years").Attribute("from").Value), Convert.ToInt32((string)appElement.Element("Years").Attribute("to").Value));
+                        }
                     }
+                    else
+                    {// equipment-style app (ACES 4.0+)
+                        string xxx = "";
+
+
+
+                    }
+
+
+
                 }
 
                 //appTemp.basevehilceid = Convert.ToInt32(appElement.Element("BaseVehicle").Attribute("id").Value);
@@ -3133,11 +3429,6 @@ default: return 0;
                     vcdbUsageStatsTotalApps++;
                 }
 
-              
-
-
-
-
                 if (progress != null)
                 {// only report progress on whole percentage steps (100 total reports). reporting on every iteration is too process intensive
                     percentProgress = Convert.ToInt32(((double)apps.Count / (double)FooterRecordCount) * 100);
@@ -3145,8 +3436,11 @@ default: return 0;
                 }
             }
 
-            logHistoryEvent("", "1\tImported "+apps.Count().ToString() + " apps");
-            if(xmlValidationErrors.Count==0 && apps.Count > 0)
+
+
+            logHistoryEvent("", "0\tImported "+apps.Count().ToString() + " apps");
+            if(xmlAssetNodeCount>0) {logHistoryEvent("", "0\tImported " + assets.Count().ToString() + " aassets"); }
+            if (xmlValidationErrors.Count==0 && apps.Count > 0)
             {
                 vcdbUsageStatsFileList.Add(_filePath);
                 successfulImport = true;
@@ -3268,7 +3562,6 @@ default: return 0;
             BaseVehicle basevehicle = new BaseVehicle();
             int percentProgress = 0;
             int i = 0;
-            //xxx
             try
             {
                 using (StreamWriter sw = new StreamWriter(_filePath))
@@ -3471,8 +3764,6 @@ default: return 0;
         
         public string exportVCdbUsageReport(VCdb vcdb, string _filePath)
         {
-            //xxx
-
             var sortedVCbDict = vcdbUsageStatsDict.ToList(); sortedVCbDict.Sort((pair2, pair1) => pair1.Value.CompareTo(pair2.Value));
             VCdbAttribute VCdbAttributeTemp = new VCdbAttribute();
 
@@ -3721,6 +4012,7 @@ default: return 0;
         public Dictionary<int, String> valvesDict = new Dictionary<int, string>();
         public Dictionary<int, String> poweroutputDict = new Dictionary<int, string>();
 
+        public Dictionary<int, List<KeyValuePair<string, string>>> deletedEngineBaseDict = new Dictionary<int, List<KeyValuePair<string, string>>>();
 
 
         public string connectLocalOLEDB(string path)
@@ -3921,6 +4213,24 @@ default: return 0;
             else
             {
                 returnValue = "invalid (" + attribute.name + "=" + attribute.value + ")";
+
+                if (attribute.name== "EngineBase" && deletedEngineBaseDict.ContainsKey(attribute.value))
+                {// special case for handling unknown enginebase - look in the changelog-derived list of deleted ID's
+
+                    string deletedEngineBlockType = ""; string deletedEngineCylinders = ""; string deletedEngineLiter = "";
+                    foreach (KeyValuePair<string,string> myPair in  deletedEngineBaseDict[attribute.value])
+                    {
+                        if (myPair.Key == "BlockType") { deletedEngineBlockType = myPair.Value; }
+                        if (myPair.Key == "Cylinders") { deletedEngineCylinders = myPair.Value; }
+                        if (myPair.Key == "Liter") { deletedEngineLiter = myPair.Value; }
+                    }
+
+                    returnValue = "invalid (" + attribute.name + "=" + attribute.value + " ["+ deletedEngineBlockType.Trim() + deletedEngineCylinders.Trim() + " " + deletedEngineLiter.Trim() + "L])";
+
+
+                }
+
+
             }
             return returnValue;
         }
@@ -5030,7 +5340,6 @@ default: return 0;
             return "";
         }
 
-        //xxx
 
         public string importMySQLdata()
         {
@@ -5354,118 +5663,117 @@ default: return 0;
                 command.CommandText = "SELECT mfrid,mfrname from Mfr"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); mfrDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 78;
+                importProgress = 77;
 
                 command.CommandText = "SELECT fueldeliverytypeid,fueldeliverytypename from FuelDeliveryType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fueldeliverytypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 79;
+                importProgress = 78;
 
                 command.CommandText = "SELECT fueldeliverysubtypeid,fueldeliverysubtypename from FuelDeliverySubType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fueldeliverysubtypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 80;
+                importProgress = 79;
 
                 command.CommandText = "SELECT fuelsystemcontroltypeid,fuelsystemcontroltypename from FuelSystemControlType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fuelsystemcontroltypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 81;
+                importProgress = 80;
 
                 command.CommandText = "SELECT fuelsystemdesignid,fuelsystemdesignname from FuelSystemDesign"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fuelsystemdesignDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 82;
+                importProgress = 81;
 
                 command.CommandText = "SELECT cylinderheadtypeid,cylinderheadtypename from CylinderHeadType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); cylinderheadtypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 83;
+                importProgress = 82;
 
                 command.CommandText = "SELECT ignitionsystemtypeid,ignitionsystemtypename from IgnitionSystemType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); ignitionsystemtypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 84;
+                importProgress = 83;
 
                 command.CommandText = "SELECT transmissionmfrcodeid,transmissionmfrcode from TransmissionMfrCode"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissionmfrcodeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 85;
+                importProgress = 84;
 
                 command.CommandText = "SELECT TransmissionBase.TransmissionBaseID,TransmissionControlTypeName, transmissiontypename, transmissionnumspeeds from TransmissionBase, TransmissionType, TransmissionNumSpeeds, TransmissionControlType WHERE TransmissionBase.TransmissionTypeID = TransmissionType.TransmissionTypeID AND TransmissionBase.TransmissionNumSpeedsID = TransmissionNumSpeeds.TransmissionNumSpeedsID AND TransmissionBase.TransmissionControlTypeID = TransmissionControlType.TransmissionControlTypeID"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissionbaseDict.Add(i, reader.GetValue(1).ToString().Trim() + " " + reader.GetValue(2).ToString().Trim() + " Speed " + reader.GetValue(3).ToString().Trim()); }
                 reader.Close();
-                importProgress = 86;
+                importProgress = 85;
 
                 command.CommandText = "SELECT TransmissionTypeID,TransmissionTypeName from TransmissionType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissiontypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 87;
+                importProgress = 86;
 
                 command.CommandText = "SELECT TransmissionControlTypeID,TransmissionControlTypeName from TransmissionControlType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissioncontroltypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 88;
+                importProgress = 87;
 
                 command.CommandText = "select ElecControlledID, ElecControlled from ElecControlled"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissioeleccontrolledDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 89;
+                importProgress = 88;
 
                 command.CommandText = "SELECT TransmissionNumSpeedsID,TransmissionNumSpeeds from TransmissionNumSpeeds"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissionnumspeedsDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 90;
+                importProgress = 89;
 
                 command.CommandText = "SELECT bedlengthid,bedlength from BedLength"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bedlengthDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 91;
+                importProgress = 90;
 
                 command.CommandText = "SELECT bedtypeid,bedtypename from BedType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bedtypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 92;
+                importProgress = 91;
 
                 command.CommandText = "SELECT wheelbaseid,wheelbase from WheelBase"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); wheelbaseDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 93;
+                importProgress = 92;
 
                 command.CommandText = "SELECT brakesystemid,brakesystemname from BrakeSystem"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); brakesystemDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 94;
+                importProgress = 93;
 
                 command.CommandText = "SELECT regionid,regionname from Region"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); regionDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 95;
+                importProgress = 94;
 
                 command.CommandText = "SELECT springtypeid,springtypename from SpringType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); springtypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 96;
+                importProgress = 95;
 
                 command.CommandText = "SELECT steeringsystemid,steeringsystemname from SteeringSystem"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); steeringsystemDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 97;
+                importProgress = 96;
 
                 command.CommandText = "SELECT steeringtypeid,steeringtypename from SteeringType"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); steeringtypeDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 98;
+                importProgress = 97;
 
                 command.CommandText = "SELECT valvesid,valvesperengine from Valves"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); valvesDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 99;
+                importProgress = 98;
 
                 command.CommandText = "select PowerOutputID,HorsePower from PowerOutput"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); poweroutputDict.Add(i, reader.GetValue(1).ToString()); }
                 reader.Close();
-                importProgress = 100;
-
+                importProgress = 99;
 
                 importSuccess = true;
 
@@ -5479,8 +5787,46 @@ default: return 0;
             }
             return "";
         }
-        
+
+
+
+        public string importMySQLchangelog()
+        {
+            importSuccess = false;
+            try
+            {
+                int i;
+                MySqlCommand command = new MySqlCommand("select PrimaryKeyBefore, ColumnName, ColumnValueBefore  from ChangeDetails where ChangeAttributeStateID = 2 and TableNameID = 16 and PrimaryKeyAfter is NULL order by PrimaryKeyBefore, ColumnName", connectionMySQLlist.First());
+                MySqlDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    importSuccess = true;
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    KeyValuePair<string, string> myPair = new KeyValuePair<string, string>(reader.GetValue(1).ToString(), reader.GetValue(2).ToString());
+
+                    if (!deletedEngineBaseDict.ContainsKey(i))
+                    {// first record that references this enginebaseid
+
+                        List<KeyValuePair<string, string>> myList = new List<KeyValuePair<string, string>>();
+                        deletedEngineBaseDict.Add(i, myList);
+                    }
+                    deletedEngineBaseDict[i].Add(myPair);
+                    //xxx
+                }
+                reader.Close();
+            }
+            catch (Exception ex)
+            {
+                importExceptionMessage = ex.Message;
+                importSuccess = false;
+                return ex.Message;
+            }
+            return "";
+        }
+
     }
+
+
 
 
 

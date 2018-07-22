@@ -1058,6 +1058,23 @@ namespace ACESinspector
             vcdb.disconnect();
         }
 
+        //xxx
+        private async void importMySQLvcdbChangelog()
+        {
+            vcdb.importMySQLchangelog();
+            if (vcdb.importSuccess)
+            {
+                aces.logHistoryEvent("", "0\tImported VCdb changelog from remote database (version:" + vcdb.version + ", server thread:" + vcdb.connectionMySQLlist.First().ServerThread.ToString() + ")");
+            }
+            else
+            {
+                aces.logHistoryEvent("", "0\tImport of remote changelog database failed: (" + vcdb.importExceptionMessage + ")");
+            }
+            vcdb.disconnect();
+        }
+
+
+
 
         private async void importMySQLpcdb()
         {
@@ -1305,6 +1322,8 @@ namespace ACESinspector
             aces.outlierAnanlysisChunksList.Last().appsList = aces.apps;
             cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_parttypeDisagreements.txt");
             cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_qtyOutliers.txt");
+            cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_assetProblems.txt");
+
 
             var outlierAppAnalysisTask = new Task(() => { aces.findIndividualAppOutliers(aces.outlierAnanlysisChunksList.Last(),vcdb, pcdb, qdb); });
             taskList.Add(outlierAppAnalysisTask);
@@ -1364,6 +1383,7 @@ namespace ACESinspector
             {// should only be one item in list 
                 aces.parttypeDisagreementCount += chunk.parttypeDisagreementErrorsCount;
                 aces.qtyOutlierCount += chunk.qtyOutlierCount;
+                aces.assetProblemsCount += chunk.assetProblemsCount;
             }
 
 
@@ -1398,9 +1418,9 @@ namespace ACESinspector
             if (aces.fitmentLogicProblemsCount > 0) { problemsListTemp.Add(aces.fitmentLogicProblemsCount.ToString() + " logic flaws"); }
             if (aces.qtyOutlierCount > 0) { problemsListTemp.Add(aces.qtyOutlierCount.ToString() + " qty outliers"); }
             if (aces.parttypeDisagreementCount > 0) { problemsListTemp.Add(aces.parttypeDisagreementCount.ToString() + " type disagreements"); }
+            if (aces.assetProblemsCount > 0) { problemsListTemp.Add(aces.assetProblemsCount.ToString() + " Asset problems"); }
             if (problemsListTemp.Count() == 0) { lblMacroProblems.Text = "0 problems"; } else { lblMacroProblems.Text = string.Join(", ", problemsListTemp); }
             
-
             // start building the assessment file
 
             string validatedAgainstVCdb = ""; if (aces.VcdbVersionDate != vcdb.version) { validatedAgainstVCdb = "validated against version " + vcdb.version; }
@@ -1560,7 +1580,22 @@ namespace ACESinspector
                         sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                     }
 
-
+                    //-----------
+                    if (aces.assetProblemsCount > 0)
+                    {
+                        sw.Write("<Worksheet ss:Name=\"Asset Problems\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"180\"/><Column ss:Width=\"50\"/><Column ss:Width=\"50\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"80\"/><Column ss:Width=\"46\"/><Column ss:Width=\"50\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Problem Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Reference</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
+                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_assetProblems.txt"))
+                        {
+                            while (!reader.EndOfStream)
+                            {
+                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[3] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[8]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[9] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell></Row>");
+                            }
+                        }
+                        excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                    }
+                    //---------------
 
                     if (aces.basevehicleidsErrorsCount > 0)
                     {
@@ -3577,6 +3612,8 @@ namespace ACESinspector
             vcdb.useRemoteDB = true;
             vcdb.addNewMySQLconnection();  // establish the initial connections used for loading the local data dictionaries. this will get distroyed as soon as the import completes. when actual analysis is run, the required number of connections will be instanced on the fly
             await Task.Run(() => importMySQLvcdb());
+
+
             progBarVCdbload.Value = 0; progBarVCdbload.Visible = false; vcdb.importIsRunning = false; lblVCdbLoadStatus.Text = "";
 
             if (vcdb.importSuccess)
@@ -3585,6 +3622,17 @@ namespace ACESinspector
                 lblVCdbFilePath.Text = "Loaded version " + vcdb.version + " from remote database";
                 if (pcdb.version != "" && qdb.version != "" && aces.successfulImport) { btnAnalyze.Enabled = true; }
             }
+
+
+
+            //xxx
+            vcdb.connectionMySQLlist.Clear();
+            vcdb.MySQLconnectionString = "SERVER=" + textBoxMySQLhost.Text.Trim() + ";" + "DATABASE=vcdbchanges;" + "UID=" + textBoxMySQLuser.Text.Trim() + ";" + "PASSWORD=" + textBoxMySQLpassword.Text.Trim() + ";";
+            vcdb.useRemoteDB = true;
+            vcdb.addNewMySQLconnection();  // establish the initial connections used for loading the local data dictionaries. this will get distroyed as soon as the import completes. when actual analysis is run, the required number of connections will be instanced on the fly
+            await Task.Run(() => importMySQLvcdbChangelog());
+
+
             buttonMySQLloadVCdb.Enabled = true;
         }
 

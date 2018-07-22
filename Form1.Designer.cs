@@ -207,9 +207,22 @@
             this.dgVCdbConfigsQdbQualifiers = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dgVCdbConfigsNotes = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPageAddsDropsParts = new System.Windows.Forms.TabPage();
+            this.lblAddsDropsPartsErrorRedirect = new System.Windows.Forms.Label();
             this.dgAddsDropsParts = new System.Windows.Forms.DataGridView();
+            this.dgAddsDropsPartsAction = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxPart = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPageAddsDropsVehicles = new System.Windows.Forms.TabPage();
+            this.lblAddsDropsVehiclesErrorRedirect = new System.Windows.Forms.Label();
             this.dgAddsDropsVehicles = new System.Windows.Forms.DataGridView();
+            this.dgAddsDropsVehiclesAction = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesBaseVid = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesMake = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesModel = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesYear = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesParttype = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesPosition = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesQualifiers = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgAddsDropsVehiclesMfrLabel = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPageQuantityWarnings = new System.Windows.Forms.TabPage();
             this.lblQtyWarningsRedirect = new System.Windows.Forms.Label();
             this.dgQuantityWarnings = new System.Windows.Forms.DataGridView();
@@ -269,19 +282,6 @@
             this.progBarRefACESload = new System.Windows.Forms.ProgressBar();
             this.lblPrimeACESLoadStatus = new System.Windows.Forms.Label();
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
-            this.dgAddsDropsVehiclesAction = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesBaseVid = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesMake = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesModel = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesYear = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesParttype = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesPosition = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesQualifiers = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsVehiclesMfrLabel = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgAddsDropsPartsAction = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridViewTextBoxPart = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.lblAddsDropsPartsErrorRedirect = new System.Windows.Forms.Label();
-            this.lblAddsDropsVehiclesErrorRedirect = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -543,22 +543,22 @@
             // lblIndividualErrors
             // 
             this.lblIndividualErrors.AutoSize = true;
-            this.lblIndividualErrors.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblIndividualErrors.Location = new System.Drawing.Point(144, 180);
+            this.lblIndividualErrors.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblIndividualErrors.Location = new System.Drawing.Point(117, 184);
             this.lblIndividualErrors.Name = "lblIndividualErrors";
-            this.lblIndividualErrors.Size = new System.Drawing.Size(42, 20);
+            this.lblIndividualErrors.Size = new System.Drawing.Size(38, 16);
             this.lblIndividualErrors.TabIndex = 59;
             this.lblIndividualErrors.Text = "label";
             // 
             // lblIndividualErrorsTitle
             // 
             this.lblIndividualErrorsTitle.AutoSize = true;
-            this.lblIndividualErrorsTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblIndividualErrorsTitle.Location = new System.Drawing.Point(6, 180);
+            this.lblIndividualErrorsTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblIndividualErrorsTitle.Location = new System.Drawing.Point(9, 184);
             this.lblIndividualErrorsTitle.Name = "lblIndividualErrorsTitle";
-            this.lblIndividualErrorsTitle.Size = new System.Drawing.Size(114, 20);
+            this.lblIndividualErrorsTitle.Size = new System.Drawing.Size(102, 16);
             this.lblIndividualErrorsTitle.TabIndex = 58;
-            this.lblIndividualErrorsTitle.Text = "Individual apps";
+            this.lblIndividualErrorsTitle.Text = "Individual apps:";
             // 
             // lblDifferentialsSummary
             // 
@@ -600,22 +600,22 @@
             // lblMacroProblems
             // 
             this.lblMacroProblems.AutoSize = true;
-            this.lblMacroProblems.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblMacroProblems.Location = new System.Drawing.Point(144, 281);
+            this.lblMacroProblems.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblMacroProblems.Location = new System.Drawing.Point(111, 285);
             this.lblMacroProblems.Name = "lblMacroProblems";
-            this.lblMacroProblems.Size = new System.Drawing.Size(42, 20);
+            this.lblMacroProblems.Size = new System.Drawing.Size(34, 15);
             this.lblMacroProblems.TabIndex = 23;
             this.lblMacroProblems.Text = "label";
             // 
             // lblMacroProblemsTitle
             // 
             this.lblMacroProblemsTitle.AutoSize = true;
-            this.lblMacroProblemsTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblMacroProblemsTitle.Location = new System.Drawing.Point(7, 281);
+            this.lblMacroProblemsTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblMacroProblemsTitle.Location = new System.Drawing.Point(7, 285);
             this.lblMacroProblemsTitle.Name = "lblMacroProblemsTitle";
-            this.lblMacroProblemsTitle.Size = new System.Drawing.Size(124, 20);
+            this.lblMacroProblemsTitle.Size = new System.Drawing.Size(102, 16);
             this.lblMacroProblemsTitle.TabIndex = 22;
-            this.lblMacroProblemsTitle.Text = "Groups Analysis";
+            this.lblMacroProblemsTitle.Text = "Group Analysis:";
             // 
             // lblStatsPartsCount
             // 
@@ -2188,6 +2188,16 @@
             this.tabPageAddsDropsParts.Text = "Adds/Drops Parts";
             this.tabPageAddsDropsParts.UseVisualStyleBackColor = true;
             // 
+            // lblAddsDropsPartsErrorRedirect
+            // 
+            this.lblAddsDropsPartsErrorRedirect.AutoSize = true;
+            this.lblAddsDropsPartsErrorRedirect.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblAddsDropsPartsErrorRedirect.Location = new System.Drawing.Point(46, 24);
+            this.lblAddsDropsPartsErrorRedirect.Name = "lblAddsDropsPartsErrorRedirect";
+            this.lblAddsDropsPartsErrorRedirect.Size = new System.Drawing.Size(256, 20);
+            this.lblAddsDropsPartsErrorRedirect.TabIndex = 5;
+            this.lblAddsDropsPartsErrorRedirect.Text = "Too many adds/drops to show here";
+            // 
             // dgAddsDropsParts
             // 
             this.dgAddsDropsParts.AllowUserToAddRows = false;
@@ -2201,6 +2211,22 @@
             this.dgAddsDropsParts.Size = new System.Drawing.Size(1228, 480);
             this.dgAddsDropsParts.TabIndex = 2;
             // 
+            // dgAddsDropsPartsAction
+            // 
+            this.dgAddsDropsPartsAction.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsPartsAction.HeaderText = "Add/Drop";
+            this.dgAddsDropsPartsAction.Name = "dgAddsDropsPartsAction";
+            this.dgAddsDropsPartsAction.ReadOnly = true;
+            this.dgAddsDropsPartsAction.Width = 79;
+            // 
+            // dataGridViewTextBoxPart
+            // 
+            this.dataGridViewTextBoxPart.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dataGridViewTextBoxPart.HeaderText = "Part";
+            this.dataGridViewTextBoxPart.Name = "dataGridViewTextBoxPart";
+            this.dataGridViewTextBoxPart.ReadOnly = true;
+            this.dataGridViewTextBoxPart.Width = 51;
+            // 
             // tabPageAddsDropsVehicles
             // 
             this.tabPageAddsDropsVehicles.Controls.Add(this.lblAddsDropsVehiclesErrorRedirect);
@@ -2211,6 +2237,16 @@
             this.tabPageAddsDropsVehicles.TabIndex = 13;
             this.tabPageAddsDropsVehicles.Text = "Adds/Drops Vehicles";
             this.tabPageAddsDropsVehicles.UseVisualStyleBackColor = true;
+            // 
+            // lblAddsDropsVehiclesErrorRedirect
+            // 
+            this.lblAddsDropsVehiclesErrorRedirect.AutoSize = true;
+            this.lblAddsDropsVehiclesErrorRedirect.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblAddsDropsVehiclesErrorRedirect.Location = new System.Drawing.Point(43, 24);
+            this.lblAddsDropsVehiclesErrorRedirect.Name = "lblAddsDropsVehiclesErrorRedirect";
+            this.lblAddsDropsVehiclesErrorRedirect.Size = new System.Drawing.Size(256, 20);
+            this.lblAddsDropsVehiclesErrorRedirect.TabIndex = 6;
+            this.lblAddsDropsVehiclesErrorRedirect.Text = "Too many adds/drops to show here";
             // 
             // dgAddsDropsVehicles
             // 
@@ -2231,6 +2267,78 @@
             this.dgAddsDropsVehicles.Name = "dgAddsDropsVehicles";
             this.dgAddsDropsVehicles.Size = new System.Drawing.Size(1228, 480);
             this.dgAddsDropsVehicles.TabIndex = 3;
+            // 
+            // dgAddsDropsVehiclesAction
+            // 
+            this.dgAddsDropsVehiclesAction.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesAction.HeaderText = "Add/Drop";
+            this.dgAddsDropsVehiclesAction.Name = "dgAddsDropsVehiclesAction";
+            this.dgAddsDropsVehiclesAction.ReadOnly = true;
+            this.dgAddsDropsVehiclesAction.Width = 79;
+            // 
+            // dgAddsDropsVehiclesBaseVid
+            // 
+            this.dgAddsDropsVehiclesBaseVid.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesBaseVid.HeaderText = "BaseVehicle id";
+            this.dgAddsDropsVehiclesBaseVid.Name = "dgAddsDropsVehiclesBaseVid";
+            this.dgAddsDropsVehiclesBaseVid.ReadOnly = true;
+            this.dgAddsDropsVehiclesBaseVid.Width = 102;
+            // 
+            // dgAddsDropsVehiclesMake
+            // 
+            this.dgAddsDropsVehiclesMake.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesMake.HeaderText = "Make";
+            this.dgAddsDropsVehiclesMake.Name = "dgAddsDropsVehiclesMake";
+            this.dgAddsDropsVehiclesMake.ReadOnly = true;
+            this.dgAddsDropsVehiclesMake.Width = 59;
+            // 
+            // dgAddsDropsVehiclesModel
+            // 
+            this.dgAddsDropsVehiclesModel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesModel.HeaderText = "Model";
+            this.dgAddsDropsVehiclesModel.Name = "dgAddsDropsVehiclesModel";
+            this.dgAddsDropsVehiclesModel.ReadOnly = true;
+            this.dgAddsDropsVehiclesModel.Width = 61;
+            // 
+            // dgAddsDropsVehiclesYear
+            // 
+            this.dgAddsDropsVehiclesYear.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesYear.HeaderText = "Year";
+            this.dgAddsDropsVehiclesYear.Name = "dgAddsDropsVehiclesYear";
+            this.dgAddsDropsVehiclesYear.ReadOnly = true;
+            this.dgAddsDropsVehiclesYear.Width = 54;
+            // 
+            // dgAddsDropsVehiclesParttype
+            // 
+            this.dgAddsDropsVehiclesParttype.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesParttype.HeaderText = "Part Type";
+            this.dgAddsDropsVehiclesParttype.Name = "dgAddsDropsVehiclesParttype";
+            this.dgAddsDropsVehiclesParttype.ReadOnly = true;
+            this.dgAddsDropsVehiclesParttype.Width = 78;
+            // 
+            // dgAddsDropsVehiclesPosition
+            // 
+            this.dgAddsDropsVehiclesPosition.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesPosition.HeaderText = "Position";
+            this.dgAddsDropsVehiclesPosition.Name = "dgAddsDropsVehiclesPosition";
+            this.dgAddsDropsVehiclesPosition.ReadOnly = true;
+            this.dgAddsDropsVehiclesPosition.Width = 69;
+            // 
+            // dgAddsDropsVehiclesQualifiers
+            // 
+            this.dgAddsDropsVehiclesQualifiers.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesQualifiers.HeaderText = "Fitment";
+            this.dgAddsDropsVehiclesQualifiers.Name = "dgAddsDropsVehiclesQualifiers";
+            this.dgAddsDropsVehiclesQualifiers.ReadOnly = true;
+            this.dgAddsDropsVehiclesQualifiers.Width = 66;
+            // 
+            // dgAddsDropsVehiclesMfrLabel
+            // 
+            this.dgAddsDropsVehiclesMfrLabel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgAddsDropsVehiclesMfrLabel.HeaderText = "MfrLabel";
+            this.dgAddsDropsVehiclesMfrLabel.Name = "dgAddsDropsVehiclesMfrLabel";
+            this.dgAddsDropsVehiclesMfrLabel.ReadOnly = true;
+            this.dgAddsDropsVehiclesMfrLabel.Width = 73;
             // 
             // tabPageQuantityWarnings
             // 
@@ -2783,114 +2891,6 @@
             this.lblRefACESLoadStatus.Size = new System.Drawing.Size(35, 13);
             this.lblRefACESLoadStatus.TabIndex = 53;
             this.lblRefACESLoadStatus.Text = "label1";
-            // 
-            // dgAddsDropsVehiclesAction
-            // 
-            this.dgAddsDropsVehiclesAction.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesAction.HeaderText = "Add/Drop";
-            this.dgAddsDropsVehiclesAction.Name = "dgAddsDropsVehiclesAction";
-            this.dgAddsDropsVehiclesAction.ReadOnly = true;
-            this.dgAddsDropsVehiclesAction.Width = 79;
-            // 
-            // dgAddsDropsVehiclesBaseVid
-            // 
-            this.dgAddsDropsVehiclesBaseVid.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesBaseVid.HeaderText = "BaseVehicle id";
-            this.dgAddsDropsVehiclesBaseVid.Name = "dgAddsDropsVehiclesBaseVid";
-            this.dgAddsDropsVehiclesBaseVid.ReadOnly = true;
-            this.dgAddsDropsVehiclesBaseVid.Width = 102;
-            // 
-            // dgAddsDropsVehiclesMake
-            // 
-            this.dgAddsDropsVehiclesMake.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesMake.HeaderText = "Make";
-            this.dgAddsDropsVehiclesMake.Name = "dgAddsDropsVehiclesMake";
-            this.dgAddsDropsVehiclesMake.ReadOnly = true;
-            this.dgAddsDropsVehiclesMake.Width = 59;
-            // 
-            // dgAddsDropsVehiclesModel
-            // 
-            this.dgAddsDropsVehiclesModel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesModel.HeaderText = "Model";
-            this.dgAddsDropsVehiclesModel.Name = "dgAddsDropsVehiclesModel";
-            this.dgAddsDropsVehiclesModel.ReadOnly = true;
-            this.dgAddsDropsVehiclesModel.Width = 61;
-            // 
-            // dgAddsDropsVehiclesYear
-            // 
-            this.dgAddsDropsVehiclesYear.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesYear.HeaderText = "Year";
-            this.dgAddsDropsVehiclesYear.Name = "dgAddsDropsVehiclesYear";
-            this.dgAddsDropsVehiclesYear.ReadOnly = true;
-            this.dgAddsDropsVehiclesYear.Width = 54;
-            // 
-            // dgAddsDropsVehiclesParttype
-            // 
-            this.dgAddsDropsVehiclesParttype.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesParttype.HeaderText = "Part Type";
-            this.dgAddsDropsVehiclesParttype.Name = "dgAddsDropsVehiclesParttype";
-            this.dgAddsDropsVehiclesParttype.ReadOnly = true;
-            this.dgAddsDropsVehiclesParttype.Width = 78;
-            // 
-            // dgAddsDropsVehiclesPosition
-            // 
-            this.dgAddsDropsVehiclesPosition.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesPosition.HeaderText = "Position";
-            this.dgAddsDropsVehiclesPosition.Name = "dgAddsDropsVehiclesPosition";
-            this.dgAddsDropsVehiclesPosition.ReadOnly = true;
-            this.dgAddsDropsVehiclesPosition.Width = 69;
-            // 
-            // dgAddsDropsVehiclesQualifiers
-            // 
-            this.dgAddsDropsVehiclesQualifiers.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesQualifiers.HeaderText = "Fitment";
-            this.dgAddsDropsVehiclesQualifiers.Name = "dgAddsDropsVehiclesQualifiers";
-            this.dgAddsDropsVehiclesQualifiers.ReadOnly = true;
-            this.dgAddsDropsVehiclesQualifiers.Width = 66;
-            // 
-            // dgAddsDropsVehiclesMfrLabel
-            // 
-            this.dgAddsDropsVehiclesMfrLabel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsVehiclesMfrLabel.HeaderText = "MfrLabel";
-            this.dgAddsDropsVehiclesMfrLabel.Name = "dgAddsDropsVehiclesMfrLabel";
-            this.dgAddsDropsVehiclesMfrLabel.ReadOnly = true;
-            this.dgAddsDropsVehiclesMfrLabel.Width = 73;
-            // 
-            // dgAddsDropsPartsAction
-            // 
-            this.dgAddsDropsPartsAction.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgAddsDropsPartsAction.HeaderText = "Add/Drop";
-            this.dgAddsDropsPartsAction.Name = "dgAddsDropsPartsAction";
-            this.dgAddsDropsPartsAction.ReadOnly = true;
-            this.dgAddsDropsPartsAction.Width = 79;
-            // 
-            // dataGridViewTextBoxPart
-            // 
-            this.dataGridViewTextBoxPart.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dataGridViewTextBoxPart.HeaderText = "Part";
-            this.dataGridViewTextBoxPart.Name = "dataGridViewTextBoxPart";
-            this.dataGridViewTextBoxPart.ReadOnly = true;
-            this.dataGridViewTextBoxPart.Width = 51;
-            // 
-            // lblAddsDropsPartsErrorRedirect
-            // 
-            this.lblAddsDropsPartsErrorRedirect.AutoSize = true;
-            this.lblAddsDropsPartsErrorRedirect.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblAddsDropsPartsErrorRedirect.Location = new System.Drawing.Point(46, 24);
-            this.lblAddsDropsPartsErrorRedirect.Name = "lblAddsDropsPartsErrorRedirect";
-            this.lblAddsDropsPartsErrorRedirect.Size = new System.Drawing.Size(256, 20);
-            this.lblAddsDropsPartsErrorRedirect.TabIndex = 5;
-            this.lblAddsDropsPartsErrorRedirect.Text = "Too many adds/drops to show here";
-            // 
-            // lblAddsDropsVehiclesErrorRedirect
-            // 
-            this.lblAddsDropsVehiclesErrorRedirect.AutoSize = true;
-            this.lblAddsDropsVehiclesErrorRedirect.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblAddsDropsVehiclesErrorRedirect.Location = new System.Drawing.Point(43, 24);
-            this.lblAddsDropsVehiclesErrorRedirect.Name = "lblAddsDropsVehiclesErrorRedirect";
-            this.lblAddsDropsVehiclesErrorRedirect.Size = new System.Drawing.Size(256, 20);
-            this.lblAddsDropsVehiclesErrorRedirect.TabIndex = 6;
-            this.lblAddsDropsVehiclesErrorRedirect.Text = "Too many adds/drops to show here";
             // 
             // Form1
             // 

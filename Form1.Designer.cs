@@ -2696,6 +2696,7 @@
             this.lblAppVersion.Size = new System.Drawing.Size(16, 13);
             this.lblAppVersion.TabIndex = 33;
             this.lblAppVersion.Text = "...";
+            this.lblAppVersion.Click += new System.EventHandler(this.lblAppVersion_Click);
             // 
             // toolTip1
             // 

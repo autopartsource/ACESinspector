@@ -7,9 +7,13 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.23 (released 7/31/2018)
+Added a mechanism to lookup the current official released version from public DNS in order to tell the use when a newer version is avail. The 4-octec (like 1.2.0.23) version number is published in DNS at aiversion.autopaersource.com. The 32bit value is not treated as an IP address and never communicated with.
+The value is compared to the local version and the background color of the version label in the top-right corner of the UI is turned red if a higher value is returned from the DNS query.
+
 
 1.2.0.22 (released 7/21/2018)
-Added basic cbangelog support via MySQL import (EngineBase only). Deleted (orphaned) EngineBaseID's are lookuped up in the changelog to see what they did translate to in the past.
+Added basic changelog support via MySQL import. EngineBase history is currently the only data consumed from the log. Deleted (orphaned) EngineBaseID's are lookuped up in the changelog to see what they did translate to in the past.
 
 
 1.2.0.21 (released 6/28/2018)

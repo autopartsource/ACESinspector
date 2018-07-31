@@ -9,6 +9,7 @@ using Microsoft.Win32;
 using System.Security.Cryptography;
 using System.Diagnostics;
 using MySql.Data.MySqlClient;
+using System.Net;
 
 namespace ACESinspector
 {
@@ -41,7 +42,7 @@ namespace ACESinspector
         fitmentNode treeNodeBeingDragged = new fitmentNode();
         bool treeCanvasIsBeingDragged;
 
-        int largeDatagridRecordThreshold = 3000;  // datgrid control is not great with huge datasets. this threshold is about when to re-direct the user to look at the results in the export spreadsheet
+        int largeDatagridRecordThreshold = 3000;  // datagrid control is not great with huge datasets. this threshold is about when to re-direct the user to look at the results in the export spreadsheet
 
         public Dictionary<String, String> noteTranslationDictionary = new Dictionary<string, string>();
 
@@ -62,6 +63,7 @@ namespace ACESinspector
 
 
         private int highestVisableTab1Index;
+        private string newestVersionsAvail;
 
         public Form1()
         {
@@ -70,17 +72,49 @@ namespace ACESinspector
 
         private async void Form1_Load(object sender, EventArgs e)
         {
+            lblAppVersion.Text = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            newestVersionsAvail = "Current installed version: "+ lblAppVersion.Text;
+            try
+            {// ACESinspector's Latest official version number is stored in public DNS as if it is an IP address (4 octets ex: 1.2.0.22). It is not an address and no actual interaction would ever happen with whatever happens to live at that IP number
+                //This is a way for AutoPartSource to convey the availability of newer versions without having the code "call home".
+                IPAddress publishedLatestVersion = Dns.GetHostAddresses("aiversion.autopartsource.com")[0];
+                string[] publishedLatestVersionChunks = publishedLatestVersion.ToString().Split('.');
+                if(publishedLatestVersionChunks.Count()==4)
+                {
+                    string[] myVersionChunks = lblAppVersion.Text.Split('.');
+                    if (myVersionChunks.Count() == 4)
+                    {
+                        Int64 myVersion = (Convert.ToUInt32(myVersionChunks[0]) << 24) | (Convert.ToUInt32(myVersionChunks[1]) << 16) | (Convert.ToUInt32(myVersionChunks[2]) << 8) | (Convert.ToUInt32(myVersionChunks[3]));
+                        Int64 latestVersion = (Convert.ToUInt32(publishedLatestVersionChunks[0]) << 24) | (Convert.ToUInt32(publishedLatestVersionChunks[1]) << 16) | (Convert.ToUInt32(publishedLatestVersionChunks[2]) << 8) | (Convert.ToUInt32(publishedLatestVersionChunks[3]));
+                        if (latestVersion > myVersion)
+                        {
+                            lblAppVersion.Text = "Newer Version Avail";
+                            lblAppVersion.BackColor = Color.Red;
+                            newestVersionsAvail = "A newer version of ACESinspector (" + publishedLatestVersion.ToString() + ") is available for download from autopartsource.com/ACESinspector";
+                        }
+                        else
+                        {// newest avail is equal or older than this version
+                            if (latestVersion == myVersion)
+                            {
+                                newestVersionsAvail = "The version installed ("+ lblAppVersion.Text + ") is the latest published.";
+                            }
+                            else
+                            {// myversion is newer than published
+                                newestVersionsAvail = "The version installed (" + lblAppVersion.Text + ") is NEWER the latest published ("+ publishedLatestVersion.ToString() + "). You have something special!";
+                                lblAppVersion.BackColor = Color.Blue;
+                                lblAppVersion.ForeColor = Color.White;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {// fail DNS lookup silently
+            }
+
             pictureBoxFitmentTree.Invalidate();
             treeNodeBeingDragged.deleted = true;
-
-            lblAppVersion.Text = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-//            lblAppVersion.Text = Environment.ProcessorCount.ToString();
-
             btnSelectReferenceACESfile.Enabled = false;
-//            btnSelectVCdbFile.Enabled = false;
-//            btnSelectPCdbFile.Enabled = false;
-//            btnSelectQdbFile.Enabled = false;
-
             lblStatus.Text = "";
             lblPrimeACESLoadStatus.Text = "";
             lblRefACESLoadStatus.Text = "";
@@ -182,7 +216,7 @@ namespace ACESinspector
 
             tabControl1.Width = this.Width - 18;
             tabControl1.Height = this.Height - 288;
-            lblAppVersion.Left = this.Width - 65;
+            lblAppVersion.Left = this.Width - 120;
 
 
 
@@ -1142,7 +1176,7 @@ namespace ACESinspector
 
             tabControl1.Width = this.Width - 18;
             tabControl1.Height = this.Height - 288;
-            lblAppVersion.Left = this.Width - 85;
+            lblAppVersion.Left = this.Width - 120;
 
             textBoxAnalysisHostory.Width = this.Width - 615;
             textBoxAnalysisHostory.Height = this.Height - 321;
@@ -3863,6 +3897,11 @@ namespace ACESinspector
                     MessageBox.Show(result);
                 }
             }
+        }
+
+        private void lblAppVersion_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(newestVersionsAvail);
         }
 
         private string escapeXMLspecialChars(string inputString)

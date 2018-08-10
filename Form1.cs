@@ -82,8 +82,8 @@ namespace ACESinspector
                 if(publishedLatestVersionChunks.Count()==4)
                 {
                     string[] myVersionChunks = lblAppVersion.Text.Split('.');
-                    if (myVersionChunks.Count() == 4)
-                    {
+                    if (myVersionChunks.Count() == 4 && Convert.ToUInt32(publishedLatestVersionChunks[0]) > 0 && Convert.ToUInt32(publishedLatestVersionChunks[0]) < 10)
+                    {// only allow DNS to tell us the version is between 1.x.x.x and 9.x.x.x (anything else is likely bogus from content filtering)
                         Int64 myVersion = (Convert.ToUInt32(myVersionChunks[0]) << 24) | (Convert.ToUInt32(myVersionChunks[1]) << 16) | (Convert.ToUInt32(myVersionChunks[2]) << 8) | (Convert.ToUInt32(myVersionChunks[3]));
                         Int64 latestVersion = (Convert.ToUInt32(publishedLatestVersionChunks[0]) << 24) | (Convert.ToUInt32(publishedLatestVersionChunks[1]) << 16) | (Convert.ToUInt32(publishedLatestVersionChunks[2]) << 8) | (Convert.ToUInt32(publishedLatestVersionChunks[3]));
                         if (latestVersion > myVersion)
@@ -157,6 +157,7 @@ namespace ACESinspector
 
             btnAppExportSave.Enabled = false;
             btnBgExportSave.Enabled = false;
+            progBarExportBuyersGuide.Visible = false;
             btnNetChangeExportSave.Enabled = false;
             btnHolesExportSave.Enabled = false;
             btnExportRelatedParts.Enabled = false;
@@ -783,6 +784,7 @@ namespace ACESinspector
                     if (refaces.xmlValidationErrors.Count()==0 && refaces.apps.Count()>0)
                     {
                         aces.logHistoryEvent("", "0\tValid ACES (" + aces.version + ") imported as reference: " + Path.GetFileName(refaces.filePath));
+                        btnNetChangeExportSave.Enabled = true;
                     }
                     else
                     {
@@ -2342,11 +2344,9 @@ namespace ACESinspector
             btnAnalyze.Enabled = true; btnBgExportSave.Enabled = true; btnExportRelatedParts.Enabled = true; btnAppExportSave.Enabled = true;
         }
 
-
         private void btnNetChangeExportSave_Click(object sender, EventArgs e)
         {
             string result = "";
-
             if (diffaces.apps.Count > 0)
             {
                 using (var fbd = new FolderBrowserDialog())
@@ -2368,13 +2368,10 @@ namespace ACESinspector
             {
                 MessageBox.Show("No net-change applications found for export");
             }
-
         }
-
 
         private void toolTip1_Popup(object sender, PopupEventArgs e)
         {
-
         }
 
         private void dgCNCoverlaps_SortCompare(object sender, DataGridViewSortCompareEventArgs e)

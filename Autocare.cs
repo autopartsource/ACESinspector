@@ -2526,47 +2526,51 @@ namespace ACESinspector
                 }
 
                 // look for assets that don't have a matching app
-                bool foundApp = false; bool foundFitmentElement = false;
+                bool foundApp = false;
                 foreach(Asset asset in assets)
                 {
                     foundApp = false;
-                    if (asset.basevehilceid != 0)
-                    {// asset is basevehicle-style. look through all apps for ones that match vehicle and attributes
+                    foreach (App app in apps)
+                    {
+                        if (asset.basevehilceid==0 || asset.basevehilceid != app.basevehilceid || asset.VCdbAttributes.Count != app.VCdbAttributes.Count || asset.notes.Count != app.notes.Count || asset.QdbQualifiers.Count != app.QdbQualifiers.Count) { continue; }
+                        // found an app with a matching basevid and counts of fitment elements
 
-                        foreach (App app in apps)
-                        {
-                            if (asset.basevehilceid == app.basevehilceid)
-                            {// found an app with a matching basevid - now see if assets's attributes are present in the found app
-
-                                if (asset.VCdbAttributes.Count != app.VCdbAttributes.Count) { continue; }
-
-                                // app and asset have same basevid and number of vcdb attributes - this may be a match 
-                                foundApp = true; foundFitmentElement = true;
-
-                                foreach (VCdbAttribute assetAttribute in asset.VCdbAttributes)
-                                {// look through all the assets VCdb addtributes looking for matches in the found app's vcdb attributes
-
-                                    foundFitmentElement = false;
-                                    foreach (VCdbAttribute appAttribute in app.VCdbAttributes)
-                                    {
-                                        if (appAttribute.name==assetAttribute.name && appAttribute.value == assetAttribute.value)
-                                        {
-                                            foundFitmentElement = true; break;
-                                        }
-                                    }
-                                }
-
-                                if (foundFitmentElement){break;}
+                        bool foundVCdbAttribute = true;
+                        foreach (VCdbAttribute assetAttribute in asset.VCdbAttributes)
+                        {// look through all the asset's VCdb addtributes looking for matches in the found app's vcdb attributes
+                            foundVCdbAttribute = false;
+                            foreach (VCdbAttribute appAttribute in app.VCdbAttributes)
+                            {
+                                if (appAttribute.name==assetAttribute.name && appAttribute.value == assetAttribute.value){ foundVCdbAttribute = true; break; }
                             }
+                            if (!foundVCdbAttribute) { break; }
                         }
+
+                        bool foundNotes = true;
+                        foreach(String assetNote in asset.notes)
+                        {
+                            if (!app.notes.Contains(assetNote)) {foundNotes = false; break;}
+                        }
+
+                        bool foundQdbQualifier = true;
+                        foreach(QdbQualifier assetQdbQualifier in asset.QdbQualifiers)
+                        {
+                            foundQdbQualifier = false;
+                            foreach(QdbQualifier appQdbQualifier in app.QdbQualifiers)
+                            {
+                                if(appQdbQualifier.qualifierText == assetQdbQualifier.qualifierText) { foundQdbQualifier = true;break; }
+                            }
+                            if (!foundQdbQualifier) { break; }
+                        }
+
+                        if (foundVCdbAttribute && foundNotes && foundQdbQualifier) { foundApp = true; }
                     }
-                    //xxx
-                    if(!foundApp)
+
+                    if (!foundApp)
                     {
                         sw.WriteLine("Asset id " + asset.id.ToString() + " (" + asset.assetName + ") has no matching app\t0\t\t" + asset.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(asset.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(asset.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(asset.basevehilceid) + "\t\t\t\t\t" + asset.niceFullFitmentString(vcdb, qdb));
                         chunk.assetProblemsCount++;
                     }
-
                 }
             }
 

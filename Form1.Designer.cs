@@ -367,7 +367,7 @@
             // 
             // btnSelectPCdbFile
             // 
-            this.btnSelectPCdbFile.Location = new System.Drawing.Point(12, 153);
+            this.btnSelectPCdbFile.Location = new System.Drawing.Point(12, 163);
             this.btnSelectPCdbFile.Name = "btnSelectPCdbFile";
             this.btnSelectPCdbFile.Size = new System.Drawing.Size(139, 21);
             this.btnSelectPCdbFile.TabIndex = 6;
@@ -1310,7 +1310,7 @@
             // 
             // progBarExportFlatApps
             // 
-            this.progBarExportFlatApps.Location = new System.Drawing.Point(493, 10);
+            this.progBarExportFlatApps.Location = new System.Drawing.Point(493, 9);
             this.progBarExportFlatApps.Name = "progBarExportFlatApps";
             this.progBarExportFlatApps.Size = new System.Drawing.Size(144, 18);
             this.progBarExportFlatApps.TabIndex = 55;

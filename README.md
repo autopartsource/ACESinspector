@@ -7,6 +7,9 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.24 (released 8/10/2018)
+Fixed asset analysis to correctly look for assets matched to apps. Also limited DNS-based version publishing to 9.0.0.0 as highest version
+
 1.2.0.23 (released 7/31/2018)
 Added a mechanism to lookup the current official released version from public DNS in order to tell the use when a newer version is avail. The 4-octec (like 1.2.0.23) version number is published in DNS at aiversion.autopaersource.com. The 32bit value is not treated as an IP address and never communicated with.
 The value is compared to the local version and the background color of the version label in the top-right corner of the UI is turned red if a higher value is returned from the DNS query.

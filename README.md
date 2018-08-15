@@ -7,6 +7,9 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.26 (released 8/16/2018)
+switched to from 4.5.2 to 4.7.1 .NET Framework
+
 1.2.0.25 (released 8/15/2018)
 cosmetic fix - "Select VCdb" button was tweaked out of place 
 

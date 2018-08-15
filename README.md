@@ -7,6 +7,9 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.25 (released 8/15/2018)
+cosmetic fix - "Select VCdb" button was tweaked out of place 
+
 1.2.0.24 (released 8/10/2018)
 Fixed asset analysis to correctly look for assets matched to apps. Also limited DNS-based version publishing to 9.0.0.0 as highest version
 

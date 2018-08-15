@@ -367,7 +367,7 @@
             // 
             // btnSelectPCdbFile
             // 
-            this.btnSelectPCdbFile.Location = new System.Drawing.Point(12, 163);
+            this.btnSelectPCdbFile.Location = new System.Drawing.Point(12, 153);
             this.btnSelectPCdbFile.Name = "btnSelectPCdbFile";
             this.btnSelectPCdbFile.Size = new System.Drawing.Size(139, 21);
             this.btnSelectPCdbFile.TabIndex = 6;

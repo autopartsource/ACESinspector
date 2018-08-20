@@ -3136,7 +3136,8 @@ namespace ACESinspector
                 {
                     key.SetValue("cacheDirectoryPath", fbd.SelectedPath);
                     lblCachePath.Text = fbd.SelectedPath;
-                    if(lblAssessmentsPath.Text == "")
+                    Directory.CreateDirectory(lblCachePath.Text + "\\AiFragments");
+                    if (lblAssessmentsPath.Text == "")
                     {
                         lblAssessmentsPath.Text = fbd.SelectedPath;
                         key.SetValue("assessmentDirectoryPath", fbd.SelectedPath);

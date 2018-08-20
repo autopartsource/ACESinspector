@@ -7,6 +7,9 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.27 (released 8/19/2018)
+Fixed creation of AiFragments directory on path selection
+
 1.2.0.26 (released 8/16/2018)
 switched to from 4.5.2 to 4.7.1 .NET Framework
 

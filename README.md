@@ -7,6 +7,9 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.28 (released 8/20/2018)
+Fixed blank lblAssessmentsPath.Text and lblCachePath.Text logic on first run
+
 1.2.0.27 (released 8/19/2018)
 Fixed creation of AiFragments directory on path selection
 

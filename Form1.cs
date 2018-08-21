@@ -218,6 +218,8 @@ namespace ACESinspector
             tabControl1.Width = this.Width - 18;
             tabControl1.Height = this.Height - 288;
             lblAppVersion.Left = this.Width - 120;
+            lblCachePath.Text = "";
+            lblAssessmentsPath.Text = "";
 
 
 
@@ -1465,7 +1467,7 @@ namespace ACESinspector
             string excelTabColorXMLtag = "";
 
             string assessmentFilename = Path.GetDirectoryName(aces.filePath) + "\\" + Path.GetFileNameWithoutExtension(aces.filePath) + "_assessment.xml";
-            if (lblAssessmentsPath.Text != "---")
+            if (lblAssessmentsPath.Text != "")
             {
                 assessmentFilename = lblAssessmentsPath.Text + "\\" + Path.GetFileNameWithoutExtension(aces.filePath) + "_assessment.xml";
             }

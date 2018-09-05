@@ -46,6 +46,9 @@ namespace ACESinspector
 
         public Dictionary<String, String> noteTranslationDictionary = new Dictionary<string, string>();
 
+        public Dictionary<String, QdbQualifier> noteToQdbTransformDictionary = new Dictionary<string, QdbQualifier>();
+
+
         private TabPage hiddenAddsDropsVehiclesTab = new TabPage();
         private TabPage hiddenAddsDropsPartsTab = new TabPage();
         private TabPage hiddenInvalidConfigurationsTab = new TabPage();
@@ -124,12 +127,13 @@ namespace ACESinspector
             lblStatsACESversion.Text = "";
             lblStatsAppsCount.Text = "";
             lblStatsPartsCount.Text = "";
+            lblStatsQdbUtil.Text = "";
             lblStatsQdbVersion.Text = "";
             lblMacroProblems.Text = "";
             lblDifferentialsSummary.Text = "";
             lblIndividualErrors.Text = "";
-            lblStatsProcessingTime.Text = "";
-            lblProcessTimeTitle.Text = "";
+            
+            
             lblVCdbFilePath.Text = "";
             lblVCdbLoadStatus.Text = "";
             progBarVCdbload.Value = 0; progBarVCdbload.Visible = false;
@@ -315,6 +319,7 @@ namespace ACESinspector
             if ((string)key.GetValue("respectValidateNoTag") == "1") { checkBoxRespectValidateTag.Checked = true; } else { checkBoxRespectValidateTag.Checked = false; }
             if ((string)key.GetValue("explodeNoteTagsBySemicolon") == "1") { checkBoxExplodeNotes.Checked = true; } else { checkBoxExplodeNotes.Checked = false; }
             if ((string)key.GetValue("allowGraceForWildcardConfigs") == "1") { checkBoxUKgrace.Checked = true; } else { checkBoxUKgrace.Checked = false; }
+            if ((string)key.GetValue("ignoreNAitems") == "1") { checkBoxIgnoreNAitems.Checked = true; } else { checkBoxIgnoreNAitems.Checked = false; }
 
             if (key.GetValue("limitDatagridRows") == null)
             {// no key present - we want to assert one and set its value to "1"
@@ -524,8 +529,7 @@ namespace ACESinspector
                 lblStatsQdbVersion.Text = ""; lblStatsQdbVersion.ForeColor = SystemColors.ControlText;
                 lblStatsAppsCount.Text = "";
                 lblStatsPartsCount.Text = "";
-                lblStatsProcessingTime.Text = "";
-                lblProcessTimeTitle.Text = "";
+                lblStatsQdbUtil.Text = "";
                 lblMacroProblems.Text = "";
                 lblIndividualErrors.Text = "";
                 lblDifferentialsSummary.Text = "";
@@ -618,7 +622,7 @@ namespace ACESinspector
 
                 aces.logHistoryEvent("", "10\tbtnSelectACESfile - importing ACES file");
 
-                var result = await Task.Run(() => aces.importXML(openFileDialog.FileName, "", checkBoxRespectValidateTag.Checked,noteTranslationDictionary,vcdb, progressIndicator));
+                var result = await Task.Run(() => aces.importXML(openFileDialog.FileName, "", checkBoxRespectValidateTag.Checked,noteTranslationDictionary,noteToQdbTransformDictionary,vcdb, progressIndicator));
 
                 if (aces.discardedDeletsOnImport > 0) { MessageBox.Show(openFileDialog.FileName + " contains \"D\" (delete) applications. These were excluded from the import. Only the \"A\" (add) application are used.");  aces.logHistoryEvent("", "10\tbtnSelectACESfile - found some deleted apps in import");}
 
@@ -635,8 +639,14 @@ namespace ACESinspector
                 {
                     lblStatsTitle.Text = aces.DocumentTitle;
                     lblStatsAppsCount.Text = aces.apps.Count.ToString();
+                    lblStatsQdbUtil.Text = aces.QdbUtilizationScore.ToString("0.00")+"%";
+                    lblStatsQdbUtil.BackColor = Color.Transparent;
+                    if (aces.QdbUtilizationScore < 80) { lblStatsQdbUtil.BackColor = Color.Yellow; }
+                    if (aces.QdbUtilizationScore < 50) { lblStatsQdbUtil.BackColor = Color.Orange; }
+                    if (aces.QdbUtilizationScore < 20) { lblStatsQdbUtil.BackColor = Color.Red; }
 
-                    if(aces.xmlAppNodeCount!=aces.FooterRecordCount)
+
+                    if (aces.xmlAppNodeCount!=aces.FooterRecordCount)
                     {
                         aces.logHistoryEvent("", "0\tApp nodes count ("+ aces.xmlAppNodeCount.ToString()+") does not agree with footer count claim ("+ aces.FooterRecordCount .ToString()+ ")");
                         //lblStatsAppsCount.Text = aces.apps.Count.ToString() + " (footer claims " + aces.FooterRecordCount.ToString() + " records)";
@@ -712,7 +722,7 @@ namespace ACESinspector
 
                     progBarPrimeACESload.Visible = false;  progBarPrimeACESload.Value = 0; lblPrimeACESLoadStatus.Text = ""; lblPrimeACESLoadStatus.Visible = false;
                     lblACESfilePath.Left = progBarPrimeACESload.Left;
-                    aces.logHistoryEvent("", "0\tValid ACES ("+aces.version+") imported as primary: "+ Path.GetFileName(aces.filePath));
+                    aces.logHistoryEvent("", "0\tXSD-validated ACES "+aces.version+" file imported as primary: "+ Path.GetFileName(aces.filePath));
                     btnAppExportSave.Enabled = true;
                     btnExportRelatedParts.Enabled = true;
                     
@@ -779,13 +789,13 @@ namespace ACESinspector
 
                 if (refaces.fileHasBeenAnalyzed(vcdb.version, pcdb.version)>0)
                 {
-                    var result = await Task.Run(() => refaces.importXML(openFileDialog.FileName, "", checkBoxRespectValidateTag.Checked,noteTranslationDictionary,vcdb, progressIndicator));
+                    var result = await Task.Run(() => refaces.importXML(openFileDialog.FileName, "", checkBoxRespectValidateTag.Checked,noteTranslationDictionary, noteToQdbTransformDictionary, vcdb, progressIndicator));
                     lblDifferentialsLabel.Visible = true; lblDifferentialsSummary.Visible = true; progressBarDifferentials.Visible = true;
                     progBarRefACESload.Value = 0; progBarRefACESload.Visible = false; lblRefACESLoadStatus.Text = ""; lblRefACESLoadStatus.Visible = false;
                     lblReferenceACESfilePath.Left = progBarRefACESload.Left;
                     if (refaces.xmlValidationErrors.Count()==0 && refaces.apps.Count()>0)
                     {
-                        aces.logHistoryEvent("", "0\tValid ACES (" + aces.version + ") imported as reference: " + Path.GetFileName(refaces.filePath));
+                        aces.logHistoryEvent("", "0\tXSD-validated ACES " + aces.version + " file imported as reference: " + Path.GetFileName(refaces.filePath));
                         btnNetChangeExportSave.Enabled = true;
                     }
                     else
@@ -1461,9 +1471,9 @@ namespace ACESinspector
             
             // start building the assessment file
 
-            string validatedAgainstVCdb = ""; if (aces.VcdbVersionDate != vcdb.version) { validatedAgainstVCdb = "validated against version " + vcdb.version; }
-            string validatedAgainstPCdb = ""; if (aces.PcdbVersionDate != pcdb.version) { validatedAgainstPCdb = "validated against version " + pcdb.version; }
-            string validatedAgainstQdb = ""; if (aces.QdbVersionDate != qdb.version) { validatedAgainstQdb = "validated against version " + qdb.version; }
+            string validatedAgainstVCdb = ""; if (aces.VcdbVersionDate != vcdb.version) { validatedAgainstVCdb = "analyzed against:" + vcdb.version; }
+            string validatedAgainstPCdb = ""; if (aces.PcdbVersionDate != pcdb.version) { validatedAgainstPCdb = "analyzedagainst:" + pcdb.version; }
+            string validatedAgainstQdb = ""; if (aces.QdbVersionDate != qdb.version) { validatedAgainstQdb = "analyzed against:" + qdb.version; }
             string excelTabColorXMLtag = "";
 
             string assessmentFilename = Path.GetDirectoryName(aces.filePath) + "\\" + Path.GetFileNameWithoutExtension(aces.filePath) + "_assessment.xml";
@@ -1508,6 +1518,17 @@ namespace ACESinspector
                     {
                         sw.Write("<Worksheet ss:Name=\"MfrLabels\"><Table ss:ExpandedColumnCount=\"1\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"151.5\"/>");
                         foreach (string distinctMfrLabel in aces.distinctMfrLabels) { sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(distinctMfrLabel) + "</Data></Cell></Row>"); }
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                    }
+
+                    if(aces.noteCounts.Count>0)
+                    {
+                        sw.Write("<Worksheet ss:Name=\"Note Tags\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"200\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"80\"/>");
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Note Text</Data></Cell><Cell><Data ss:Type=\"String\">occurrences</Data></Cell></Row>");
+                        foreach (KeyValuePair<string, int> noteEntry in aces.noteCounts)
+                        {
+                            sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(noteEntry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + noteEntry.Value + "</Data></Cell></Row>");
+                        }
                         sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                     }
 
@@ -2247,8 +2268,6 @@ namespace ACESinspector
             btnSelectPCdbFile.Enabled = true;
             btnSelectQdbFile.Enabled = true;
 
-            lblStatsProcessingTime.Text = Math.Round(Convert.ToDecimal(aces.analysisTime)/5,1).ToString() + " Seconds";
-            lblProcessTimeTitle.Text = "Processing Time";
             lblStatus.Visible = true; lblStatus.Text = "";
 
             if ((aces.parttypePositionErrorsCount + aces.vcdbCodesErrorsCount + aces.vcdbConfigurationsErrorsCount + aces.basevehicleidsErrorsCount + aces.qdbErrorsCount + aces.vcdbConfigurationsErrorsCount + aces.fitmentLogicProblemsCount) > 0)
@@ -2271,24 +2290,24 @@ namespace ACESinspector
                 }
             }
 
-
+            aces.logHistoryEvent("", "0\tAnalysis took "+Math.Round(Convert.ToDecimal(aces.analysisTime) / 5, 1).ToString() + " Seconds");
 
             if (aces.VcdbVersionDate != vcdb.version)
             {
                 lblStatsVCdbVersion.ForeColor = Color.DarkOrange;
-                lblStatsVCdbVersion.Text = aces.VcdbVersionDate + "  (validated against VCdb:" + vcdb.version + ")";
+                lblStatsVCdbVersion.Text = aces.VcdbVersionDate + "  (analyzed against:" + vcdb.version + ")";
             }
 
             if (aces.PcdbVersionDate != pcdb.version)
             {
                 lblStatsPCdbVersion.ForeColor = Color.DarkOrange;
-                lblStatsPCdbVersion.Text = aces.PcdbVersionDate + "  (validated against PCdb:" + pcdb.version + ")";
+                lblStatsPCdbVersion.Text = aces.PcdbVersionDate + "  (analyzed against:" + pcdb.version + ")";
             }
 
             if (aces.QdbVersionDate != qdb.version)
             {
                 lblStatsQdbVersion.ForeColor = Color.DarkOrange;
-                lblStatsQdbVersion.Text = aces.QdbVersionDate + "  (validated against Qdb:" + qdb.version + ")";
+                lblStatsQdbVersion.Text = aces.QdbVersionDate + "  (analyzed against:" + qdb.version + ")";
             }
 
             aces.recordAnalysisResults(vcdb.version, pcdb.version); // record file hash and results in registry
@@ -3298,7 +3317,16 @@ namespace ACESinspector
         }
 
         private void btnSelectNoteInterchangeFile_Click(object sender, EventArgs e)
-        {
+        {//note translation can be a simple two-column input/output list or a more complex transform from simple notes to Qdb-coded values
+         // both types can be present in the note translation file
+         // simple note->note example: "W/sport pkg." -> "With Sport Package"
+         // transform note->Qdb exmaple: "W/sport pkg." -> "Qdb:17038"
+         // transform note->Qdb exmaple: "From 5/15/2007" -> "Qdb:4615,5/15/2007"
+         // transform note->Qdb exmaple: "From 5/15/2007 To 6/15/2007" -> "Qdb:4623,5/15/2007,6/15/2007"
+         //
+         //  In the transform case, the note will be converted to Qdb uppon import and in a subsequent export, all apps using that note would instead be using the coded Qdb.
+         // This would be a way to map Qdb off-PIM if the PIM did not support Qdb before sending to a receiver.
+
             OpenFileDialog openFileDialog = new OpenFileDialog();
             RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
             key.CreateSubKey("ACESinspector");
@@ -3311,17 +3339,17 @@ namespace ACESinspector
             DialogResult openFileResult = openFileDialog.ShowDialog();
             if (openFileResult.ToString() == "OK")
             {
-                noteTranslationDictionary.Clear();
+                noteTranslationDictionary.Clear(); noteToQdbTransformDictionary.Clear();
                 key.SetValue("lastNoteTranslationDirectoryPath", Path.GetDirectoryName(openFileDialog.FileName));
                 importNoteTranslation(openFileDialog.FileName);
                 if (noteTranslationDictionary.Count() > 0)
                 {
-                    lblNoteTranslationfilePath.Text = Path.GetFileName(openFileDialog.FileName) + "   (Contains " + noteTranslationDictionary.Count().ToString() + " note translation records)";
+                    lblNoteTranslationfilePath.Text = Path.GetFileName(openFileDialog.FileName) + "   (Contains " + noteTranslationDictionary.Count().ToString() + " note translations, "+noteToQdbTransformDictionary.Count.ToString()+" note-Qdb transforms)";
                 }
                 else
                 {
                     lblNoteTranslationfilePath.Text = "";
-                    MessageBox.Show(openFileDialog.FileName + " does not contain any properly formatted note translation records.\r\n\r\nThe required format is:\r\n  input note string  <tab>  output note string\r\n\r\nThe file must contain exactly two columns and contain no header row. Every <Note> node in the imported ACES file will be checked against this list and replaced by the contents of the second column if found. The second column can be blank - this would effectively remove every instance of the note in the fist column.");
+                    MessageBox.Show(openFileDialog.FileName + " does not contain any properly formatted note translation or note-Qdb transform records.\r\n\r\nThe required note translation format is:\r\n  input note string  <tab>  output note string\r\n\r\nThe file must contain exactly two columns and contain no header row. Every <Note> node in the imported ACES file will be checked against this list and replaced by the contents of the second column if found. The second column can be blank - this would effectively remove every instance of the note in the fist column.");
                 }
             }
         }
@@ -3603,32 +3631,36 @@ namespace ACESinspector
 
         private void buttonMySQLconnect_Click(object sender, EventArgs e)
         {
-            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
-            key.CreateSubKey("ACESinspector");
-            key = key.OpenSubKey("ACESinspector", true);
 
-            getAvailableMySQLdatabaseList();
+            if(textBoxMySQLhost.Text != "" && textBoxMySQLuser.Text != "" && textBoxMySQLpassword.Text != "")
+            {
+                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
+                key.CreateSubKey("ACESinspector");
+                key = key.OpenSubKey("ACESinspector", true);
 
-            comboBoxMySQLvcdbVersion.Items.Clear();
-            comboBoxMySQLvcdbVersion.Items.AddRange(vcdb.vcdbVersionsOnServerList.ToArray());
-            comboBoxMySQLvcdbVersion.SelectedIndex = 0;
-            comboBoxMySQLvcdbVersion.Visible = true;
-            btnSelectVCdbFile.Visible = false;
-            buttonMySQLloadVCdb.Visible = true;
+                getAvailableMySQLdatabaseList();
 
-            comboBoxMySQLpcdbVersion.Items.Clear();
-            comboBoxMySQLpcdbVersion.Items.AddRange(pcdb.pcdbVersionsOnServerList.ToArray());
-            comboBoxMySQLpcdbVersion.SelectedIndex = 0;
-            comboBoxMySQLpcdbVersion.Visible = true;
-            buttonMySQLloadPCdb.Visible = true;
-            btnSelectPCdbFile.Visible = false;
+                comboBoxMySQLvcdbVersion.Items.Clear();
+                comboBoxMySQLvcdbVersion.Items.AddRange(vcdb.vcdbVersionsOnServerList.ToArray());
+                comboBoxMySQLvcdbVersion.SelectedIndex = 0;
+                comboBoxMySQLvcdbVersion.Visible = true;
+                btnSelectVCdbFile.Visible = false;
+                buttonMySQLloadVCdb.Visible = true;
 
-            comboBoxMySQLqdbVersion.Items.Clear();
-            comboBoxMySQLqdbVersion.Items.AddRange(qdb.qdbVersionsOnServerList.ToArray());
-            comboBoxMySQLqdbVersion.SelectedIndex = 0;
-            comboBoxMySQLqdbVersion.Visible = true;
-            buttonMySQLloadQdb.Visible = true;
-            btnSelectQdbFile.Visible = false;
+                comboBoxMySQLpcdbVersion.Items.Clear();
+                comboBoxMySQLpcdbVersion.Items.AddRange(pcdb.pcdbVersionsOnServerList.ToArray());
+                comboBoxMySQLpcdbVersion.SelectedIndex = 0;
+                comboBoxMySQLpcdbVersion.Visible = true;
+                buttonMySQLloadPCdb.Visible = true;
+                btnSelectPCdbFile.Visible = false;
+
+                comboBoxMySQLqdbVersion.Items.Clear();
+                comboBoxMySQLqdbVersion.Items.AddRange(qdb.qdbVersionsOnServerList.ToArray());
+                comboBoxMySQLqdbVersion.SelectedIndex = 0;
+                comboBoxMySQLqdbVersion.Visible = true;
+                buttonMySQLloadQdb.Visible = true;
+                btnSelectQdbFile.Visible = false;
+            }
         }
 
 
@@ -3676,7 +3708,7 @@ namespace ACESinspector
             RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
             key.CreateSubKey("ACESinspector");
             key = key.OpenSubKey("ACESinspector", true);
-            if (radioButtonDataSourceMySQL.Checked)
+            if (radioButtonDataSourceMySQL.Checked  && textBoxMySQLhost.Text != "" && textBoxMySQLuser.Text != "" && textBoxMySQLpassword.Text != "")
             {
                 key.SetValue("datasource", "mysql");
                 getAvailableMySQLdatabaseList();
@@ -3751,13 +3783,30 @@ namespace ACESinspector
                     var fields = line.Split('\t');
                     if (fields.Count() == 2 && fields[0].Trim().Length > 0)
                     {//text must be exactly 2 columns seperated by tab
-                        if(noteTranslationDictionary.ContainsKey(fields[0].Trim()))
-                        {
-                            noteTranslationDictionary[fields[0].Trim()] = fields[1].Trim();
+
+                        //xxx
+                        if (fields[1].Length>4 && fields[1].Substring(0, 4) == "Qdb:")
+                        {// transform this note to a Qdb. string will look like one of these:
+
+                            if(noteToQdbTransformDictionary.ContainsKey(fields[0].Trim()))
+                            {
+                                noteToQdbTransformDictionary[fields[0].Trim()] = aces.QdbQualifierFromTransfromString(fields[1].Trim());
+                            }
+                            else
+                            {// over-write the previously-found transform for this key (unlikely)
+                                noteToQdbTransformDictionary.Add(fields[0].Trim(), aces.QdbQualifierFromTransfromString(fields[1].Trim()));
+                            }
                         }
                         else
-                        {
-                            noteTranslationDictionary.Add(fields[0].Trim(), fields[1].Trim());
+                        {//simple note translation
+                            if (noteTranslationDictionary.ContainsKey(fields[0].Trim()))
+                            {
+                                noteTranslationDictionary[fields[0].Trim()] = fields[1].Trim();
+                            }
+                            else
+                            {
+                                noteTranslationDictionary.Add(fields[0].Trim(), fields[1].Trim());
+                            }
                         }
                     }
                 }
@@ -3902,6 +3951,13 @@ namespace ACESinspector
         private void lblAppVersion_Click(object sender, EventArgs e)
         {
             MessageBox.Show(newestVersionsAvail);
+        }
+
+        private void checkBoxIgnoreNAitems_CheckedChanged(object sender, EventArgs e)
+        {
+            aces.ignoreNAitems = checkBoxIgnoreNAitems.Checked;
+            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true); key.CreateSubKey("ACESinspector"); key = key.OpenSubKey("ACESinspector", true);
+            if (checkBoxIgnoreNAitems.Checked) { key.SetValue("ignoreNAitems", "1"); } else { key.SetValue("ignoreNAitems", "0"); }
         }
 
         private string escapeXMLspecialChars(string inputString)

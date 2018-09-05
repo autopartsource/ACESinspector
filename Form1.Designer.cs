@@ -45,8 +45,6 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageStats = new System.Windows.Forms.TabPage();
             this.textBoxAnalysisHostory = new System.Windows.Forms.TextBox();
-            this.lblStatsProcessingTime = new System.Windows.Forms.Label();
-            this.lblProcessTimeTitle = new System.Windows.Forms.Label();
             this.pictureBoxCommonErrors = new System.Windows.Forms.PictureBox();
             this.lblIndividualErrors = new System.Windows.Forms.Label();
             this.lblIndividualErrorsTitle = new System.Windows.Forms.Label();
@@ -282,6 +280,9 @@
             this.progBarRefACESload = new System.Windows.Forms.ProgressBar();
             this.lblPrimeACESLoadStatus = new System.Windows.Forms.Label();
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
+            this.lblStatsQdbUtil = new System.Windows.Forms.Label();
+            this.checkBoxIgnoreNAitems = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -465,9 +466,9 @@
             // 
             // tabPageStats
             // 
+            this.tabPageStats.Controls.Add(this.lblStatsQdbUtil);
+            this.tabPageStats.Controls.Add(this.label16);
             this.tabPageStats.Controls.Add(this.textBoxAnalysisHostory);
-            this.tabPageStats.Controls.Add(this.lblStatsProcessingTime);
-            this.tabPageStats.Controls.Add(this.lblProcessTimeTitle);
             this.tabPageStats.Controls.Add(this.pictureBoxCommonErrors);
             this.tabPageStats.Controls.Add(this.lblIndividualErrors);
             this.tabPageStats.Controls.Add(this.lblIndividualErrorsTitle);
@@ -509,26 +510,6 @@
             this.textBoxAnalysisHostory.Size = new System.Drawing.Size(648, 429);
             this.textBoxAnalysisHostory.TabIndex = 64;
             this.textBoxAnalysisHostory.WordWrap = false;
-            // 
-            // lblStatsProcessingTime
-            // 
-            this.lblStatsProcessingTime.AutoSize = true;
-            this.lblStatsProcessingTime.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStatsProcessingTime.Location = new System.Drawing.Point(144, 145);
-            this.lblStatsProcessingTime.Name = "lblStatsProcessingTime";
-            this.lblStatsProcessingTime.Size = new System.Drawing.Size(42, 20);
-            this.lblStatsProcessingTime.TabIndex = 63;
-            this.lblStatsProcessingTime.Text = "label";
-            // 
-            // lblProcessTimeTitle
-            // 
-            this.lblProcessTimeTitle.AutoSize = true;
-            this.lblProcessTimeTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblProcessTimeTitle.Location = new System.Drawing.Point(6, 145);
-            this.lblProcessTimeTitle.Name = "lblProcessTimeTitle";
-            this.lblProcessTimeTitle.Size = new System.Drawing.Size(125, 20);
-            this.lblProcessTimeTitle.TabIndex = 62;
-            this.lblProcessTimeTitle.Text = "Processing Time";
             // 
             // pictureBoxCommonErrors
             // 
@@ -759,6 +740,7 @@
             // 
             // tabPageSettings
             // 
+            this.tabPageSettings.Controls.Add(this.checkBoxIgnoreNAitems);
             this.tabPageSettings.Controls.Add(this.groupBoxRemoteVCdb);
             this.tabPageSettings.Controls.Add(this.lblAssessmentsPath);
             this.tabPageSettings.Controls.Add(this.btnSelectAssessmentDir);
@@ -908,7 +890,7 @@
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(151, 290);
+            this.label10.Location = new System.Drawing.Point(152, 182);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(42, 13);
             this.label10.TabIndex = 18;
@@ -916,7 +898,7 @@
             // 
             // numericUpDownThreads
             // 
-            this.numericUpDownThreads.Location = new System.Drawing.Point(104, 288);
+            this.numericUpDownThreads.Location = new System.Drawing.Point(105, 180);
             this.numericUpDownThreads.Maximum = new decimal(new int[] {
             50,
             0,
@@ -940,7 +922,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(5, 290);
+            this.label9.Location = new System.Drawing.Point(6, 182);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(97, 13);
             this.label9.TabIndex = 16;
@@ -949,7 +931,7 @@
             // checkBoxUKgrace
             // 
             this.checkBoxUKgrace.AutoSize = true;
-            this.checkBoxUKgrace.Location = new System.Drawing.Point(8, 265);
+            this.checkBoxUKgrace.Location = new System.Drawing.Point(8, 204);
             this.checkBoxUKgrace.Name = "checkBoxUKgrace";
             this.checkBoxUKgrace.Size = new System.Drawing.Size(208, 17);
             this.checkBoxUKgrace.TabIndex = 15;
@@ -960,7 +942,7 @@
             // checkBoxLimitDataGridRows
             // 
             this.checkBoxLimitDataGridRows.AutoSize = true;
-            this.checkBoxLimitDataGridRows.Location = new System.Drawing.Point(8, 242);
+            this.checkBoxLimitDataGridRows.Location = new System.Drawing.Point(8, 296);
             this.checkBoxLimitDataGridRows.Name = "checkBoxLimitDataGridRows";
             this.checkBoxLimitDataGridRows.Size = new System.Drawing.Size(188, 17);
             this.checkBoxLimitDataGridRows.TabIndex = 13;
@@ -976,7 +958,7 @@
             this.groupBoxValidateTagOptions.Enabled = false;
             this.groupBoxValidateTagOptions.Location = new System.Drawing.Point(348, 70);
             this.groupBoxValidateTagOptions.Name = "groupBoxValidateTagOptions";
-            this.groupBoxValidateTagOptions.Size = new System.Drawing.Size(253, 99);
+            this.groupBoxValidateTagOptions.Size = new System.Drawing.Size(192, 99);
             this.groupBoxValidateTagOptions.TabIndex = 12;
             this.groupBoxValidateTagOptions.TabStop = false;
             this.groupBoxValidateTagOptions.Text = "Handling of validate=no";
@@ -1023,9 +1005,9 @@
             this.groupBoxQuantityOutlierSettings.Controls.Add(this.numericUpDownQtyOutliersThreshold);
             this.groupBoxQuantityOutlierSettings.Controls.Add(this.numericUpDownQtyOutliersSample);
             this.groupBoxQuantityOutlierSettings.Controls.Add(this.checkBoxQtyOutliers);
-            this.groupBoxQuantityOutlierSettings.Location = new System.Drawing.Point(222, 175);
+            this.groupBoxQuantityOutlierSettings.Location = new System.Drawing.Point(801, 70);
             this.groupBoxQuantityOutlierSettings.Name = "groupBoxQuantityOutlierSettings";
-            this.groupBoxQuantityOutlierSettings.Size = new System.Drawing.Size(379, 114);
+            this.groupBoxQuantityOutlierSettings.Size = new System.Drawing.Size(379, 99);
             this.groupBoxQuantityOutlierSettings.TabIndex = 11;
             this.groupBoxQuantityOutlierSettings.TabStop = false;
             this.groupBoxQuantityOutlierSettings.Text = "Unusual \"Qty\" analysis";
@@ -1148,7 +1130,7 @@
             // checkBoxAssetsAsFitment
             // 
             this.checkBoxAssetsAsFitment.AutoSize = true;
-            this.checkBoxAssetsAsFitment.Location = new System.Drawing.Point(8, 219);
+            this.checkBoxAssetsAsFitment.Location = new System.Drawing.Point(8, 273);
             this.checkBoxAssetsAsFitment.Name = "checkBoxAssetsAsFitment";
             this.checkBoxAssetsAsFitment.Size = new System.Drawing.Size(181, 17);
             this.checkBoxAssetsAsFitment.TabIndex = 7;
@@ -1158,11 +1140,11 @@
             // checkBoxExplodeNotes
             // 
             this.checkBoxExplodeNotes.AutoSize = true;
-            this.checkBoxExplodeNotes.Location = new System.Drawing.Point(8, 196);
+            this.checkBoxExplodeNotes.Location = new System.Drawing.Point(8, 250);
             this.checkBoxExplodeNotes.Name = "checkBoxExplodeNotes";
-            this.checkBoxExplodeNotes.Size = new System.Drawing.Size(180, 17);
+            this.checkBoxExplodeNotes.Size = new System.Drawing.Size(186, 17);
             this.checkBoxExplodeNotes.TabIndex = 6;
-            this.checkBoxExplodeNotes.Text = "Explode Note tags by semi-colon";
+            this.checkBoxExplodeNotes.Text = "Split apart Note tags by semicolon";
             this.checkBoxExplodeNotes.UseVisualStyleBackColor = true;
             this.checkBoxExplodeNotes.CheckedChanged += new System.EventHandler(this.checkBoxExplodeNotes_CheckedChanged);
             // 
@@ -1172,9 +1154,9 @@
             this.groupBoxFitmentLogicSettings.Controls.Add(this.checkBoxConcernForDisparate);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.label24);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.numericUpDownTreeConfigLimit);
-            this.groupBoxFitmentLogicSettings.Location = new System.Drawing.Point(8, 314);
+            this.groupBoxFitmentLogicSettings.Location = new System.Drawing.Point(548, 70);
             this.groupBoxFitmentLogicSettings.Name = "groupBoxFitmentLogicSettings";
-            this.groupBoxFitmentLogicSettings.Size = new System.Drawing.Size(247, 92);
+            this.groupBoxFitmentLogicSettings.Size = new System.Drawing.Size(247, 99);
             this.groupBoxFitmentLogicSettings.TabIndex = 4;
             this.groupBoxFitmentLogicSettings.TabStop = false;
             this.groupBoxFitmentLogicSettings.Text = "App grouping analysis";
@@ -2893,6 +2875,37 @@
             this.lblRefACESLoadStatus.TabIndex = 53;
             this.lblRefACESLoadStatus.Text = "label1";
             // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label16.Location = new System.Drawing.Point(6, 145);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(112, 20);
+            this.label16.TabIndex = 65;
+            this.label16.Text = "Qdb Utilization";
+            // 
+            // lblStatsQdbUtil
+            // 
+            this.lblStatsQdbUtil.AutoSize = true;
+            this.lblStatsQdbUtil.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblStatsQdbUtil.Location = new System.Drawing.Point(144, 145);
+            this.lblStatsQdbUtil.Name = "lblStatsQdbUtil";
+            this.lblStatsQdbUtil.Size = new System.Drawing.Size(42, 20);
+            this.lblStatsQdbUtil.TabIndex = 66;
+            this.lblStatsQdbUtil.Text = "label";
+            // 
+            // checkBoxIgnoreNAitems
+            // 
+            this.checkBoxIgnoreNAitems.AutoSize = true;
+            this.checkBoxIgnoreNAitems.Location = new System.Drawing.Point(8, 227);
+            this.checkBoxIgnoreNAitems.Name = "checkBoxIgnoreNAitems";
+            this.checkBoxIgnoreNAitems.Size = new System.Drawing.Size(159, 17);
+            this.checkBoxIgnoreNAitems.TabIndex = 22;
+            this.checkBoxIgnoreNAitems.Text = "Ignore apps with \"NA\" items";
+            this.checkBoxIgnoreNAitems.UseVisualStyleBackColor = true;
+            this.checkBoxIgnoreNAitems.CheckedChanged += new System.EventHandler(this.checkBoxIgnoreNAitems_CheckedChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3180,8 +3193,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewParttypePositionQty;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewParttypePositionPart;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewParttypePositionQualifiers;
-        private System.Windows.Forms.Label lblStatsProcessingTime;
-        private System.Windows.Forms.Label lblProcessTimeTitle;
         private System.Windows.Forms.Label lblPartsTabRedirect;
         private System.Windows.Forms.Label lblFitmentLogicProblemsTabRedirect;
         private System.Windows.Forms.Label lblParttypePositionRedirect;
@@ -3253,6 +3264,9 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dgAddsDropsVehiclesMfrLabel;
         private System.Windows.Forms.Label lblAddsDropsPartsErrorRedirect;
         private System.Windows.Forms.Label lblAddsDropsVehiclesErrorRedirect;
+        private System.Windows.Forms.Label lblStatsQdbUtil;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.CheckBox checkBoxIgnoreNAitems;
     }
 }
 

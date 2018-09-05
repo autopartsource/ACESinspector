@@ -743,8 +743,10 @@ namespace ACESinspector
         public Decimal qtyOutlierThreshold;
         public Decimal qtyOutlierSampleSize;
         public bool allowGraceForWildcardConfigs;
+        public bool ignoreNAitems;
         public int xmlAppNodeCount;
         public int xmlAssetNodeCount;
+        public decimal QdbUtilizationScore;
 
         public int qtyOutlierCount;
         public int assetProblemsCount;
@@ -773,10 +775,9 @@ namespace ACESinspector
 
         public Dictionary<string, int> partsAppCounts = new Dictionary<string, int>();
         public Dictionary<string, string> interchange = new Dictionary<string, string>();
-        Dictionary<int, List<String>> groupKeyedNoteLists = new Dictionary<int, List<String>>();
-        Dictionary<string, List<String>> noteKeyedNoteLists = new Dictionary<string, List<String>>();
         public Dictionary<string, List<int>> partsPartTypes = new Dictionary<string, List<int>>();
         public Dictionary<string, List<int>> partsPositions = new Dictionary<string, List<int>>();
+        public Dictionary<string, int> noteCounts = new Dictionary<string, int>();
         public Dictionary<int, int> basevidOccurrences = new Dictionary<int, int>(); 
         public List<string> distinctAssets = new List<string>();
         public List<string> distinctMfrLabels = new List<string>();
@@ -859,6 +860,7 @@ namespace ACESinspector
             assets.Clear();
             xmlAppNodeCount = 0;
             xmlAssetNodeCount = 0;
+            QdbUtilizationScore = 0;
             partsAppCounts.Clear();
             distinctPartTypes.Clear();
             distinctAssetNames.Clear();
@@ -892,6 +894,7 @@ namespace ACESinspector
             parttypeDisagreementCachefilesList.Clear();
             vcdbCodesErrorsCachefilesList.Clear();
             basevehicleidsErrorsCachefilesList.Clear();
+            noteCounts.Clear();
         }
 
 
@@ -924,7 +927,6 @@ namespace ACESinspector
             parttypeDisagreementCachefilesList.Clear();
             vcdbCodesErrorsCachefilesList.Clear();
             basevehicleidsErrorsCachefilesList.Clear();
-
         }
 
 
@@ -2347,11 +2349,7 @@ namespace ACESinspector
             }
             if (chunk.vcdbCodesErrorsCount == 0) { File.Delete(cacheFilename); } else { logHistoryEvent("", "5\tError: " + chunk.vcdbCodesErrorsCount.ToString() + " invalid vcdb-coded values (task " + chunk.id.ToString() + ")"); } // delete cache file if empty
 
-            //xxx
-
-
             //------------------------------------------------ invalid vehicle configurations --------------------------------------------------
-
             
             bool appHasInvalidAttribute;
             List<VCdbAttribute> dummyAttributesList = new List<VCdbAttribute>();
@@ -2829,147 +2827,6 @@ default: return 0;
             }
         }
 
-        public void importNoteGroupingsCache(string cacheFile)
-        {
-            using (var reader = new StreamReader(cacheFile))
-            {
-                int groupId;
-                groupKeyedNoteLists.Clear();
-                while (!reader.EndOfStream)
-                {
-                    var line = reader.ReadLine();
-                    var fields = line.Split('\t');
-                    if (fields.Count() == 2 && fields[0].Trim().Length > 0 && fields[1].Trim().Length > 0)
-                    {
-                        groupId = Convert.ToInt32(fields[1]);
-                        if (groupKeyedNoteLists.ContainsKey(groupId))
-                        {
-                            groupKeyedNoteLists[groupId].Add(fields[0].Trim());
-                        }
-                        else
-                        {
-                            List<String> notesList = new List<string>();
-                            notesList.Add(fields[0].Trim());
-                            groupKeyedNoteLists.Add(groupId, notesList);
-                        }
-                   }
-                }
-                buildNoteGroupingsIndex();
-            }
-        }
-
-        public void addNoteGroupingsPair(String noteA, string noteB)
-        {
-            // see if the note relationship already exists
-            bool found = false;
-            int groupNumber = 1;
-            if (noteKeyedNoteLists.ContainsKey(noteA))
-            {
-                found = noteKeyedNoteLists[noteA].Contains(noteB);
-            }
-
-            if (!found)
-            {// the exact pairing of A and B was not found
-
-                // see if either A or B already exist in the list
-                if (noteKeyedNoteLists.ContainsKey(noteA))
-                {// A is already grouped with something - glom B onto it
-
-                    groupNumber = -1;
-                    foreach (KeyValuePair<int, List<string>> entry in groupKeyedNoteLists)
-                    {
-                        if (entry.Value.Contains(noteA))
-                        {
-                            groupNumber = entry.Key; break;
-                        }
-                    }
-                    if(groupNumber > -1){groupKeyedNoteLists[groupNumber].Add(noteB);}
-                }
-                else
-                {// A is not represented anywhere
-                    if(noteKeyedNoteLists.ContainsKey(noteB))
-                    {// B is already grouped with something - glom A onto it
-
-                        groupNumber = -1;
-                        foreach (KeyValuePair<int, List<string>> entry in groupKeyedNoteLists)
-                        {
-                            if (entry.Value.Contains(noteB))
-                            {
-                                groupNumber = entry.Key; break;
-                            }
-                        }
-                        if (groupNumber > -1) { groupKeyedNoteLists[groupNumber].Add(noteA); }
-                    }
-                    else
-                    {// neither A or B is in the list - make a new group and put them in it
-                     // determine the next unused group number in 
-                        foreach (KeyValuePair<int, List<string>> entry in groupKeyedNoteLists) { if (entry.Key > groupNumber) { groupNumber = entry.Key; } }
-                        groupNumber++;
-
-                        List<String> notesList = new List<string>();
-                        notesList.Add(noteA);
-                        notesList.Add(noteB);
-                        groupKeyedNoteLists.Add(groupNumber, notesList);
-                    }
-                }
-                buildNoteGroupingsIndex();
-            }
-        }
-
-        public void buildNoteGroupingsIndex()
-        {
-            noteKeyedNoteLists.Clear();
-            foreach (KeyValuePair<int, List<string>> entry in groupKeyedNoteLists)
-            {
-                foreach (string noteOuter in entry.Value)
-                {
-                    foreach (string noteInner in entry.Value)
-                    {
-                        if (noteOuter == noteInner) { continue; }
-
-                        if (noteKeyedNoteLists.ContainsKey(noteOuter))
-                        {
-                            noteKeyedNoteLists[noteOuter].Add(noteInner);
-                        }
-                        else
-                        {
-                            List<String> notesList = new List<string>();
-                            notesList.Add(noteInner);
-                            noteKeyedNoteLists.Add(noteOuter, notesList);
-                        }
-                    }
-                }
-            }
-        }
-
-
-
-        public void writeNoteGroupingsCache(String _filePath)
-        {
-            /*
-            if (noteGroupings.Count() > 0)
-            {
-                try
-                {
-                    using (StreamWriter sw = new StreamWriter(_filePath))
-                    {
-                        foreach (KeyValuePair<string, string> noteEntry in noteGroupings)
-                        {
-                            sw.WriteLine(noteEntry.Key + "\t" + noteEntry.Value);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-
-                }
-            }
-            */
-        }
-
-
-
-
         static IEnumerable<XElement> StreamAppElement(string _filePath,string name)
         {
             using (XmlReader reader = XmlReader.Create(_filePath))
@@ -2994,7 +2851,7 @@ default: return 0;
 
 
 
-        public int importXML(string _filePath, string _schemaString, bool respectValidateNoTag, Dictionary<string,string> noteTranslation, VCdb vcdb, IProgress<int> progress)
+        public int importXML(string _filePath, string _schemaString, bool respectValidateNoTag, Dictionary<string,string> noteTranslation, Dictionary<string,QdbQualifier> noteQdbTransformDictionary, VCdb vcdb, IProgress<int> progress)
         {
             // if schema string is "", select XSD according to what ACES version is claimed by the XML
 
@@ -3007,7 +2864,8 @@ default: return 0;
             string noteTemp;
             bool splitNotesBySemicolon = true;
             List<int> basevidsInRange = new List<int>();
-
+            int NoteUsageCount = 0;
+            int QdbUsageCount = 0;
 
             if (_schemaString == "")
             {// no schema string was passed in - extract ACES version from XML
@@ -3074,7 +2932,7 @@ default: return 0;
 
             //--assets
             foreach (XElement assetElement in StreamAppElement(filePath, "Asset"))
-            {//xxx
+            {
                 Asset assetTemp = new Asset();
                 assetTemp.action = (string)assetElement.Attribute("action").Value;
                 if (assetTemp.action == "D") { discardedDeletsOnImport++; continue; }// skip deleted assets
@@ -3122,32 +2980,35 @@ default: return 0;
                             assetTemp.notes.Add(noteTemp.Trim());
                         }
                     }
+                    
+                    string translationNoteOutput = "";
+                    List<String> noteListTemp = new List<string>();
+                    bool changedSomeNotes = false;
+                    foreach (string translationNoteInput in assetTemp.notes)
+                    {
+                        if (noteTranslation.ContainsKey(translationNoteInput))
+                        {// this note is called-out in the left column of our translation file
+                            translationNoteOutput = noteTranslation[translationNoteInput];
+                            // see if the output is a Qdb transform
+                            if (translationNoteOutput.Substring(0, 4) == "Qdb:")
+                            {// transform this note to a Qdb.
 
-                    if (noteTranslation.Count > 0)
-                    {// we have a note translation file - search all the notes recently attached to to the temp app and translate/remove as required 
-                        string translationNoteOutput = "";
-                        List<String> noteListTemp = new List<string>();
-                        bool changedSomeNotes = false;
-                        foreach (string translationNoteInput in assetTemp.notes)
-                        {
-
-                            if (noteTranslation.ContainsKey(translationNoteInput))
-                            {// this note is called-out in the left column of our translation file
-                                translationNoteOutput = noteTranslation[translationNoteInput];
+                            }
+                            else
+                            {// plain-old translate of note - take second column as the resulting new note text
                                 changedSomeNotes = true;
                                 if (translationNoteOutput != "")
                                 {// right column of translation file is non-blank. use the translated value
                                     noteListTemp.Add(translationNoteOutput);
                                 }
                             }
-                            else
-                            {// this note is not present in the translations list - add it to the temp output list
-                                noteListTemp.Add(translationNoteInput);
-                            }
-
                         }
-                        if (changedSomeNotes) { assetTemp.notes = noteListTemp; }
+                        else
+                        {// this note is not present in the translations list - add it to the temp output list
+                            noteListTemp.Add(translationNoteInput);
+                        }
                     }
+                    if (changedSomeNotes) { assetTemp.notes = noteListTemp; }
                 }
 
                 foreach (string VCdbAttributeName in VCdbAttributeNames)
@@ -3163,7 +3024,7 @@ default: return 0;
 
                 assetTemp.VCdbAttributes.Sort();
 
-                // Qdb
+                // Qdb for this asset
                 foreach (XElement qualElement in assetElement.Elements("Qual"))
                 {
                     QdbQualifier QdbQualifierTemp = new QdbQualifier();
@@ -3184,6 +3045,22 @@ default: return 0;
                     assetTemp.QdbQualifiers.Add(QdbQualifierTemp);
                 }
 
+                // see if any of the note strings in the app have Qdb transforms defined
+                List<String> newNoteListTemp = new List<string>();
+                foreach (string QdbTransformInput in assetTemp.notes)
+                {
+                    if (noteQdbTransformDictionary.ContainsKey(QdbTransformInput))
+                    {//there exists a note->QdbTransform for this note text. Add the QdbQualifier (which includes its list of parms) to this app
+                        assetTemp.QdbQualifiers.Add(noteQdbTransformDictionary[QdbTransformInput]);
+                    }
+                    else
+                    {// no transform exists this note will get add to the app as-is
+                        newNoteListTemp.Add(QdbTransformInput);
+                    }
+                }
+                assetTemp.notes = newNoteListTemp;
+
+
                 foreach (int basevid in basevidsInRange)
                 {
                     Asset assetToAdd = new Asset();
@@ -3195,8 +3072,10 @@ default: return 0;
                     assetToAdd.QdbQualifiers = assetTemp.QdbQualifiers;
                     assetToAdd.VCdbAttributes = assetTemp.VCdbAttributes;
                     assets.Add(assetToAdd);
+                    NoteUsageCount += assetToAdd.notes.Count;
+                    QdbUsageCount += assetToAdd.QdbQualifiers.Count;
                 }
-                
+
             }
 
             //--/assets
@@ -3218,7 +3097,7 @@ default: return 0;
                 }
 
                 appTemp.part = (string)appElement.Element("Part");
-                //if (appTemp.part == "NA" || appTemp.part == "NR" || appTemp.part == "N/A"|| appTemp.part == "N/R"|| appTemp.part == "") { continue; } // skip place-holder part numbers like "NA"
+                if (ignoreNAitems && (appTemp.part == "NA" || appTemp.part == "NR" || appTemp.part == "N/A"|| appTemp.part == "N/R"|| appTemp.part == "")) { continue; } // skip place-holder part numbers like "NA"
 
                 appTemp.id = Convert.ToInt32(appElement.Attribute("id").Value);
                 xmlAppNodeCount++;
@@ -3226,15 +3105,13 @@ default: return 0;
                 basevidsInRange.Clear();
 
                 if (appElement.Element("BaseVehicle") != null)
-                {// standard base-vid style aoo
+                {// standard, traditional base-vid style app (majority of the files in the wild)
                     basevidsInRange.Add(Convert.ToInt32(appElement.Element("BaseVehicle").Attribute("id").Value));
                 }
                 else
                 {// this is a year-range style app (not a specific basevid)
-
                     if (appElement.Element("Years") != null)
                     {// year-range style app
-
                         if ((string)appElement.Element("Make").Attribute("id").Value != null && (string)appElement.Element("Model").Attribute("id").Value != null && (string)appElement.Element("Years").Attribute("from").Value != null && (string)appElement.Element("Years").Attribute("to").Value != null)
                         {
                             basevidsInRange = vcdb.basevidsFromYearRange(Convert.ToInt32((string)appElement.Element("Make").Attribute("id").Value), Convert.ToInt32((string)appElement.Element("Model").Attribute("id").Value), Convert.ToInt32((string)appElement.Element("Years").Attribute("from").Value), Convert.ToInt32((string)appElement.Element("Years").Attribute("to").Value));
@@ -3242,17 +3119,9 @@ default: return 0;
                     }
                     else
                     {// equipment-style app (ACES 4.0+)
-                        string xxx = "";
-
-
-
                     }
-
-
-
                 }
 
-                //appTemp.basevehilceid = Convert.ToInt32(appElement.Element("BaseVehicle").Attribute("id").Value);
                 appTemp.positionid = 0; if ((string)appElement.Element("Position") != null) { appTemp.positionid = Convert.ToInt32(appElement.Element("Position").Attribute("id").Value); }
                 appTemp.parttypeid = Convert.ToInt32(appElement.Element("PartType").Attribute("id").Value);
                 appTemp.mfrlabel = (string)appElement.Element("MfrLabel");
@@ -3323,7 +3192,7 @@ default: return 0;
                     {
                         foreach (string noteTempChunk in noteTemp.Split(';'))
                         {
-                            if (!appTemp.notes.Contains(noteTempChunk.Trim()))
+                            if (!appTemp.notes.Contains(noteTempChunk.Trim()) && noteTempChunk.Trim() != "")
                             {
                                 appTemp.notes.Add(noteTempChunk.Trim());
                             }
@@ -3331,38 +3200,44 @@ default: return 0;
                     }
                     else
                     {
-                        if (!appTemp.notes.Contains(noteTemp.Trim()))
+                        if (!appTemp.notes.Contains(noteTemp.Trim()) && noteTemp.Trim()!="")
                         {
                             appTemp.notes.Add(noteTemp.Trim());
                         }
                     }
                 }
 
-                if(noteTranslation.Count>0)
-                {// we have a note translation file - search all the notes recently attached to to the temp app and translate/remove as required 
-                    string translationNoteOutput = "";
-                    List<String> noteListTemp = new List<string>();
-                    bool changedSomeNotes = false;
-                    foreach(string translationNoteInput in appTemp.notes)
-                    {
-                        
-                        if (noteTranslation.ContainsKey(translationNoteInput))
-                        {// this note is called-out in the left column of our translation file
-                            translationNoteOutput = noteTranslation[translationNoteInput];
-                            changedSomeNotes = true;
-                            if (translationNoteOutput != "")
-                            {// right column of translation file is non-blank. use the translated value
-                                noteListTemp.Add(translationNoteOutput);
-                            }
-                        }
-                        else
-                        {// this note is not present in the translations list - add it to the temp output list
-                            noteListTemp.Add(translationNoteInput);
-                        }
-
-                    }
-                    if (changedSomeNotes) { appTemp.notes = noteListTemp; }
+                //add this app's notes to the master noteCounts dictionary
+                foreach (string appTempNote in appTemp.notes)
+                {
+                    if (noteCounts.ContainsKey(appTempNote)){noteCounts[appTempNote]++;}else{noteCounts.Add(appTempNote, 1);}
                 }
+
+
+
+
+
+                string translationNoteOutput = "";
+                List<String> noteListTemp = new List<string>();
+                bool changedSomeNotes = false;
+                foreach(string translationNoteInput in appTemp.notes)
+                {
+                    if (noteTranslation.ContainsKey(translationNoteInput))
+                    {// this note is called-out in the left column of our translation file
+                        translationNoteOutput = noteTranslation[translationNoteInput];
+                        changedSomeNotes = true;
+                        if (translationNoteOutput != "")
+                        {// right column of translation file is non-blank. use the translated value
+                            noteListTemp.Add(translationNoteOutput);
+                        }
+                    }
+                    else
+                    {// this note is not present in the translations list - add it to the temp output list
+                        noteListTemp.Add(translationNoteInput);
+                    }
+                }
+                if (changedSomeNotes) { appTemp.notes = noteListTemp; }
+
 
                 foreach (string VCdbAttributeName in VCdbAttributeNames)
                 {// roll through the entire of list of possible VCdb attribute names looking for nodes like <SubModel id="13">
@@ -3399,9 +3274,29 @@ default: return 0;
                     appTemp.QdbQualifiers.Add(QdbQualifierTemp);
                 }
 
+                // see if any of the note strings in the app have Qdb transforms defined
+                List<String> newNoteListTemp = new List<string>();
+                foreach (string QdbTransformInput in appTemp.notes)
+                {
+                    if (noteQdbTransformDictionary.ContainsKey(QdbTransformInput))
+                    {//there exists a note->QdbTransform for this note text. Add the QdbQualifier (which includes its list of parms) to this app
+                        appTemp.QdbQualifiers.Add(noteQdbTransformDictionary[QdbTransformInput]);
+                    }
+                    else
+                    {// no transform exists this note will get add to the app as-is
+                        newNoteListTemp.Add(QdbTransformInput);
+                    }
+                }
+                appTemp.notes = newNoteListTemp;
 
 
-                foreach(int basevid in basevidsInRange)
+
+
+
+
+
+
+                foreach (int basevid in basevidsInRange)
                 {
 
                     if (!basevidOccurrences.ContainsKey(basevid))
@@ -3431,6 +3326,8 @@ default: return 0;
                     appToAdd.VCdbAttributes = appTemp.VCdbAttributes;
                     apps.Add(appToAdd);
                     vcdbUsageStatsTotalApps++;
+                    NoteUsageCount += appTemp.notes.Count;
+                    QdbUsageCount += appTemp.QdbQualifiers.Count;
                 }
 
                 if (progress != null)
@@ -3440,7 +3337,7 @@ default: return 0;
                 }
             }
 
-
+            QdbUtilizationScore = Convert.ToDecimal(QdbUsageCount*100) / Convert.ToDecimal(NoteUsageCount + QdbUsageCount + 1); // +1 to avoid a divide-by-zero
 
             logHistoryEvent("", "0\tImported "+apps.Count().ToString() + " apps");
             if(xmlAssetNodeCount>0) {logHistoryEvent("", "0\tImported " + assets.Count().ToString() + " aassets"); }
@@ -3452,6 +3349,74 @@ default: return 0;
             return apps.Count;
         }
 
+        public QdbQualifier QdbQualifierFromTransfromString(string input)
+        {//xxx
+            // transform this note to a Qdb. string will look like one of these:
+            // Qdb:20420:,                  -- no parms
+            // Qdb:21720:Sport,             -- "name" parm
+            // Qdb:7095:8500,lb             -- "weight" numeric parm with unit of measure
+            // Qdb:977:9000,lb;9200,lb      -- multiple "weight" numeric parms with units of measure. semi-colon between parms
+            // Qdb:21092:S482213|Y422059,    -- "id list" strings (pipe-delimited)
+            // Qdb:21092:S482213|Y422059,;8500,lb;sport,;    -- "id list" strings (pipe-delimited)
+            QdbQualifier QdbQualifier = new QdbQualifier();
+            QdbQualifier.qualifierParameters = new List<string>();
+
+            if (input.Substring(0,4)=="Qdb:")
+            {// Qdb:21092:S482213|Y422059,;8500,lb;sport,;
+                input = input.Substring(4); // hack off the fisrt 4 chars ("Qdb:")
+            }
+            else
+            {// no "Qdb:" was not the start of the string - return an un-populated Qdb object
+                return QdbQualifier;
+            }
+
+            if (input.IndexOf(":")>0)
+            {// 21092:S482213|Y422059,;8500,lb;sport,;
+                QdbQualifier.qualifierId = Convert.ToInt32(input.Substring(0, input.IndexOf(":")));
+            }
+            else
+            {// no ":" was found - return an un-populated Qdb object
+                return QdbQualifier;
+            }
+
+            input = input.Substring(input.IndexOf(":")+1); // hack off the first ":" and chars to its left - this is the QdbId and a delimiting ":"
+
+            string[] parms = input.Split(';');
+
+            foreach (string parm in parms)
+            {// each paramater split out by ";"
+                if (parm.Trim() != "")
+                {
+                    string[] valueAndUom = parm.Split(',');
+                    if (valueAndUom.Count() == 2 && valueAndUom[0].Trim() != "")
+                    {
+                        if (valueAndUom[1].Trim() == "")
+                        {
+                            QdbQualifier.qualifierParameters.Add(escapeXMLspecialChars(valueAndUom[0]));
+                        }
+                        else
+                        {
+                            QdbQualifier.qualifierParameters.Add(escapeXMLspecialChars(valueAndUom[0]) + " " + valueAndUom[1]);
+                        }
+                    }
+                }
+            }
+            return QdbQualifier;
+        }
+
+        private string escapeXMLspecialChars(string inputString)
+        {
+            string outputString = inputString;
+            if (!string.IsNullOrEmpty(outputString))
+            {
+                outputString = outputString.Replace("&", "&amp;");
+                outputString = outputString.Replace("<", "&lt;");
+                outputString = outputString.Replace(">", "&gt;");
+                outputString = outputString.Replace("'", "&apos;");
+                outputString = outputString.Replace("\"", "&quot;");
+            }
+            return outputString;
+        }
 
 
 
@@ -5815,7 +5780,6 @@ default: return 0;
                         deletedEngineBaseDict.Add(i, myList);
                     }
                     deletedEngineBaseDict[i].Add(myPair);
-                    //xxx
                 }
                 reader.Close();
             }
@@ -6182,7 +6146,6 @@ default: return 0;
                 {
                     // <p1 type="size"/> - <p2 type="size"/> Or <p3 type="size"/> - <p4 type="size"/>
                     // num, name, size, weight, idlist, date
-
                     foreach (string parameter in parameters)
                     {
                         parameterOpenChunk = "<p" + parameterNumber.ToString() + " type=\"";
@@ -6202,7 +6165,7 @@ default: return 0;
                 return qualifierid.ToString();
             }
             else
-            {// no Qdb reference data was supplied - build a string of the ID and parameters for the sake of duplicats and overlaps detection functions that call this function
+            {// no Qdb reference data was supplied - build a string of the ID and parameters for the sake of overlaps detection functions that call this function
 
                 niceValue = qualifierid.ToString();
                 foreach (string parameter in parameters)

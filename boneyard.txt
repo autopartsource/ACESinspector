@@ -1,4 +1,131 @@
-﻿            lblStatus.Text = "Analyzing"; lblDuplicateApps.Text = "(analyzing)";
+﻿        public Dictionary<int, List<String>> groupKeyedNoteLists = new Dictionary<int, List<String>>();
+        public Dictionary<string, List<String>> noteKeyedNoteLists = new Dictionary<string, List<String>>();
+
+
+        public void importNoteGroupingsCache(string cacheFile)
+        {
+            using (var reader = new StreamReader(cacheFile))
+            {
+                int groupId;
+                groupKeyedNoteLists.Clear();
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    var fields = line.Split('\t');
+                    if (fields.Count() == 2 && fields[0].Trim().Length > 0 && fields[1].Trim().Length > 0)
+                    {
+                        groupId = Convert.ToInt32(fields[1]);
+                        if (groupKeyedNoteLists.ContainsKey(groupId))
+                        {
+                            groupKeyedNoteLists[groupId].Add(fields[0].Trim());
+                        }
+                        else
+                        {
+                            List<String> notesList = new List<string>();
+                            notesList.Add(fields[0].Trim());
+                            groupKeyedNoteLists.Add(groupId, notesList);
+                        }
+                   }
+                }
+                buildNoteGroupingsIndex();
+            }
+        }
+
+        public void addNoteGroupingsPair(String noteA, string noteB)
+        {
+            // see if the note relationship already exists
+            bool found = false;
+            int groupNumber = 1;
+            if (noteKeyedNoteLists.ContainsKey(noteA))
+            {
+                found = noteKeyedNoteLists[noteA].Contains(noteB);
+            }
+
+            if (!found)
+            {// the exact pairing of A and B was not found
+
+                // see if either A or B already exist in the list
+                if (noteKeyedNoteLists.ContainsKey(noteA))
+                {// A is already grouped with something - glom B onto it
+
+                    groupNumber = -1;
+                    foreach (KeyValuePair<int, List<string>> entry in groupKeyedNoteLists)
+                    {
+                        if (entry.Value.Contains(noteA))
+                        {
+                            groupNumber = entry.Key; break;
+                        }
+                    }
+                    if(groupNumber > -1){groupKeyedNoteLists[groupNumber].Add(noteB);}
+                }
+                else
+                {// A is not represented anywhere
+                    if(noteKeyedNoteLists.ContainsKey(noteB))
+                    {// B is already grouped with something - glom A onto it
+
+                        groupNumber = -1;
+                        foreach (KeyValuePair<int, List<string>> entry in groupKeyedNoteLists)
+                        {
+                            if (entry.Value.Contains(noteB))
+                            {
+                                groupNumber = entry.Key; break;
+                            }
+                        }
+                        if (groupNumber > -1) { groupKeyedNoteLists[groupNumber].Add(noteA); }
+                    }
+                    else
+                    {// neither A or B is in the list - make a new group and put them in it
+                     // determine the next unused group number in 
+                        foreach (KeyValuePair<int, List<string>> entry in groupKeyedNoteLists) { if (entry.Key > groupNumber) { groupNumber = entry.Key; } }
+                        groupNumber++;
+
+                        List<String> notesList = new List<string>();
+                        notesList.Add(noteA);
+                        notesList.Add(noteB);
+                        groupKeyedNoteLists.Add(groupNumber, notesList);
+                    }
+                }
+                buildNoteGroupingsIndex();
+            }
+        }
+
+        public void buildNoteGroupingsIndex()
+        {
+            noteKeyedNoteLists.Clear();
+            foreach (KeyValuePair<int, List<string>> entry in groupKeyedNoteLists)
+            {
+                foreach (string noteOuter in entry.Value)
+                {
+                    foreach (string noteInner in entry.Value)
+                    {
+                        if (noteOuter == noteInner) { continue; }
+
+                        if (noteKeyedNoteLists.ContainsKey(noteOuter))
+                        {
+                            noteKeyedNoteLists[noteOuter].Add(noteInner);
+                        }
+                        else
+                        {
+                            List<String> notesList = new List<string>();
+                            notesList.Add(noteInner);
+                            noteKeyedNoteLists.Add(noteOuter, notesList);
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+        public void writeNoteGroupingsCache(String _filePath)
+        {
+        }
+
+
+
+
+
+            lblStatus.Text = "Analyzing"; lblDuplicateApps.Text = "(analyzing)";
             await Task.Run(() => aces.duplicates(vcdb, pcdb, progressDuplicates));
             lblDuplicateApps.Text = aces.duplicateErrors.Count.ToString();
             pictureBoxDuplicates.Visible = true; if (aces.duplicateErrors.Count > 0) { tabControl1.TabPages.Add(hiddenDuplicatesTab); highestVisableTab1Index++; dgDuplicates.Visible = true; pictureBoxDuplicates.BackColor = Color.Yellow; } else { pictureBoxDuplicates.BackColor = Color.Green; }

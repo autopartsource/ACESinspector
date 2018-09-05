@@ -7,6 +7,13 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.29 (released 9/xx/2018)
+Added distinct note-tag reporting in the output spreadsheet.
+Added Qdb-Transform feature to the note translation mechanism
+Added Qdb utilization stats on home tab
+Added "Ignore NA items" control and (back-end execution) to settings tab
+Moved controls around (cosmetic) on the settings tab
+
 1.2.0.28 (released 8/20/2018)
 Fixed blank lblAssessmentsPath.Text and lblCachePath.Text logic on first run
 

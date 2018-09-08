@@ -181,13 +181,16 @@ namespace ACESinspector
 
         public string niceQdbQualifierString(Qdb qdb)
         {
-            string returnString = "";
+            List<string> stringList = new List<string>();
+            
             foreach (QdbQualifier myQdbQualifier in QdbQualifiers)
             {
-                returnString += qdb.niceQdbQualifier(myQdbQualifier.qualifierId, myQdbQualifier.qualifierParameters);
+                //returnString += qdb.niceQdbQualifier(myQdbQualifier.qualifierId, myQdbQualifier.qualifierParameters);
+                stringList.Add(qdb.niceQdbQualifier(myQdbQualifier.qualifierId, myQdbQualifier.qualifierParameters));
 
             }
-            return returnString;
+            //return returnString;
+            return String.Join(";", stringList.ToArray());
         }
 
         public string niceFullFitmentString(VCdb vcdb, Qdb qdb)

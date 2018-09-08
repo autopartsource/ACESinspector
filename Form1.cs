@@ -1498,6 +1498,8 @@ namespace ACESinspector
                     sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique Part count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.partsAppCounts.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
                     sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique MfrLabel count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.distinctMfrLabels.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
                     sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique Parttypes count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.distinctPartTypes.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Qdb Utilization (%)</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.QdbUtilizationScore.ToString("0.00") + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+
                     sw.Write("<Row><Cell><Data ss:Type=\"String\">Validation tool</Data></Cell><Cell ss:StyleID=\"s64\" ss:HRef=\"https://autopartsource.com/ACESinspector\"><Data ss:Type=\"String\">ACESinspector version " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
                     sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><Selected/><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
 
@@ -1523,13 +1525,30 @@ namespace ACESinspector
 
                     if(aces.noteCounts.Count>0)
                     {
-                        sw.Write("<Worksheet ss:Name=\"Note Tags\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"200\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"80\"/>");
-                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Note Text</Data></Cell><Cell><Data ss:Type=\"String\">occurrences</Data></Cell></Row>");
+                        if (noteToQdbTransformDictionary.Count() > 0)
+                        {// transforms are in play - they will be listed in the third column
+                            sw.Write("<Worksheet ss:Name=\"Note Tags\"><Table ss:ExpandedColumnCount=\"3\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"350\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"62.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"350\"/>");
+                            sw.Write("<Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Note Text</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Occurrences</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Qdb Transform</Data></Cell></Row>");
+                        }
+                        else
+                        {// no transforms in play - list the notes and counts only
+                            sw.Write("<Worksheet ss:Name=\"Note Tags\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"350\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"62.5\"/>");
+                            sw.Write("<Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Note Text</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Occurrences</Data></Cell></Row>");
+                        }
+
                         foreach (KeyValuePair<string, int> noteEntry in aces.noteCounts)
                         {
-                            sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(noteEntry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + noteEntry.Value + "</Data></Cell></Row>");
+                            if (noteToQdbTransformDictionary.ContainsKey(noteEntry.Key))
+                            {
+                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(noteEntry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + noteEntry.Value + "</Data></Cell><Cell><Data ss:Type=\"String\">" + qdb.niceQdbQualifier(noteToQdbTransformDictionary[noteEntry.Key].qualifierId, noteToQdbTransformDictionary[noteEntry.Key].qualifierParameters) + "</Data></Cell></Row>");
+                            }
+                            else
+                            {
+                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(noteEntry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + noteEntry.Value + "</Data></Cell></Row>");
+                            }
                         }
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                        excelTabColorXMLtag = "";// "<TabColorIndex>13</TabColorIndex>";
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                     }
 
                     if (aces.parttypeDisagreementCount > 0)

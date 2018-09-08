@@ -7,12 +7,18 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
-1.2.0.29 (released 9/xx/2018)
+1.2.0.30 (released 9/7/2018)
+Added row to assessment spreadsheet stats tab to show Qdb utilization score.
+Added decoded Qdb-transformed notes to the distinct notes list in assessment spreasheet.
+Fixed header row to be Frozen and bold/gray bg in assessment spreadsheet notes tab.
+Fix fullFitmentString() function to properly delimit consecutive Qdb elements with a semi-colon.
+
+1.2.0.29 (released 9/5/2018)
 Added distinct note-tag reporting in the output spreadsheet.
-Added Qdb-Transform feature to the note translation mechanism
-Added Qdb utilization stats on home tab
-Added "Ignore NA items" control and (back-end execution) to settings tab
-Moved controls around (cosmetic) on the settings tab
+Added Qdb-Transform feature to the note translation mechanism.
+Added Qdb utilization stats on home tab.
+Added "Ignore NA items" control and (back-end execution) to settings tab.
+Moved controls around (cosmetic) on the settings tab.
 
 1.2.0.28 (released 8/20/2018)
 Fixed blank lblAssessmentsPath.Text and lblCachePath.Text logic on first run

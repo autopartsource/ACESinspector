@@ -7,7 +7,7 @@ using System.Windows.Forms;
 using System.IO;
 using Microsoft.Win32;
 using System.Security.Cryptography;
-using System.Diagnostics;
+//using System.Diagnostics;
 using MySql.Data.MySqlClient;
 using System.Net;
 
@@ -3693,7 +3693,7 @@ namespace ACESinspector
             vcdb.MySQLusername = textBoxMySQLuser.Text.Trim();
             vcdb.MySQLpassword = textBoxMySQLpassword.Text.Trim();
             vcdb.MySQLdatabaseName = comboBoxMySQLvcdbVersion.Items[comboBoxMySQLvcdbVersion.SelectedIndex].ToString();
-            vcdb.MySQLconnectionString = "SERVER=" + textBoxMySQLhost.Text.Trim() + ";" + "DATABASE=" + vcdb.MySQLdatabaseName + ";" + "UID=" + textBoxMySQLuser.Text.Trim() + ";" + "PASSWORD=" + textBoxMySQLpassword.Text.Trim() + ";";
+            vcdb.MySQLconnectionString = "SERVER=" + textBoxMySQLhost.Text.Trim() + ";" + "DATABASE=" + vcdb.MySQLdatabaseName + ";" + "UID=" + textBoxMySQLuser.Text.Trim() + ";" + "PASSWORD=" + textBoxMySQLpassword.Text.Trim() + ";SslMode=none;";
             vcdb.useRemoteDB = true;
             vcdb.addNewMySQLconnection();  // establish the initial connections used for loading the local data dictionaries. this will get distroyed as soon as the import completes. when actual analysis is run, the required number of connections will be instanced on the fly
             await Task.Run(() => importMySQLvcdb());
@@ -3712,7 +3712,7 @@ namespace ACESinspector
 
             //xxx
             vcdb.connectionMySQLlist.Clear();
-            vcdb.MySQLconnectionString = "SERVER=" + textBoxMySQLhost.Text.Trim() + ";" + "DATABASE=vcdbchanges;" + "UID=" + textBoxMySQLuser.Text.Trim() + ";" + "PASSWORD=" + textBoxMySQLpassword.Text.Trim() + ";";
+            vcdb.MySQLconnectionString = "SERVER=" + textBoxMySQLhost.Text.Trim() + ";" + "DATABASE=vcdbchanges;" + "UID=" + textBoxMySQLuser.Text.Trim() + ";" + "PASSWORD=" + textBoxMySQLpassword.Text.Trim() + ";SslMode=none;";
             vcdb.useRemoteDB = true;
             vcdb.addNewMySQLconnection();  // establish the initial connections used for loading the local data dictionaries. this will get distroyed as soon as the import completes. when actual analysis is run, the required number of connections will be instanced on the fly
             await Task.Run(() => importMySQLvcdbChangelog());
@@ -3841,7 +3841,7 @@ namespace ACESinspector
             pcdb.MySQLusername = textBoxMySQLuser.Text.Trim();
             pcdb.MySQLpassword = textBoxMySQLpassword.Text.Trim();
             pcdb.MySQLdatabaseName = comboBoxMySQLpcdbVersion.Items[comboBoxMySQLpcdbVersion.SelectedIndex].ToString();
-            pcdb.MySQLconnectionString = "SERVER=" + textBoxMySQLhost.Text.Trim() + ";" + "DATABASE=" + pcdb.MySQLdatabaseName + ";" + "UID=" + textBoxMySQLuser.Text.Trim() + ";" + "PASSWORD=" + textBoxMySQLpassword.Text.Trim() + ";";
+            pcdb.MySQLconnectionString = "SERVER=" + textBoxMySQLhost.Text.Trim() + ";" + "DATABASE=" + pcdb.MySQLdatabaseName + ";" + "UID=" + textBoxMySQLuser.Text.Trim() + ";" + "PASSWORD=" + textBoxMySQLpassword.Text.Trim() + ";SslMode=none;";
             pcdb.useRemoteDB = true;
             pcdb.connectMySQL();
             await Task.Run(() => importMySQLpcdb());
@@ -3862,7 +3862,7 @@ namespace ACESinspector
             qdb.MySQLusername = textBoxMySQLuser.Text.Trim();
             qdb.MySQLpassword = textBoxMySQLpassword.Text.Trim();
             qdb.MySQLdatabaseName = comboBoxMySQLqdbVersion.Items[comboBoxMySQLqdbVersion.SelectedIndex].ToString();
-            qdb.MySQLconnectionString = "SERVER=" + textBoxMySQLhost.Text.Trim() + ";" + "DATABASE=" + qdb.MySQLdatabaseName + ";" + "UID=" + textBoxMySQLuser.Text.Trim() + ";" + "PASSWORD=" + textBoxMySQLpassword.Text.Trim() + ";";
+            qdb.MySQLconnectionString = "SERVER=" + textBoxMySQLhost.Text.Trim() + ";" + "DATABASE=" + qdb.MySQLdatabaseName + ";" + "UID=" + textBoxMySQLuser.Text.Trim() + ";" + "PASSWORD=" + textBoxMySQLpassword.Text.Trim() + ";SslMode=none;";
             qdb.useRemoteDB = true;
             qdb.connectMySQL();
             await Task.Run(() => importMySQLqdb());
@@ -3881,7 +3881,7 @@ namespace ACESinspector
             pcdb.pcdbVersionsOnServerList.Clear();
             qdb.qdbVersionsOnServerList.Clear();
             // "list" is the assumed name of the db on the server. it must contain a table called "versions" with two colums :name, type. like 'vcdb20180228','vcdb'. this tells the client what vcdb,qdb and pcb databases exist (by name) on the server. when it comes time to actually comsume the reference databases, new connections will be made to those specific databases that the user selects - or that the imported ACES file claims
-            string connectionString = "SERVER=" + textBoxMySQLhost.Text.Trim() + ";" + "DATABASE=list" + ";" + "UID=" + textBoxMySQLuser.Text.Trim() + ";" + "PASSWORD=" + textBoxMySQLpassword.Text.Trim() + ";POOLING=FALSE";
+            string connectionString = "SERVER=" + textBoxMySQLhost.Text.Trim() + ";" + "DATABASE=list" + ";" + "UID=" + textBoxMySQLuser.Text.Trim() + ";" + "PASSWORD=" + textBoxMySQLpassword.Text.Trim() + ";POOLING=FALSE;SslMode=none;";
             MySqlConnection connection = new MySqlConnection(connectionString);
             try
             {
@@ -3913,8 +3913,9 @@ namespace ACESinspector
                 switch (ex.Number)
                 {
                     case 0: MessageBox.Show("Cannot connect to server."); break;
+                    case 1042: MessageBox.Show("Hostname lookup failure - Check network connection"); break;
                     case 1045: MessageBox.Show("Invalid username/password"); break;
-                    default: MessageBox.Show("MySQL error (1): " + ex.Message); break;
+                    default: MessageBox.Show("MySQL error: " + ex.Message); break;
                 }
             }
         }

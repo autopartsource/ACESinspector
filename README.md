@@ -7,6 +7,10 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.31 (released 9/xx/2018)
+upgraded included MySQL client DLLs to latest generally-available version (8.0.12.0). Had to add "SslMode=none" to the connect string as a result.
+
+
 1.2.0.30 (released 9/7/2018)
 Added row to assessment spreadsheet stats tab to show Qdb utilization score.
 Added decoded Qdb-transformed notes to the distinct notes list in assessment spreasheet.

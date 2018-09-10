@@ -10,8 +10,8 @@ using System.Globalization;
 using System.Security;
 using Microsoft.Win32;
 using System.Drawing;
-using System.Diagnostics;
-using System.Security.Cryptography;
+//using System.Diagnostics;
+//using System.Security.Cryptography;
 using MySql.Data.MySqlClient;
 
 namespace ACESinspector

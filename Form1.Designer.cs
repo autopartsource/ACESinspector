@@ -44,6 +44,8 @@
             this.dgPartsPositions = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageStats = new System.Windows.Forms.TabPage();
+            this.lblStatsQdbUtil = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
             this.textBoxAnalysisHostory = new System.Windows.Forms.TextBox();
             this.pictureBoxCommonErrors = new System.Windows.Forms.PictureBox();
             this.lblIndividualErrors = new System.Windows.Forms.Label();
@@ -69,6 +71,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.tabPageSettings = new System.Windows.Forms.TabPage();
+            this.checkBoxIgnoreNAitems = new System.Windows.Forms.CheckBox();
             this.groupBoxRemoteVCdb = new System.Windows.Forms.GroupBox();
             this.radioButtonDataSourceMySQL = new System.Windows.Forms.RadioButton();
             this.radioButtonDataSourceAccess = new System.Windows.Forms.RadioButton();
@@ -280,9 +283,6 @@
             this.progBarRefACESload = new System.Windows.Forms.ProgressBar();
             this.lblPrimeACESLoadStatus = new System.Windows.Forms.Label();
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
-            this.label16 = new System.Windows.Forms.Label();
-            this.lblStatsQdbUtil = new System.Windows.Forms.Label();
-            this.checkBoxIgnoreNAitems = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -498,6 +498,26 @@
             this.tabPageStats.TabIndex = 9;
             this.tabPageStats.Text = "Statistics";
             this.tabPageStats.UseVisualStyleBackColor = true;
+            // 
+            // lblStatsQdbUtil
+            // 
+            this.lblStatsQdbUtil.AutoSize = true;
+            this.lblStatsQdbUtil.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblStatsQdbUtil.Location = new System.Drawing.Point(144, 145);
+            this.lblStatsQdbUtil.Name = "lblStatsQdbUtil";
+            this.lblStatsQdbUtil.Size = new System.Drawing.Size(42, 20);
+            this.lblStatsQdbUtil.TabIndex = 66;
+            this.lblStatsQdbUtil.Text = "label";
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label16.Location = new System.Drawing.Point(6, 145);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(112, 20);
+            this.label16.TabIndex = 65;
+            this.label16.Text = "Qdb Utilization";
             // 
             // textBoxAnalysisHostory
             // 
@@ -762,6 +782,17 @@
             this.tabPageSettings.TabIndex = 17;
             this.tabPageSettings.Text = "Settings";
             this.tabPageSettings.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxIgnoreNAitems
+            // 
+            this.checkBoxIgnoreNAitems.AutoSize = true;
+            this.checkBoxIgnoreNAitems.Location = new System.Drawing.Point(8, 227);
+            this.checkBoxIgnoreNAitems.Name = "checkBoxIgnoreNAitems";
+            this.checkBoxIgnoreNAitems.Size = new System.Drawing.Size(159, 17);
+            this.checkBoxIgnoreNAitems.TabIndex = 22;
+            this.checkBoxIgnoreNAitems.Text = "Ignore apps with \"NA\" items";
+            this.checkBoxIgnoreNAitems.UseVisualStyleBackColor = true;
+            this.checkBoxIgnoreNAitems.CheckedChanged += new System.EventHandler(this.checkBoxIgnoreNAitems_CheckedChanged);
             // 
             // groupBoxRemoteVCdb
             // 
@@ -2874,37 +2905,6 @@
             this.lblRefACESLoadStatus.Size = new System.Drawing.Size(35, 13);
             this.lblRefACESLoadStatus.TabIndex = 53;
             this.lblRefACESLoadStatus.Text = "label1";
-            // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label16.Location = new System.Drawing.Point(6, 145);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(112, 20);
-            this.label16.TabIndex = 65;
-            this.label16.Text = "Qdb Utilization";
-            // 
-            // lblStatsQdbUtil
-            // 
-            this.lblStatsQdbUtil.AutoSize = true;
-            this.lblStatsQdbUtil.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStatsQdbUtil.Location = new System.Drawing.Point(144, 145);
-            this.lblStatsQdbUtil.Name = "lblStatsQdbUtil";
-            this.lblStatsQdbUtil.Size = new System.Drawing.Size(42, 20);
-            this.lblStatsQdbUtil.TabIndex = 66;
-            this.lblStatsQdbUtil.Text = "label";
-            // 
-            // checkBoxIgnoreNAitems
-            // 
-            this.checkBoxIgnoreNAitems.AutoSize = true;
-            this.checkBoxIgnoreNAitems.Location = new System.Drawing.Point(8, 227);
-            this.checkBoxIgnoreNAitems.Name = "checkBoxIgnoreNAitems";
-            this.checkBoxIgnoreNAitems.Size = new System.Drawing.Size(159, 17);
-            this.checkBoxIgnoreNAitems.TabIndex = 22;
-            this.checkBoxIgnoreNAitems.Text = "Ignore apps with \"NA\" items";
-            this.checkBoxIgnoreNAitems.UseVisualStyleBackColor = true;
-            this.checkBoxIgnoreNAitems.CheckedChanged += new System.EventHandler(this.checkBoxIgnoreNAitems_CheckedChanged);
             // 
             // Form1
             // 

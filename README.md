@@ -7,7 +7,7 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
-1.2.0.31 (released 9/xx/2018)
+1.2.0.31 (not yet released)
 upgraded included MySQL client DLLs to latest generally-available version (8.0.12.0). Had to add "SslMode=none" to the connect string as a result.
 
 

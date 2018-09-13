@@ -7,9 +7,15 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
-1.2.0.31 (not yet released)
-upgraded included MySQL client DLLs to latest generally-available version (8.0.12.0). Had to add "SslMode=none" to the connect string as a result.
 
+1.2.0.32 (not yet released)
+
+
+
+1.2.0.31 (released 9/13/2018)
+Upgraded included MySQL client DLLs to latest generally-available version (8.0.12.0). Had to add "SslMode=none" to the connect string as a result.
+Started catching bogus years that are implied by year-range-style apps that go beyond (earlier or later) than the valid basevehicles defined in the VCdb.
+tweaked the Qdb utilization score to avoid divide-by-zero.
 
 1.2.0.30 (released 9/7/2018)
 Added row to assessment spreadsheet stats tab to show Qdb utilization score.

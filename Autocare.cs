@@ -3340,7 +3340,11 @@ default: return 0;
                 }
             }
 
-            QdbUtilizationScore = Convert.ToDecimal(QdbUsageCount*100) / Convert.ToDecimal(NoteUsageCount + QdbUsageCount + 1); // +1 to avoid a divide-by-zero
+            QdbUtilizationScore = 0;
+            if ((NoteUsageCount + QdbUsageCount) > 0)
+            {// only compute a score if divide-by-zero will not happen
+                QdbUtilizationScore = Convert.ToDecimal(QdbUsageCount * 100) / Convert.ToDecimal(NoteUsageCount + QdbUsageCount);
+            }
 
             logHistoryEvent("", "0\tImported "+apps.Count().ToString() + " apps");
             if(xmlAssetNodeCount>0) {logHistoryEvent("", "0\tImported " + assets.Count().ToString() + " aassets"); }
@@ -4309,6 +4313,10 @@ default: return 0;
                 if (vcdbReverseBasevhicleDict.ContainsKey(mmyKeyTemp))
                 {
                     basevidList.Add(vcdbReverseBasevhicleDict[mmyKeyTemp]);
+                }
+                else
+                {// this MMY is not valid from given VCDB
+                    basevidList.Add(0);
                 }
             }
             return basevidList;

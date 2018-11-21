@@ -2582,14 +2582,13 @@ namespace ACESinspector
         //the world that the children made, here
 
         // take two ACES objects (primary and reference) and put the diffs into "this" instance
-        public void findDifferentials(ACES primearyaces, ACES refaces, VCdb vcdb, PCdb pcdb, IProgress<int> progress)
+        public void findDifferentials(ACES primearyaces, ACES refaces, VCdb vcdb, PCdb pcdb, Qdb qdb, IProgress<int> progress)
         {
             string hashKey = ""; int percentProgress = 0; int partsAddedCount = 0; int partsDroppedCount = 0; int vehiclesAddedCount = 0; int vehiclesDroppedCount = 0; int appsAddedCount = 0; int appsDroppedCount = 0;
             Dictionary<string, int> primaryvehicles = new Dictionary<string, int>();
             Dictionary<string, int> refvehicles = new Dictionary<string, int>();
             Dictionary<string, int> primaryApps = new Dictionary<string, int>();
             Dictionary<string, int> refApps = new Dictionary<string, int>();
-            List<String> differentialApps = new List<String>();
 
 
             foreach (KeyValuePair<string,int> partEntry in primearyaces.partsAppCounts)
@@ -2606,13 +2605,13 @@ namespace ACESinspector
             if (progress != null) { percentProgress = 10; progress.Report(percentProgress); }
             foreach (App app in primearyaces.apps)
             {
-                hashKey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.namevalpairString(false) + "\t" + string.Join(";", app.notes) + "\t" + app.mfrlabel;
+                hashKey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.niceFullFitmentString(vcdb,qdb)+ "\t" + app.mfrlabel;
                 if (!primaryvehicles.ContainsKey(hashKey)) { primaryvehicles.Add(hashKey, 0); }
             }
             if (progress != null) { percentProgress = 15; progress.Report(percentProgress); }
             foreach (App app in refaces.apps)
             {
-                hashKey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.namevalpairString(false) + "\t" + string.Join(";", app.notes) + "\t" + app.mfrlabel;
+                hashKey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.niceFullFitmentString(vcdb, qdb) + "\t" + app.mfrlabel;
                 if (!refvehicles.ContainsKey(hashKey)) { refvehicles.Add(hashKey, 0); }
             }
             if (progress != null) { percentProgress = 20; progress.Report(percentProgress); }
@@ -2628,62 +2627,72 @@ namespace ACESinspector
 
 
 
-            // differential apps  - defined as basevid/type/position/attributes/notes/mfrlabel/part
+            // differential apps  - defined as basevid/type/position/attributes/qdbs/notes/mfrlabel/asset/part
             if (progress != null) { percentProgress = 30; progress.Report(percentProgress); }
             foreach (App app in primearyaces.apps)
             {
-                hashKey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.quantity.ToString() + "\t" + app.namevalpairString(false) + "\t" + string.Join(";", app.notes) + "\t" + app.mfrlabel + "\t" + app.part + "\t" + app.asset + "\t" + app.assetitemorder.ToString();
+                hashKey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.quantity.ToString() + "\t" + app.niceFullFitmentString(vcdb, qdb) + "\t" + app.mfrlabel + "\t" + app.part + "\t" + app.asset + "\t" + app.assetitemorder.ToString();
                 if (!primaryApps.ContainsKey(hashKey)) { primaryApps.Add(hashKey, 0); }
             }
             if (progress != null) { percentProgress = 40; progress.Report(percentProgress); }
             foreach (App app in refaces.apps)
             {
-                hashKey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.quantity.ToString() + "\t" + app.namevalpairString(false) + "\t" + string.Join(";", app.notes) + "\t" + app.mfrlabel + "\t" + app.part + "\t" + app.asset + "\t" + app.assetitemorder.ToString();
+                hashKey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.quantity.ToString() + "\t" + app.niceFullFitmentString(vcdb, qdb) + "\t" + app.mfrlabel + "\t" + app.part + "\t" + app.asset + "\t" + app.assetitemorder.ToString();
                 if (!refApps.ContainsKey(hashKey)) { refApps.Add(hashKey, 0); }
             }
             if (progress != null) { percentProgress = 70; progress.Report(percentProgress); }
-            foreach (KeyValuePair<string, int> entry in primaryApps)
+
+
+            foreach (App app in primearyaces.apps)
             {
-                if (!refApps.ContainsKey(entry.Key))
+                hashKey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.quantity.ToString() + "\t" + app.niceFullFitmentString(vcdb, qdb) + "\t" + app.mfrlabel + "\t" + app.part + "\t" + app.asset + "\t" + app.assetitemorder.ToString();
+                if (!refApps.ContainsKey(hashKey))
                 {
-                    differentialApps.Add("Add\t" + entry.Key); appsAddedCount++;
+                    App addApp = new App();
+                    addApp.basevehilceid = app.basevehilceid;
+                    addApp.action = "A";
+                    addApp.reference = app.reference;
+                    addApp.asset = app.asset;
+                    addApp.assetitemorder = app.assetitemorder;
+                    addApp.assetitemref = app.assetitemref;
+                    addApp.id = app.id;
+                    addApp.mfrlabel = app.mfrlabel;
+                    addApp.notes = app.notes;
+                    addApp.part = app.part;
+                    addApp.parttypeid = app.parttypeid;
+                    addApp.positionid = app.positionid;
+                    addApp.QdbQualifiers = app.QdbQualifiers;
+                    addApp.quantity = app.quantity;
+                    addApp.VCdbAttributes = app.VCdbAttributes;
+
+                    this.apps.Add(addApp);
                 }
             }
-            if (progress != null) { percentProgress = 90; progress.Report(percentProgress); }
-            foreach (KeyValuePair<string, int> entry in refApps)
+
+            foreach (App app in refaces.apps)
             {
-                if (!primaryApps.ContainsKey(entry.Key))
+                hashKey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.quantity.ToString() + "\t" + app.niceFullFitmentString(vcdb, qdb) + "\t" + app.mfrlabel + "\t" + app.part + "\t" + app.asset + "\t" + app.assetitemorder.ToString();
+                if (!primaryApps.ContainsKey(hashKey))
                 {
-                    differentialApps.Add("Drop\t" + entry.Key); appsDroppedCount++;
+                    App dropApp = new App();
+                    dropApp.basevehilceid = app.basevehilceid;
+                    dropApp.action = "D";
+                    dropApp.reference = app.reference;
+                    dropApp.asset = app.asset;
+                    dropApp.assetitemorder = app.assetitemorder;
+                    dropApp.assetitemref = app.assetitemref;
+                    dropApp.id = app.id;
+                    dropApp.mfrlabel = app.mfrlabel;
+                    dropApp.notes = app.notes;
+                    dropApp.part = app.part;
+                    dropApp.parttypeid = app.parttypeid;
+                    dropApp.positionid = app.positionid;
+                    dropApp.QdbQualifiers = app.QdbQualifiers;
+                    dropApp.quantity = app.quantity;
+                    dropApp.VCdbAttributes = app.VCdbAttributes;
+
+                    this.apps.Add(dropApp);
                 }
-            }
-
-            // cram diff apps into "this" ACES class object
-            if (differentialApps.Count > 0)
-            {
-                /*    apps = new App[differentialApps.Count]; // allocate instances of App class in "apps" array
-
-                    foreach (string entry in differentialApps)
-                    {
-                        string[] fields = entry.Split('\t');
-                        apps[appsCount] = new App();
-                        if (fields[0] == "Add") { apps[appsCount].action = "A"; }
-                        if (fields[0] == "Drop") { apps[appsCount].action = "D"; }
-
-                        apps[appsCount].basevehilceid = Convert.ToInt32(fields[1]);
-                        apps[appsCount].parttypeid = Convert.ToInt32(fields[2]);
-                        apps[appsCount].positionid = Convert.ToInt32(fields[3]);
-                        apps[appsCount].quantity = Convert.ToInt32(fields[4]);
-                        if (fields[5] != "") { apps[appsCount].VCdbAttributes = parseAttributePairsString(fields[5]); }
-                        apps[appsCount].notes = fields[6];
-                        apps[appsCount].mfrlabel = fields[7];
-                        apps[appsCount].part = fields[8];
-                        apps[appsCount].asset = fields[9];
-                        apps[appsCount].assetitemorder = Convert.ToInt32(fields[10]);
-                        appsCount++;
-                    }
-                    differentialApps.Clear();
-                    */
             }
 
             if (progress != null) { percentProgress = 100; progress.Report(percentProgress); }

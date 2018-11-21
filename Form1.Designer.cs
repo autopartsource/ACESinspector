@@ -71,6 +71,17 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.tabPageSettings = new System.Windows.Forms.TabPage();
+            this.groupBoxAssessmentFile = new System.Windows.Forms.GroupBox();
+            this.textBoxFTPpass = new System.Windows.Forms.TextBox();
+            this.textBoxFTPuser = new System.Windows.Forms.TextBox();
+            this.textBoxFTPhost = new System.Windows.Forms.TextBox();
+            this.lblAssessmentsPath = new System.Windows.Forms.Label();
+            this.label20 = new System.Windows.Forms.Label();
+            this.btnSelectAssessmentDir = new System.Windows.Forms.Button();
+            this.label19 = new System.Windows.Forms.Label();
+            this.checkBoxFTPassessment = new System.Windows.Forms.CheckBox();
+            this.comboBoxAssessmentFormat = new System.Windows.Forms.ComboBox();
+            this.label17 = new System.Windows.Forms.Label();
             this.checkBoxIgnoreNAitems = new System.Windows.Forms.CheckBox();
             this.groupBoxRemoteVCdb = new System.Windows.Forms.GroupBox();
             this.radioButtonDataSourceMySQL = new System.Windows.Forms.RadioButton();
@@ -82,8 +93,6 @@
             this.label14 = new System.Windows.Forms.Label();
             this.textBoxMySQLhost = new System.Windows.Forms.TextBox();
             this.checkBoxAutoloadLocalDatabases = new System.Windows.Forms.CheckBox();
-            this.lblAssessmentsPath = new System.Windows.Forms.Label();
-            this.btnSelectAssessmentDir = new System.Windows.Forms.Button();
             this.label10 = new System.Windows.Forms.Label();
             this.numericUpDownThreads = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
@@ -289,6 +298,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxCommonErrors)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLogicProblems)).BeginInit();
             this.tabPageSettings.SuspendLayout();
+            this.groupBoxAssessmentFile.SuspendLayout();
             this.groupBoxRemoteVCdb.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownThreads)).BeginInit();
             this.groupBoxValidateTagOptions.SuspendLayout();
@@ -760,10 +770,9 @@
             // 
             // tabPageSettings
             // 
+            this.tabPageSettings.Controls.Add(this.groupBoxAssessmentFile);
             this.tabPageSettings.Controls.Add(this.checkBoxIgnoreNAitems);
             this.tabPageSettings.Controls.Add(this.groupBoxRemoteVCdb);
-            this.tabPageSettings.Controls.Add(this.lblAssessmentsPath);
-            this.tabPageSettings.Controls.Add(this.btnSelectAssessmentDir);
             this.tabPageSettings.Controls.Add(this.label10);
             this.tabPageSettings.Controls.Add(this.numericUpDownThreads);
             this.tabPageSettings.Controls.Add(this.label9);
@@ -783,10 +792,119 @@
             this.tabPageSettings.Text = "Settings";
             this.tabPageSettings.UseVisualStyleBackColor = true;
             // 
+            // groupBoxAssessmentFile
+            // 
+            this.groupBoxAssessmentFile.Controls.Add(this.textBoxFTPpass);
+            this.groupBoxAssessmentFile.Controls.Add(this.textBoxFTPuser);
+            this.groupBoxAssessmentFile.Controls.Add(this.textBoxFTPhost);
+            this.groupBoxAssessmentFile.Controls.Add(this.lblAssessmentsPath);
+            this.groupBoxAssessmentFile.Controls.Add(this.label20);
+            this.groupBoxAssessmentFile.Controls.Add(this.btnSelectAssessmentDir);
+            this.groupBoxAssessmentFile.Controls.Add(this.label19);
+            this.groupBoxAssessmentFile.Controls.Add(this.checkBoxFTPassessment);
+            this.groupBoxAssessmentFile.Controls.Add(this.comboBoxAssessmentFormat);
+            this.groupBoxAssessmentFile.Controls.Add(this.label17);
+            this.groupBoxAssessmentFile.Location = new System.Drawing.Point(9, 150);
+            this.groupBoxAssessmentFile.Name = "groupBoxAssessmentFile";
+            this.groupBoxAssessmentFile.Size = new System.Drawing.Size(333, 118);
+            this.groupBoxAssessmentFile.TabIndex = 23;
+            this.groupBoxAssessmentFile.TabStop = false;
+            this.groupBoxAssessmentFile.Text = "Assessment File";
+            // 
+            // textBoxFTPpass
+            // 
+            this.textBoxFTPpass.Enabled = false;
+            this.textBoxFTPpass.Location = new System.Drawing.Point(202, 91);
+            this.textBoxFTPpass.Name = "textBoxFTPpass";
+            this.textBoxFTPpass.Size = new System.Drawing.Size(125, 20);
+            this.textBoxFTPpass.TabIndex = 8;
+            // 
+            // textBoxFTPuser
+            // 
+            this.textBoxFTPuser.Enabled = false;
+            this.textBoxFTPuser.Location = new System.Drawing.Point(49, 91);
+            this.textBoxFTPuser.Name = "textBoxFTPuser";
+            this.textBoxFTPuser.Size = new System.Drawing.Size(116, 20);
+            this.textBoxFTPuser.TabIndex = 7;
+            // 
+            // textBoxFTPhost
+            // 
+            this.textBoxFTPhost.Enabled = false;
+            this.textBoxFTPhost.Location = new System.Drawing.Point(128, 65);
+            this.textBoxFTPhost.Name = "textBoxFTPhost";
+            this.textBoxFTPhost.Size = new System.Drawing.Size(199, 20);
+            this.textBoxFTPhost.TabIndex = 6;
+            // 
+            // lblAssessmentsPath
+            // 
+            this.lblAssessmentsPath.AutoSize = true;
+            this.lblAssessmentsPath.Location = new System.Drawing.Point(6, 45);
+            this.lblAssessmentsPath.Name = "lblAssessmentsPath";
+            this.lblAssessmentsPath.Size = new System.Drawing.Size(16, 13);
+            this.lblAssessmentsPath.TabIndex = 20;
+            this.lblAssessmentsPath.Text = "---";
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(167, 94);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(29, 13);
+            this.label20.TabIndex = 5;
+            this.label20.Text = "pass";
+            // 
+            // btnSelectAssessmentDir
+            // 
+            this.btnSelectAssessmentDir.Location = new System.Drawing.Point(9, 19);
+            this.btnSelectAssessmentDir.Name = "btnSelectAssessmentDir";
+            this.btnSelectAssessmentDir.Size = new System.Drawing.Size(118, 23);
+            this.btnSelectAssessmentDir.TabIndex = 19;
+            this.btnSelectAssessmentDir.Text = "Assessments Folder";
+            this.btnSelectAssessmentDir.UseVisualStyleBackColor = true;
+            this.btnSelectAssessmentDir.Click += new System.EventHandler(this.btnSelectAssessmentDir_Click);
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(14, 94);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(27, 13);
+            this.label19.TabIndex = 4;
+            this.label19.Text = "user";
+            // 
+            // checkBoxFTPassessment
+            // 
+            this.checkBoxFTPassessment.AutoSize = true;
+            this.checkBoxFTPassessment.Enabled = false;
+            this.checkBoxFTPassessment.Location = new System.Drawing.Point(9, 67);
+            this.checkBoxFTPassessment.Name = "checkBoxFTPassessment";
+            this.checkBoxFTPassessment.Size = new System.Drawing.Size(118, 17);
+            this.checkBoxFTPassessment.TabIndex = 2;
+            this.checkBoxFTPassessment.Text = "Send to FTP server";
+            this.checkBoxFTPassessment.UseVisualStyleBackColor = true;
+            // 
+            // comboBoxAssessmentFormat
+            // 
+            this.comboBoxAssessmentFormat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxAssessmentFormat.FormattingEnabled = true;
+            this.comboBoxAssessmentFormat.Location = new System.Drawing.Point(178, 19);
+            this.comboBoxAssessmentFormat.Name = "comboBoxAssessmentFormat";
+            this.comboBoxAssessmentFormat.Size = new System.Drawing.Size(149, 21);
+            this.comboBoxAssessmentFormat.TabIndex = 1;
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(133, 24);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(39, 13);
+            this.label17.TabIndex = 0;
+            this.label17.Text = "Format";
+            // 
             // checkBoxIgnoreNAitems
             // 
             this.checkBoxIgnoreNAitems.AutoSize = true;
-            this.checkBoxIgnoreNAitems.Location = new System.Drawing.Point(8, 227);
+            this.checkBoxIgnoreNAitems.Location = new System.Drawing.Point(8, 336);
             this.checkBoxIgnoreNAitems.Name = "checkBoxIgnoreNAitems";
             this.checkBoxIgnoreNAitems.Size = new System.Drawing.Size(159, 17);
             this.checkBoxIgnoreNAitems.TabIndex = 22;
@@ -805,7 +923,7 @@
             this.groupBoxRemoteVCdb.Controls.Add(this.label14);
             this.groupBoxRemoteVCdb.Controls.Add(this.textBoxMySQLhost);
             this.groupBoxRemoteVCdb.Controls.Add(this.checkBoxAutoloadLocalDatabases);
-            this.groupBoxRemoteVCdb.Location = new System.Drawing.Point(9, 70);
+            this.groupBoxRemoteVCdb.Location = new System.Drawing.Point(9, 45);
             this.groupBoxRemoteVCdb.Name = "groupBoxRemoteVCdb";
             this.groupBoxRemoteVCdb.Size = new System.Drawing.Size(333, 99);
             this.groupBoxRemoteVCdb.TabIndex = 21;
@@ -827,7 +945,7 @@
             // radioButtonDataSourceAccess
             // 
             this.radioButtonDataSourceAccess.AutoSize = true;
-            this.radioButtonDataSourceAccess.Location = new System.Drawing.Point(12, 19);
+            this.radioButtonDataSourceAccess.Location = new System.Drawing.Point(12, 18);
             this.radioButtonDataSourceAccess.Name = "radioButtonDataSourceAccess";
             this.radioButtonDataSourceAccess.Size = new System.Drawing.Size(111, 17);
             this.radioButtonDataSourceAccess.TabIndex = 9;
@@ -899,29 +1017,10 @@
             this.checkBoxAutoloadLocalDatabases.UseVisualStyleBackColor = true;
             this.checkBoxAutoloadLocalDatabases.CheckedChanged += new System.EventHandler(this.checkBoxAutoloadDatabases_CheckedChanged);
             // 
-            // lblAssessmentsPath
-            // 
-            this.lblAssessmentsPath.AutoSize = true;
-            this.lblAssessmentsPath.Location = new System.Drawing.Point(168, 46);
-            this.lblAssessmentsPath.Name = "lblAssessmentsPath";
-            this.lblAssessmentsPath.Size = new System.Drawing.Size(16, 13);
-            this.lblAssessmentsPath.TabIndex = 20;
-            this.lblAssessmentsPath.Text = "---";
-            // 
-            // btnSelectAssessmentDir
-            // 
-            this.btnSelectAssessmentDir.Location = new System.Drawing.Point(9, 41);
-            this.btnSelectAssessmentDir.Name = "btnSelectAssessmentDir";
-            this.btnSelectAssessmentDir.Size = new System.Drawing.Size(153, 23);
-            this.btnSelectAssessmentDir.TabIndex = 19;
-            this.btnSelectAssessmentDir.Text = "Select Assessments Folder";
-            this.btnSelectAssessmentDir.UseVisualStyleBackColor = true;
-            this.btnSelectAssessmentDir.Click += new System.EventHandler(this.btnSelectAssessmentDir_Click);
-            // 
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(152, 182);
+            this.label10.Location = new System.Drawing.Point(152, 291);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(42, 13);
             this.label10.TabIndex = 18;
@@ -929,7 +1028,7 @@
             // 
             // numericUpDownThreads
             // 
-            this.numericUpDownThreads.Location = new System.Drawing.Point(105, 180);
+            this.numericUpDownThreads.Location = new System.Drawing.Point(105, 289);
             this.numericUpDownThreads.Maximum = new decimal(new int[] {
             50,
             0,
@@ -953,7 +1052,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(6, 182);
+            this.label9.Location = new System.Drawing.Point(6, 291);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(97, 13);
             this.label9.TabIndex = 16;
@@ -962,7 +1061,7 @@
             // checkBoxUKgrace
             // 
             this.checkBoxUKgrace.AutoSize = true;
-            this.checkBoxUKgrace.Location = new System.Drawing.Point(8, 204);
+            this.checkBoxUKgrace.Location = new System.Drawing.Point(8, 313);
             this.checkBoxUKgrace.Name = "checkBoxUKgrace";
             this.checkBoxUKgrace.Size = new System.Drawing.Size(208, 17);
             this.checkBoxUKgrace.TabIndex = 15;
@@ -973,7 +1072,7 @@
             // checkBoxLimitDataGridRows
             // 
             this.checkBoxLimitDataGridRows.AutoSize = true;
-            this.checkBoxLimitDataGridRows.Location = new System.Drawing.Point(8, 296);
+            this.checkBoxLimitDataGridRows.Location = new System.Drawing.Point(8, 405);
             this.checkBoxLimitDataGridRows.Name = "checkBoxLimitDataGridRows";
             this.checkBoxLimitDataGridRows.Size = new System.Drawing.Size(188, 17);
             this.checkBoxLimitDataGridRows.TabIndex = 13;
@@ -987,9 +1086,9 @@
             this.groupBoxValidateTagOptions.Controls.Add(this.radioButton1);
             this.groupBoxValidateTagOptions.Controls.Add(this.checkBoxRespectValidateTag);
             this.groupBoxValidateTagOptions.Enabled = false;
-            this.groupBoxValidateTagOptions.Location = new System.Drawing.Point(348, 70);
+            this.groupBoxValidateTagOptions.Location = new System.Drawing.Point(348, 50);
             this.groupBoxValidateTagOptions.Name = "groupBoxValidateTagOptions";
-            this.groupBoxValidateTagOptions.Size = new System.Drawing.Size(192, 99);
+            this.groupBoxValidateTagOptions.Size = new System.Drawing.Size(201, 94);
             this.groupBoxValidateTagOptions.TabIndex = 12;
             this.groupBoxValidateTagOptions.TabStop = false;
             this.groupBoxValidateTagOptions.Text = "Handling of validate=no";
@@ -1036,7 +1135,7 @@
             this.groupBoxQuantityOutlierSettings.Controls.Add(this.numericUpDownQtyOutliersThreshold);
             this.groupBoxQuantityOutlierSettings.Controls.Add(this.numericUpDownQtyOutliersSample);
             this.groupBoxQuantityOutlierSettings.Controls.Add(this.checkBoxQtyOutliers);
-            this.groupBoxQuantityOutlierSettings.Location = new System.Drawing.Point(801, 70);
+            this.groupBoxQuantityOutlierSettings.Location = new System.Drawing.Point(555, 50);
             this.groupBoxQuantityOutlierSettings.Name = "groupBoxQuantityOutlierSettings";
             this.groupBoxQuantityOutlierSettings.Size = new System.Drawing.Size(379, 99);
             this.groupBoxQuantityOutlierSettings.TabIndex = 11;
@@ -1142,7 +1241,7 @@
             // lblCachePath
             // 
             this.lblCachePath.AutoSize = true;
-            this.lblCachePath.Location = new System.Drawing.Point(168, 17);
+            this.lblCachePath.Location = new System.Drawing.Point(97, 17);
             this.lblCachePath.Name = "lblCachePath";
             this.lblCachePath.Size = new System.Drawing.Size(16, 13);
             this.lblCachePath.TabIndex = 10;
@@ -1152,16 +1251,16 @@
             // 
             this.btnSelectCacheDir.Location = new System.Drawing.Point(9, 12);
             this.btnSelectCacheDir.Name = "btnSelectCacheDir";
-            this.btnSelectCacheDir.Size = new System.Drawing.Size(153, 23);
+            this.btnSelectCacheDir.Size = new System.Drawing.Size(82, 23);
             this.btnSelectCacheDir.TabIndex = 9;
-            this.btnSelectCacheDir.Text = "Select Cache Folder";
+            this.btnSelectCacheDir.Text = "Cache Folder";
             this.btnSelectCacheDir.UseVisualStyleBackColor = true;
             this.btnSelectCacheDir.Click += new System.EventHandler(this.btnSelectCacheDir_Click);
             // 
             // checkBoxAssetsAsFitment
             // 
             this.checkBoxAssetsAsFitment.AutoSize = true;
-            this.checkBoxAssetsAsFitment.Location = new System.Drawing.Point(8, 273);
+            this.checkBoxAssetsAsFitment.Location = new System.Drawing.Point(8, 382);
             this.checkBoxAssetsAsFitment.Name = "checkBoxAssetsAsFitment";
             this.checkBoxAssetsAsFitment.Size = new System.Drawing.Size(181, 17);
             this.checkBoxAssetsAsFitment.TabIndex = 7;
@@ -1171,7 +1270,7 @@
             // checkBoxExplodeNotes
             // 
             this.checkBoxExplodeNotes.AutoSize = true;
-            this.checkBoxExplodeNotes.Location = new System.Drawing.Point(8, 250);
+            this.checkBoxExplodeNotes.Location = new System.Drawing.Point(8, 359);
             this.checkBoxExplodeNotes.Name = "checkBoxExplodeNotes";
             this.checkBoxExplodeNotes.Size = new System.Drawing.Size(186, 17);
             this.checkBoxExplodeNotes.TabIndex = 6;
@@ -1185,7 +1284,7 @@
             this.groupBoxFitmentLogicSettings.Controls.Add(this.checkBoxConcernForDisparate);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.label24);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.numericUpDownTreeConfigLimit);
-            this.groupBoxFitmentLogicSettings.Location = new System.Drawing.Point(548, 70);
+            this.groupBoxFitmentLogicSettings.Location = new System.Drawing.Point(348, 150);
             this.groupBoxFitmentLogicSettings.Name = "groupBoxFitmentLogicSettings";
             this.groupBoxFitmentLogicSettings.Size = new System.Drawing.Size(247, 99);
             this.groupBoxFitmentLogicSettings.TabIndex = 4;
@@ -2958,6 +3057,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLogicProblems)).EndInit();
             this.tabPageSettings.ResumeLayout(false);
             this.tabPageSettings.PerformLayout();
+            this.groupBoxAssessmentFile.ResumeLayout(false);
+            this.groupBoxAssessmentFile.PerformLayout();
             this.groupBoxRemoteVCdb.ResumeLayout(false);
             this.groupBoxRemoteVCdb.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownThreads)).EndInit();
@@ -3267,6 +3368,15 @@
         private System.Windows.Forms.Label lblStatsQdbUtil;
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.CheckBox checkBoxIgnoreNAitems;
+        private System.Windows.Forms.GroupBox groupBoxAssessmentFile;
+        private System.Windows.Forms.TextBox textBoxFTPpass;
+        private System.Windows.Forms.TextBox textBoxFTPuser;
+        private System.Windows.Forms.TextBox textBoxFTPhost;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.CheckBox checkBoxFTPassessment;
+        private System.Windows.Forms.ComboBox comboBoxAssessmentFormat;
+        private System.Windows.Forms.Label label17;
     }
 }
 

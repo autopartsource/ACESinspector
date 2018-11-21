@@ -437,6 +437,14 @@ namespace ACESinspector
                 btnSelectQdbFile.Visible = false;
             }
 
+
+            comboBoxAssessmentFormat.Items.Clear();  comboBoxAssessmentFormat.Items.Add("Excel Spreadsheet (xml)"); comboBoxAssessmentFormat.Items.Add("Structured Text");
+            comboBoxAssessmentFormat.SelectedIndex = 0;
+
+
+
+
+
         }
 
 
@@ -1306,7 +1314,7 @@ namespace ACESinspector
             if (refaces.apps.Count > 0)
             { 
                 lblDifferentialsSummary.Text = "(analyzing)"; progressBarDifferentials.Visible = true;
-                var differentialsAnalysisTask = new Task(() => { diffaces.findDifferentials(aces, refaces, vcdb, pcdb, progressDifferentials); });
+                var differentialsAnalysisTask = new Task(() => { diffaces.findDifferentials(aces, refaces, vcdb, pcdb,qdb, progressDifferentials); });
                 taskList.Add(differentialsAnalysisTask);
                 differentialsAnalysisTask.Start();
 
@@ -1498,8 +1506,24 @@ namespace ACESinspector
                     sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique Part count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.partsAppCounts.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
                     sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique MfrLabel count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.distinctMfrLabels.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
                     sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique Parttypes count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.distinctPartTypes.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Qdb Utilization (%)</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.QdbUtilizationScore.ToString("0.00") + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
 
+                    if ((aces.parttypePositionErrorsCount + aces.vcdbCodesErrorsCount + aces.vcdbConfigurationsErrorsCount + aces.basevehicleidsErrorsCount + aces.qdbErrorsCount + aces.fitmentLogicProblemsCount) > 0)
+                    {
+                        List<string> failureReasons = new List<string>();
+                        if (aces.parttypePositionErrorsCount > 0) { failureReasons.Add(aces.parttypePositionErrorsCount.ToString()+" partType-position pairings"); }
+                        if (aces.vcdbCodesErrorsCount > 0) { failureReasons.Add(aces.vcdbCodesErrorsCount.ToString()+" invalid VCdb codes"); }
+                        if (aces.vcdbConfigurationsErrorsCount > 0) { failureReasons.Add(aces.vcdbConfigurationsErrorsCount.ToString()+ " invalid VCdb configs"); }
+                        if (aces.basevehicleidsErrorsCount>0) { failureReasons.Add(aces.basevehicleidsErrorsCount.ToString()+" invalid basevehicles"); }
+                        if (aces.qdbErrorsCount > 0) { failureReasons.Add(aces.qdbErrorsCount.ToString()+" Qdb errors"); }
+                        if (aces.fitmentLogicProblemsCount>0) { failureReasons.Add(aces.fitmentLogicProblemsCount.ToString() + " fitment logic problems"); }
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Result</Data></Cell><Cell><Data ss:Type=\"String\">Fail</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + string.Join(",",failureReasons) + "</Data></Cell></Row>");
+                    }
+                    else
+                    {
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Result</Data></Cell><Cell><Data ss:Type=\"String\">Pass</Data></Cell></Row>");
+                    }
+
+                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Qdb Utilization (%)</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.QdbUtilizationScore.ToString("0.00") + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
                     sw.Write("<Row><Cell><Data ss:Type=\"String\">Validation tool</Data></Cell><Cell ss:StyleID=\"s64\" ss:HRef=\"https://autopartsource.com/ACESinspector\"><Data ss:Type=\"String\">ACESinspector version " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
                     sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><Selected/><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
 
@@ -1805,10 +1829,7 @@ namespace ACESinspector
                             if(vcdb.niceMakeOfBasevid(tempApp.basevehilceid)== "not found"){continue;}
                             tempApp.parttypeid = Convert.ToInt32(fields[2]);
                             tempApp.positionid = Convert.ToInt32(fields[3]);
-                            if (fields[5] != "") { tempApp.VCdbAttributes = aces.parseAttributePairsString(fields[4]); }
-                            tempApp.notes = fields[5].Split(';').ToList();
-                            tempApp.mfrlabel = fields[6];
-                            sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + tempApp.basevehilceid.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + vcdb.niceMakeOfBasevid(tempApp.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(vcdb.niceModelOfBasevid(tempApp.basevehilceid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + vcdb.niceYearOfBasevid(tempApp.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.niceParttype(tempApp.parttypeid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.nicePosition(tempApp.positionid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(tempApp.niceAttributesString(vcdb, true))+ "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(tempApp.mfrlabel) + "</Data></Cell></Row>");
+                            sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + tempApp.basevehilceid.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + vcdb.niceMakeOfBasevid(tempApp.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(vcdb.niceModelOfBasevid(tempApp.basevehilceid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + vcdb.niceYearOfBasevid(tempApp.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.niceParttype(tempApp.parttypeid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.nicePosition(tempApp.positionid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[5]) + "</Data></Cell></Row>");
                         }
                         sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                     }
@@ -1820,6 +1841,278 @@ namespace ACESinspector
             {
                 aces.logHistoryEvent("", "0\tAssessment file NOT created: " +ex.Message);
             }
+
+
+
+            //--------------------
+            if (lblAssessmentsPath.Text != "")
+            {
+                int recordSequence = 0;
+                assessmentFilename = lblAssessmentsPath.Text + "\\" + Path.GetFileNameWithoutExtension(aces.filePath) + "_assessment.txt";
+                try
+                {
+                    using (StreamWriter sw = new StreamWriter(assessmentFilename))
+                    {
+                        sw.Write("Section\tRecord Type\t1\t2\t3\t4\t5\t6\t7\t8\t9\t10\t11\t12\t13\t14\t15\t16\t17\t18\t19\t20\r\n");
+
+                        sw.Write("Stats\tInput Filename\t" + Path.GetFileName(aces.filePath) + "\r\n");
+                        sw.Write("Stats\tTitle\t" + aces.DocumentTitle + "\r\n");
+                        sw.Write("Stats\tACES version\t" + aces.version + "\r\n");
+                        sw.Write("Stats\tVCdb version cited\t" + aces.VcdbVersionDate + "\t" + validatedAgainstVCdb + "\r\n");
+                        sw.Write("Stats\tPCdb version cited\t" + aces.PcdbVersionDate + "\t" + validatedAgainstPCdb + "\r\n");
+                        sw.Write("Stats\tQdb version cited\t" + aces.QdbVersionDate + "\t" + validatedAgainstQdb + "\r\n");
+                        sw.Write("Stats\tApplication count\t" + aces.apps.Count.ToString() + "\r\n");
+                        sw.Write("Stats\tUnique Part count\t" + aces.partsAppCounts.Count.ToString() + "\r\n");
+                        sw.Write("Stats\tUnique MfrLabel count\t" + aces.distinctMfrLabels.Count.ToString() + "\r\n");
+                        sw.Write("Stats\tUnique Parttypes count\t" + aces.distinctPartTypes.Count.ToString() + "\r\n");
+                        if ((aces.parttypePositionErrorsCount + aces.vcdbCodesErrorsCount + aces.vcdbConfigurationsErrorsCount + aces.basevehicleidsErrorsCount + aces.qdbErrorsCount + aces.fitmentLogicProblemsCount) > 0)
+                        {
+                            List<string> failureReasons = new List<string>(); if (aces.parttypePositionErrorsCount > 0) { failureReasons.Add(aces.parttypePositionErrorsCount.ToString() + " partType-position pairings"); }
+                            if (aces.vcdbCodesErrorsCount > 0) { failureReasons.Add(aces.vcdbCodesErrorsCount.ToString() + " invalid VCdb codes"); }
+                            if (aces.vcdbConfigurationsErrorsCount > 0) { failureReasons.Add(aces.vcdbConfigurationsErrorsCount.ToString() + " invalid VCdb configs"); }
+                            if (aces.basevehicleidsErrorsCount > 0) { failureReasons.Add(aces.basevehicleidsErrorsCount.ToString() + " invalid basevehicles"); }
+                            if (aces.qdbErrorsCount > 0) { failureReasons.Add(aces.qdbErrorsCount.ToString() + " Qdb errors"); }
+                            if (aces.fitmentLogicProblemsCount > 0) { failureReasons.Add(aces.fitmentLogicProblemsCount.ToString() + " fitment logic problems"); }
+                            sw.Write("Stats\tResult\tfail\t" + string.Join(",", failureReasons) + "\r\n");
+                        }
+                        else { sw.Write("Stats\tResult\tpass\t\r\n"); }
+                        sw.Write("Stats\tQdb Utilization (%)\t" + aces.QdbUtilizationScore.ToString("0.00") + "\r\n");
+                        sw.Write("Stats\tValidation tool\tACESinspector version " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\r\n");
+
+                        foreach (KeyValuePair<string, int> partsAppCountEntry in aces.partsAppCounts)
+                        {
+                            partTypeNameList.Clear(); foreach (int partTypeId in aces.partsPartTypes[partsAppCountEntry.Key]) { partTypeNameList.Add(pcdb.niceParttype(partTypeId)); }
+                            positionNameList.Clear(); foreach (int positionId in aces.partsPositions[partsAppCountEntry.Key]) { positionNameList.Add(pcdb.nicePosition(positionId)); }
+                            sw.Write("Parts\t" + partsAppCountEntry.Key + "\t" + partsAppCountEntry.Value.ToString() + "\t" + string.Join(",", partTypeNameList) + "\t" + String.Join(",", positionNameList) + "\r\n");
+                        }
+
+                        foreach (int distinctPartType in aces.distinctPartTypes) { sw.Write("Part Types\t" + distinctPartType + "\t" + pcdb.niceParttype(distinctPartType) + "\r\n"); }
+                        if (aces.distinctMfrLabels.Count > 0) { foreach (string distinctMfrLabel in aces.distinctMfrLabels) { sw.Write("Mfr Lables\t" + distinctMfrLabel + "\r\n"); } }
+
+                        if (aces.parttypeDisagreementCount > 0)
+                        {
+                            recordSequence = 0;
+                            using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_parttypeDisagreements.txt"))
+                            {
+                                while (!reader.EndOfStream)
+                                {
+                                    recordSequence++;
+                                    string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                    sw.Write("Part Type Disagreements\t" + recordSequence.ToString() + "\t" + fileds[0] + "\t" + fileds[1] + "\r\n");
+                                }
+                            }
+                        }
+
+                        if (aces.qtyOutlierCount > 0)
+                        {
+                            recordSequence = 0;
+                            using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_qtyOutliers.txt"))
+                            {
+                                while (!reader.EndOfStream)
+                                {
+                                    recordSequence++;
+                                    string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                    sw.Write("Qty Outliers\t" + recordSequence.ToString() + "\t" + fileds[1] + "\t" + fileds[2] + "\t" + fileds[3] + "\t" + fileds[4] + "\t" + fileds[5] + "\t" + fileds[6] + "\t" + fileds[7] + "\t" + fileds[8] + "\t" + fileds[9] + "\t" + fileds[10] + "\t" + fileds[11] + "\t" + fileds[12] + "\r\n");
+                                }
+                            }
+                        }
+
+                        if (aces.parttypePositionErrorsCount > 0)
+                        {
+                            recordSequence = 0;
+                            foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                            {
+                                if (chunk.parttypePositionErrorsCount > 0)
+                                {
+                                    try
+                                    {
+                                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_parttypePositionErrors" + chunk.id.ToString() + ".txt"))
+                                        {
+                                            while (!reader.EndOfStream)
+                                            {
+                                                recordSequence++;
+                                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                                sw.Write("PartType-Position Errors\t" + recordSequence.ToString() + "\t" + fileds[1] + "\t" + fileds[2] + "\t" + fileds[3] + "\t" + fileds[4] + "\t" + fileds[5] + "\t" + fileds[6] + "\t" + fileds[7] + "\t" + fileds[8] + "\t" + fileds[9] + "\t" + fileds[10] + "\r\n");
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex) { }
+                                }
+                            }
+                        }
+
+                        if (aces.qdbErrorsCount > 0)
+                        {
+                            recordSequence = 0;
+                            foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                            {
+                                if (chunk.qdbErrorsCount > 0)
+                                {
+                                    try
+                                    {
+                                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_qdbErrors" + chunk.id.ToString() + ".txt"))
+                                        {
+                                            while (!reader.EndOfStream)
+                                            {
+                                                recordSequence++;
+                                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                                sw.Write("Qdb Errors\t" + recordSequence.ToString() +"\t" +  fileds[1] + "\t" + fileds[2] + "\t" + fileds[3] + "\t" + fileds[4] + "\t" + fileds[5] + "\t" + fileds[6] + "\t" + fileds[7] + "\t" + fileds[8] + "\t" + fileds[9] + "\t" + fileds[10] + "\t" + fileds[11] + "\r\n");
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex) { }
+                                }
+                            }
+                        }
+
+                        if (aces.questionableNotesCount > 0)
+                        {
+                            recordSequence = 0;
+                            foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                            {
+                                if (chunk.questionableNotesCount > 0)
+                                {
+                                    try
+                                    {
+                                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_questionableNotes" + chunk.id.ToString() + ".txt"))
+                                        {
+                                            while (!reader.EndOfStream)
+                                            {
+                                                recordSequence++;
+                                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                                sw.Write("Questionable Notes\t" + recordSequence.ToString() + "\t" + fileds[2] + "\t" + fileds[3] + "\t" + fileds[4] + "\t" + fileds[5] + "\t" + fileds[6] + "\t" + fileds[7] + "\t" + fileds[8] + "\t" + fileds[9] + "\t" + fileds[10] + "\t" + fileds[11] + "\r\n");
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex) { }
+                                }
+                            }
+                        }
+
+
+                        if (aces.assetProblemsCount > 0)
+                        {
+                            recordSequence = 0;
+                            using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_assetProblems.txt"))
+                            {
+                                while (!reader.EndOfStream)
+                                {
+                                    recordSequence++;
+                                    string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                    sw.Write("Asset Problems\t" + recordSequence.ToString() + "\t" + fileds[1] + "\t" + fileds[2] + "\t" + fileds[3] + "\t" + fileds[4] + "\t" + fileds[5] + "\t" + fileds[6] + "\t" + fileds[7] + "\t" + fileds[8] + "\t" + fileds[9] + "\t" + fileds[10] + "\t" + fileds[11] + "\r\n");
+                                }
+                            }
+                        }
+
+
+                        if (aces.basevehicleidsErrorsCount > 0)
+                        {
+                            recordSequence = 0;
+                            foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                            {
+                                if (chunk.basevehicleidsErrorsCount > 0)
+                                {
+                                    try
+                                    {
+                                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_invalidBasevehicles" + chunk.id.ToString() + ".txt"))
+                                        {
+                                            while (!reader.EndOfStream)
+                                            {
+                                                recordSequence++;
+                                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                                sw.Write("Invalid Base Vids\t" + recordSequence .ToString()+ "\t" + fileds[1] + "\t\t\t\t" + fileds[2] + "\t" + fileds[3] + "\t" + fileds[4] + "\t" + fileds[5] + "\t" + fileds[6] + "\r\n");
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex) { }
+                                }
+                            }
+                        }
+
+                        if (aces.vcdbCodesErrorsCount > 0)
+                        {
+                            recordSequence = 0;
+                            foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                            {
+                                if (chunk.vcdbCodesErrorsCount > 0)
+                                {
+                                    try
+                                    {
+                                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_invalidVCdbCodes" + chunk.id.ToString() + ".txt"))
+                                        {
+                                            while (!reader.EndOfStream)
+                                            {
+                                                recordSequence++;
+                                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                                sw.Write("Invalid VCdb Codes\t" + recordSequence.ToString() + "\t" + fileds[1] + "\t" + fileds[2] + "\t" + fileds[3] + "\t" + fileds[4] + "\t" + fileds[5] + "\t" + fileds[6] + "\t" + fileds[7] + "\t" + fileds[8] + "\t" + fileds[9] + "\r\n");
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex) { }
+                                }
+                            }
+                        }
+
+
+
+
+
+                        if (aces.vcdbConfigurationsErrorsCount > 0)
+                        {
+                            recordSequence = 0;
+                            foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                            {
+                                if (chunk.vcdbConfigurationsErrorsCount > 0)
+                                {
+                                    try
+                                    {
+                                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_configurationErrors" + chunk.id.ToString() + ".txt"))
+                                        {
+                                            while (!reader.EndOfStream)
+                                            {
+                                                recordSequence++;
+                                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                                sw.Write("Invalid VCdb Configs\t" + recordSequence.ToString() + "\t" + fileds[1] + "\t" + fileds[2] + "\t" + fileds[3] + "\t" + fileds[4] + "\t" + fileds[5] + "\t" + fileds[6] + "\t" + fileds[7] + "\t" + fileds[8] + "\t" + fileds[9] + "\t" + fileds[10] + "\t" + fileds[11] + "\r\n");
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex) { }
+                                }
+                            }
+                        }
+
+                        if (aces.fitmentLogicProblemsCount > 0)
+                        {
+                            problemDescription = ""; elementPrevalence = 0; fitmentElementPrevalence.Clear();
+                            foreach (KeyValuePair<string, List<App>> entry in aces.fitmentProblemGroupsAppLists)
+                            {// construct a tree in order to re-discover the problmes with it.
+                                aces.fitmentNodeList.Clear(); fitmentElementPrevalence.Clear();
+                                foreach (string fitmentElement in aces.fitmentProblemGroupsBestPermutations[entry.Key])
+                                {
+                                    fitmentElementPrevalence.Add(fitmentElement, elementPrevalence); elementPrevalence++;
+                                }
+                                aces.fitmentNodeList.AddRange(aces.buildFitmentTreeFromAppList(entry.Value, fitmentElementPrevalence, -1, false, false, vcdb, qdb));
+                                problemDescription = aces.fitmentTreeProblemDescription(aces.fitmentNodeList, checkBoxConcernForDisparate.Checked);
+
+                                foreach (App app in entry.Value)
+                                {
+                                    sw.Write("Fitment Logic Problems\t" + problemDescription + " - " + entry.Key + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceFullFitmentString(vcdb, qdb) + "\r\n");
+                                }
+                            }
+                        }
+
+                    }
+                    
+                }
+                catch (Exception ex)
+                {
+                    aces.logHistoryEvent("", "0\tAlternate assessment file NOT created: " + ex.Message);
+                }
+            }
+            //--------------------
+
+
+
 
 
 
@@ -2239,24 +2532,24 @@ namespace ACESinspector
                     if (checkBoxLimitDataGridRows.Checked)
                     {
                         // show the "not here" lable
-                        lblAddsDropsPartsErrorRedirect.Visible = true;
-                        lblAddsDropsPartsErrorRedirect.Text = "Part adds/drops list is too large to show here (" + diffaces.differentialParts.Count.ToString() + "). See assessment file for full list.";
+                        lblAddsDropsVehiclesErrorRedirect.Visible = true;
+                        lblAddsDropsVehiclesErrorRedirect.Text = "Vehicle adds/drops list is too large to show here (" + diffaces.differentialVehicles.Count.ToString() + "). See assessment file for full list.";
+                    }
+                    else
+                    {// show the diff vehilces list 
+                        foreach (string line in diffaces.differentialVehicles)
+                        {
+                            string[] fields = line.Split('\t');
+                            dgAddsDropsVehicles.Rows.Add(fields[0], fields[1], vcdb.niceMakeOfBasevid(Convert.ToInt32(fields[1])), vcdb.niceModelOfBasevid(Convert.ToInt32(fields[1])), vcdb.niceYearOfBasevid(Convert.ToInt32(fields[1])), pcdb.niceParttype(Convert.ToInt32(fields[2])), pcdb.nicePosition(Convert.ToInt32(fields[3])), fields[4], fields[5]);
+                        }
                     }
                 }
                 else
                 {// diff vehicles small enough to be displayed
-                    App tempApp = new App();
                     foreach (string line in diffaces.differentialVehicles)
                     {
                         string[] fields = line.Split('\t');
-                        tempApp.Clear();
-                        tempApp.basevehilceid = Convert.ToInt32(fields[1]);
-                        tempApp.parttypeid = Convert.ToInt32(fields[2]);
-                        tempApp.positionid = Convert.ToInt32(fields[3]);
-                        if (fields[5] != "") { tempApp.VCdbAttributes = aces.parseAttributePairsString(fields[4]); }
-                        tempApp.notes = fields[5].Split(';').ToList();
-                        tempApp.mfrlabel = fields[6];
-                        dgAddsDropsVehicles.Rows.Add(fields[0], tempApp.basevehilceid.ToString(), vcdb.niceMakeOfBasevid(tempApp.basevehilceid), vcdb.niceModelOfBasevid(tempApp.basevehilceid), vcdb.niceYearOfBasevid(tempApp.basevehilceid), pcdb.niceParttype(tempApp.parttypeid), pcdb.nicePosition(tempApp.positionid), tempApp.niceFullFitmentString(vcdb, qdb), tempApp.mfrlabel);
+                        dgAddsDropsVehicles.Rows.Add(fields[0], fields[1], vcdb.niceMakeOfBasevid(Convert.ToInt32(fields[1])), vcdb.niceModelOfBasevid(Convert.ToInt32(fields[1])), vcdb.niceYearOfBasevid(Convert.ToInt32(fields[1])), pcdb.niceParttype(Convert.ToInt32(fields[2])), pcdb.nicePosition(Convert.ToInt32(fields[3])), fields[4], fields[5]);
                     }
                 }
 
@@ -2264,17 +2557,6 @@ namespace ACESinspector
                 if (diffaces.differentialParts.Count > 0) { tabControl1.TabPages.Add(hiddenAddsDropsPartsTab); highestVisableTab1Index++; dgAddsDropsParts.Visible = true; }
                 if (diffaces.differentialVehicles.Count > 0) { tabControl1.TabPages.Add(hiddenAddsDropsVehiclesTab); highestVisableTab1Index++; dgAddsDropsVehicles.Visible = true; }
             }
-
-
-
-
-
-
-
-
-
-
-
 
             pictureBoxLogicProblems.Invalidate();
             pictureBoxCommonErrors.Invalidate();
@@ -2399,7 +2681,7 @@ namespace ACESinspector
                     if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath) && aces.apps.Count > 0)
                     {
                         key.SetValue("lastNetChangeDirectoryPath", fbd.SelectedPath);
-                        result = diffaces.exportXMLApps(fbd.SelectedPath + "\\" + Path.GetFileNameWithoutExtension(aces.filePath)+"_diffs.xml", "UPDATE", "mypath", false);
+                        result = diffaces.exportXMLApps(fbd.SelectedPath + "\\" + Path.GetFileNameWithoutExtension(aces.filePath)+"_diffs.xml", "UPDATE", "", false);
                         MessageBox.Show(result);
                     }
                 }

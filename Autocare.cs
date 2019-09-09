@@ -4066,11 +4066,12 @@ default: return 0;
             filePath = path;
             try
             {
-                if (connectionOLEDB.State == System.Data.ConnectionState.Closed)
+                if (connectionOLEDB.State != System.Data.ConnectionState.Closed)
                 {
-                    connectionOLEDB.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + path + ";Mode=Read";
-                    connectionOLEDB.Open();
+                    connectionOLEDB.Close();
                 }
+                connectionOLEDB.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + path + ";Mode=Read";
+                connectionOLEDB.Open();
             }
             catch (Exception ex) { result = ex.Message; }
             return result;
@@ -5909,7 +5910,10 @@ default: return 0;
                 command.Connection = connectionOLEDB;
 
                 OleDbDataReader reader = command.ExecuteReader();
-                while (reader.Read()) { version = reader.GetValue(0).ToString(); }
+                while (reader.Read())
+                {
+                    version = reader.GetValue(0).ToString();
+                }
                 reader.Close();
 
                 DateTime dt = new DateTime(); if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
@@ -5987,11 +5991,12 @@ default: return 0;
             filePath = path;
             try
             {
-                if (connectionOLEDB.State == System.Data.ConnectionState.Closed)
-                {
-                    connectionOLEDB.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + path + ";Mode=Read";
-                    connectionOLEDB.Open();
+                if(connectionOLEDB.State != System.Data.ConnectionState.Closed)
+                {// already open - close it first
+                    connectionOLEDB.Close();
                 }
+                connectionOLEDB.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + path + ";Mode=Read";
+                connectionOLEDB.Open();
             }
             catch (Exception ex) { result = ex.Message; }
             return result;
@@ -6150,11 +6155,12 @@ default: return 0;
             filePath = path;
             try
             {
-                if (connectionOLEDB.State == System.Data.ConnectionState.Closed)
+                if (connectionOLEDB.State != System.Data.ConnectionState.Closed)
                 {
-                    connectionOLEDB.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + path + ";Mode=Read";
-                    connectionOLEDB.Open();
+                    connectionOLEDB.Close();
                 }
+                connectionOLEDB.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + path + ";Mode=Read";
+                connectionOLEDB.Open();
             }
             catch (Exception ex) { result = ex.Message; }
             return result;

@@ -14,7 +14,10 @@ Fixed "Part adds/drops list is too large to show here" message was showing up in
 Added results row to the stats tab of the assessment spreadsheet.
 Fixed net-changed ACES xml export. Had been broken since 1.0.2.1 due to changing from arrays of apps to lists of apps.
 Fixed differential vehilces datagrid - it was not showing any results if results count was above "limit".
-Added automated processing features
+Added automated processing features.
+Added clickability to the fitment tree diagram in the logig problems tab. Clicking a fitment element draws a red line through it and addds it to a hitlist of things to go back and remove from the source PIM dataset.
+Removed brake wear-sensors from the list of typical parttype/qty analysis.
+Fixed loading of Access files was not updating version lables properly - Calvin @ Dr1ve identified this issue
 
 1.2.0.31 (released 9/13/2018)
 Upgraded included MySQL client DLLs to latest generally-available version (8.0.12.0). Had to add "SslMode=none" to the connect string as a result.

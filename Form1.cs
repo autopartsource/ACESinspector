@@ -287,6 +287,29 @@ namespace ACESinspector
                 }
             }
 
+            if ((string)key.GetValue("automatedOpperation") == "1") { checkBoxAutomatedOpperation.Checked = true; } else { checkBoxAutomatedOpperation.Checked = false; }
+
+            if (key.GetValue("automatedInputDirectoryPath") == null)
+            {
+                if (checkBoxAutomatedOpperation.Checked)
+                {
+                    MessageBox.Show("Please select a folder to poll for input ACES files. This can be done in the Settings tab");
+                }
+            }
+            else
+            {// registry contains a path that was provided in the past - verify it before we use it
+                if (Directory.Exists(key.GetValue("automatedInputDirectoryPath").ToString()))
+                {// valid directory
+                    labelAutomatedPath.Text = key.GetValue("automatedInputDirectoryPath").ToString();
+                }
+                else
+                {// registry-provided input directory does not exist
+                    MessageBox.Show("Please select a folder to poll for input ACES files. The saved value is not valid. This can be done in the Settings tab");
+                }
+            }
+            
+
+
             if (key.GetValue("assessmentDirectoryPath") != null)
             {
                 if (Directory.Exists(key.GetValue("assessmentDirectoryPath").ToString()))
@@ -299,6 +322,8 @@ namespace ACESinspector
             if (key.GetValue("qtyOutliersThreshold") != null) { numericUpDownQtyOutliersThreshold.Value = Convert.ToDecimal(key.GetValue("qtyOutliersThreshold")); } else { numericUpDownQtyOutliersThreshold.Value = 1; }
             if (key.GetValue("qtyOutliersSampleSize") != null) { numericUpDownQtyOutliersSample.Value = Convert.ToDecimal(key.GetValue("qtyOutliersSampleSize")); } else { numericUpDownQtyOutliersSample.Value = 500; }
             if (key.GetValue("threadCount") != null) { numericUpDownThreads.Value = Convert.ToDecimal(key.GetValue("threadCount")); } else { numericUpDownThreads.Value = 20; }
+            if (key.GetValue("automatedHour") != null) { numericUpDownAutomatedHour.Value = Convert.ToDecimal(key.GetValue("automatedHour")); } else { numericUpDownAutomatedHour.Value = 23; }
+            if (key.GetValue("automatedMinute") != null) { numericUpDownAutomatedMinute.Value = Convert.ToDecimal(key.GetValue("automatedMinute")); } else { numericUpDownAutomatedMinute.Value = 0; }
 
 
             // look for the "secret" key in the registry that entitles bad-branch detection. If you are reading this, you are in pretty exclusive club and 
@@ -439,10 +464,8 @@ namespace ACESinspector
 
 
             comboBoxAssessmentFormat.Items.Clear();  comboBoxAssessmentFormat.Items.Add("Excel Spreadsheet (xml)"); comboBoxAssessmentFormat.Items.Add("Structured Text");
-            comboBoxAssessmentFormat.SelectedIndex = 0;
-
-
-
+            if (key.GetValue("assessmentFileFormat") != null) { comboBoxAssessmentFormat.SelectedIndex = Convert.ToInt32(key.GetValue("assessmentFileFormat").ToString()); }
+            if(comboBoxAssessmentFormat.SelectedIndex < 0){ comboBoxAssessmentFormat.SelectedIndex = 0; }
 
 
         }
@@ -1114,7 +1137,6 @@ namespace ACESinspector
             vcdb.disconnect();
         }
 
-        //xxx
         private async void importMySQLvcdbChangelog()
         {
             vcdb.importMySQLchangelog();
@@ -1202,6 +1224,11 @@ namespace ACESinspector
 
             textBoxAnalysisHostory.Width = this.Width - 615;
             textBoxAnalysisHostory.Height = this.Height - 321;
+
+            textBoxFitmentLogicElements.Height = pictureBoxFitmentTree.Height / 2;
+            textBoxFitmentLogicElements.Width = this.Width / 5;
+            textBoxFitmentLogicElements.Left = pictureBoxFitmentTree.Width - textBoxFitmentLogicElements.Width;
+            btnClearFlaggedNodes.Left= pictureBoxFitmentTree.Width - btnClearFlaggedNodes.Width;
         }
 
         void ReportAnalyzeProgressDifferentials(int value)
@@ -1376,14 +1403,13 @@ namespace ACESinspector
             aces.outlierAnanlysisChunksList.Add(new analysisChunk());
             aces.outlierAnanlysisChunksList.Last().cachefile = lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash;
             aces.outlierAnanlysisChunksList.Last().appsList = aces.apps;
-            cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_parttypeDisagreements.txt");
             cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_qtyOutliers.txt");
-            cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_assetProblems.txt");
-
-
-            var outlierAppAnalysisTask = new Task(() => { aces.findIndividualAppOutliers(aces.outlierAnanlysisChunksList.Last(),vcdb, pcdb, qdb); });
+            var outlierAppAnalysisTask = new Task(() => { aces.findIndividualAppOutliers(aces.outlierAnanlysisChunksList.Last(), vcdb, pcdb, qdb); });
             taskList.Add(outlierAppAnalysisTask);
             outlierAppAnalysisTask.Start();
+
+            cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_parttypeDisagreements.txt");
+            cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_assetProblems.txt");
 
 
             numberOfSections = Convert.ToInt32(numericUpDownThreads.Value);
@@ -1490,362 +1516,366 @@ namespace ACESinspector
                 assessmentFilename = lblAssessmentsPath.Text + "\\" + Path.GetFileNameWithoutExtension(aces.filePath) + "_assessment.xml";
             }
 
-            try
+            if (lblAssessmentsPath.Text != "" && comboBoxAssessmentFormat.SelectedIndex == 0)
             {
 
-                using (StreamWriter sw = new StreamWriter(assessmentFilename))
+
+
+                try
                 {
-                    sw.Write("<?xml version=\"1.0\"?><?mso-application progid=\"Excel.Sheet\"?><Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:html=\"http://www.w3.org/TR/REC-html40\"><DocumentProperties xmlns=\"urn:schemas-microsoft-com:office:office\"><Author>ACESinspector</Author><LastAuthor>ACESinspector</LastAuthor><Created>2017-02-20T01:10:23Z</Created><LastSaved>2017-02-20T02:49:36Z</LastSaved><Version>14.00</Version></DocumentProperties><OfficeDocumentSettings xmlns=\"urn:schemas-microsoft-com:office:office\"><AllowPNG/></OfficeDocumentSettings><ExcelWorkbook xmlns=\"urn:schemas-microsoft-com:office:excel\"><WindowHeight>7500</WindowHeight><WindowWidth>15315</WindowWidth><WindowTopX>120</WindowTopX><WindowTopY>150</WindowTopY><TabRatio>785</TabRatio><ProtectStructure>False</ProtectStructure><ProtectWindows>False</ProtectWindows></ExcelWorkbook><Styles><Style ss:ID=\"Default\" ss:Name=\"Normal\"><Alignment ss:Vertical=\"Bottom\"/><Borders/><Font ss:FontName=\"Calibri\" x:Family=\"Swiss\" ss:Size=\"11\" ss:Color=\"#000000\"/><Interior/><NumberFormat/><Protection/></Style><Style ss:ID=\"s62\"><NumberFormat ss:Format=\"Short Date\"/></Style><Style ss:ID=\"s64\" ss:Name=\"Hyperlink\"><Font ss:FontName=\"Calibri\" x:Family=\"Swiss\" ss:Size=\"11\" ss:Color=\"#0000FF\" ss:Underline=\"Single\"/></Style><Style ss:ID=\"s65\"><Font ss:FontName=\"Calibri\" x:Family=\"Swiss\" ss:Size=\"11\" ss:Color=\"#000000\" ss:Bold=\"1\"/><Interior ss:Color=\"#D9D9D9\" ss:Pattern=\"Solid\"/></Style></Styles><Worksheet ss:Name=\"Stats\"><Table ss:ExpandedColumnCount=\"3\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"116.25\"/><Column ss:Width=\"225\"/><Column ss:Width=\"225\"/>");
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Input Filename</Data></Cell><Cell><Data ss:Type=\"String\">" + Path.GetFileName(aces.filePath) + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Title</Data></Cell><Cell><Data ss:Type=\"String\">" + aces.DocumentTitle + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">ACES version</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + aces.version + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">VCdb version cited</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + aces.VcdbVersionDate + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + validatedAgainstVCdb + "</Data></Cell></Row>");
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">PCdb version cited</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + aces.PcdbVersionDate + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + validatedAgainstPCdb + "</Data></Cell></Row>");
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Qdb version cited</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + aces.QdbVersionDate + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + validatedAgainstQdb + "</Data></Cell></Row>");
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Application count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.apps.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique Part count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.partsAppCounts.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique MfrLabel count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.distinctMfrLabels.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique Parttypes count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.distinctPartTypes.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
 
-                    if ((aces.parttypePositionErrorsCount + aces.vcdbCodesErrorsCount + aces.vcdbConfigurationsErrorsCount + aces.basevehicleidsErrorsCount + aces.qdbErrorsCount + aces.fitmentLogicProblemsCount) > 0)
+                    using (StreamWriter sw = new StreamWriter(assessmentFilename))
                     {
-                        List<string> failureReasons = new List<string>();
-                        if (aces.parttypePositionErrorsCount > 0) { failureReasons.Add(aces.parttypePositionErrorsCount.ToString()+" partType-position pairings"); }
-                        if (aces.vcdbCodesErrorsCount > 0) { failureReasons.Add(aces.vcdbCodesErrorsCount.ToString()+" invalid VCdb codes"); }
-                        if (aces.vcdbConfigurationsErrorsCount > 0) { failureReasons.Add(aces.vcdbConfigurationsErrorsCount.ToString()+ " invalid VCdb configs"); }
-                        if (aces.basevehicleidsErrorsCount>0) { failureReasons.Add(aces.basevehicleidsErrorsCount.ToString()+" invalid basevehicles"); }
-                        if (aces.qdbErrorsCount > 0) { failureReasons.Add(aces.qdbErrorsCount.ToString()+" Qdb errors"); }
-                        if (aces.fitmentLogicProblemsCount>0) { failureReasons.Add(aces.fitmentLogicProblemsCount.ToString() + " fitment logic problems"); }
-                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Result</Data></Cell><Cell><Data ss:Type=\"String\">Fail</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + string.Join(",",failureReasons) + "</Data></Cell></Row>");
-                    }
-                    else
-                    {
-                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Result</Data></Cell><Cell><Data ss:Type=\"String\">Pass</Data></Cell></Row>");
-                    }
+                        sw.Write("<?xml version=\"1.0\"?><?mso-application progid=\"Excel.Sheet\"?><Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:html=\"http://www.w3.org/TR/REC-html40\"><DocumentProperties xmlns=\"urn:schemas-microsoft-com:office:office\"><Author>ACESinspector</Author><LastAuthor>ACESinspector</LastAuthor><Created>2017-02-20T01:10:23Z</Created><LastSaved>2017-02-20T02:49:36Z</LastSaved><Version>14.00</Version></DocumentProperties><OfficeDocumentSettings xmlns=\"urn:schemas-microsoft-com:office:office\"><AllowPNG/></OfficeDocumentSettings><ExcelWorkbook xmlns=\"urn:schemas-microsoft-com:office:excel\"><WindowHeight>7500</WindowHeight><WindowWidth>15315</WindowWidth><WindowTopX>120</WindowTopX><WindowTopY>150</WindowTopY><TabRatio>785</TabRatio><ProtectStructure>False</ProtectStructure><ProtectWindows>False</ProtectWindows></ExcelWorkbook><Styles><Style ss:ID=\"Default\" ss:Name=\"Normal\"><Alignment ss:Vertical=\"Bottom\"/><Borders/><Font ss:FontName=\"Calibri\" x:Family=\"Swiss\" ss:Size=\"11\" ss:Color=\"#000000\"/><Interior/><NumberFormat/><Protection/></Style><Style ss:ID=\"s62\"><NumberFormat ss:Format=\"Short Date\"/></Style><Style ss:ID=\"s64\" ss:Name=\"Hyperlink\"><Font ss:FontName=\"Calibri\" x:Family=\"Swiss\" ss:Size=\"11\" ss:Color=\"#0000FF\" ss:Underline=\"Single\"/></Style><Style ss:ID=\"s65\"><Font ss:FontName=\"Calibri\" x:Family=\"Swiss\" ss:Size=\"11\" ss:Color=\"#000000\" ss:Bold=\"1\"/><Interior ss:Color=\"#D9D9D9\" ss:Pattern=\"Solid\"/></Style></Styles><Worksheet ss:Name=\"Stats\"><Table ss:ExpandedColumnCount=\"3\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"116.25\"/><Column ss:Width=\"225\"/><Column ss:Width=\"225\"/>");
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Input Filename</Data></Cell><Cell><Data ss:Type=\"String\">" + Path.GetFileName(aces.filePath) + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Title</Data></Cell><Cell><Data ss:Type=\"String\">" + aces.DocumentTitle + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">ACES version</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + aces.version + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">VCdb version cited</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + aces.VcdbVersionDate + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + validatedAgainstVCdb + "</Data></Cell></Row>");
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">PCdb version cited</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + aces.PcdbVersionDate + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + validatedAgainstPCdb + "</Data></Cell></Row>");
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Qdb version cited</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + aces.QdbVersionDate + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + validatedAgainstQdb + "</Data></Cell></Row>");
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Application count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.apps.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique Part count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.partsAppCounts.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique MfrLabel count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.distinctMfrLabels.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Unique Parttypes count</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.distinctPartTypes.Count.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
 
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Qdb Utilization (%)</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.QdbUtilizationScore.ToString("0.00") + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
-                    sw.Write("<Row><Cell><Data ss:Type=\"String\">Validation tool</Data></Cell><Cell ss:StyleID=\"s64\" ss:HRef=\"https://autopartsource.com/ACESinspector\"><Data ss:Type=\"String\">ACESinspector version " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
-                    sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><Selected/><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-
-                    sw.Write("<Worksheet ss:Name=\"Parts\"><Table ss:ExpandedColumnCount=\"4\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Applications Count</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Types</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Positions</Data></Cell></Row>");
-                    foreach (KeyValuePair<string, int> partsAppCountEntry in aces.partsAppCounts)
-                    {
-                        partTypeNameList.Clear(); foreach (int partTypeId in aces.partsPartTypes[partsAppCountEntry.Key]) { partTypeNameList.Add(pcdb.niceParttype(partTypeId)); }
-                        positionNameList.Clear(); foreach (int positionId in aces.partsPositions[partsAppCountEntry.Key]) { positionNameList.Add(pcdb.nicePosition(positionId)); }
-                        sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(partsAppCountEntry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + partsAppCountEntry.Value.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(string.Join(",", partTypeNameList)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(String.Join(",", positionNameList)) + "</Data></Cell></Row>");
-                    }
-                    sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-
-                    sw.Write("<Worksheet ss:Name=\"Part Types\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Index=\"2\" ss:AutoFitWidth=\"0\" ss:Width=\"183.75\"/>");
-                    foreach (int distinctPartType in aces.distinctPartTypes) { sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + distinctPartType + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.niceParttype(distinctPartType)) + "</Data></Cell></Row>"); }
-                    sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-
-                    if (aces.distinctMfrLabels.Count > 0)
-                    {
-                        sw.Write("<Worksheet ss:Name=\"MfrLabels\"><Table ss:ExpandedColumnCount=\"1\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"151.5\"/>");
-                        foreach (string distinctMfrLabel in aces.distinctMfrLabels) { sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(distinctMfrLabel) + "</Data></Cell></Row>"); }
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
-
-                    if(aces.noteCounts.Count>0)
-                    {
-                        if (noteToQdbTransformDictionary.Count() > 0)
-                        {// transforms are in play - they will be listed in the third column
-                            sw.Write("<Worksheet ss:Name=\"Note Tags\"><Table ss:ExpandedColumnCount=\"3\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"350\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"62.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"350\"/>");
-                            sw.Write("<Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Note Text</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Occurrences</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Qdb Transform</Data></Cell></Row>");
+                        if ((aces.parttypePositionErrorsCount + aces.vcdbCodesErrorsCount + aces.vcdbConfigurationsErrorsCount + aces.basevehicleidsErrorsCount + aces.qdbErrorsCount + aces.fitmentLogicProblemsCount) > 0)
+                        {
+                            List<string> failureReasons = new List<string>();
+                            if (aces.parttypePositionErrorsCount > 0) { failureReasons.Add(aces.parttypePositionErrorsCount.ToString() + " partType-position pairings"); }
+                            if (aces.vcdbCodesErrorsCount > 0) { failureReasons.Add(aces.vcdbCodesErrorsCount.ToString() + " invalid VCdb codes"); }
+                            if (aces.vcdbConfigurationsErrorsCount > 0) { failureReasons.Add(aces.vcdbConfigurationsErrorsCount.ToString() + " invalid VCdb configs"); }
+                            if (aces.basevehicleidsErrorsCount > 0) { failureReasons.Add(aces.basevehicleidsErrorsCount.ToString() + " invalid basevehicles"); }
+                            if (aces.qdbErrorsCount > 0) { failureReasons.Add(aces.qdbErrorsCount.ToString() + " Qdb errors"); }
+                            if (aces.fitmentLogicProblemsCount > 0) { failureReasons.Add(aces.fitmentLogicProblemsCount.ToString() + " fitment logic problems"); }
+                            sw.Write("<Row><Cell><Data ss:Type=\"String\">Result</Data></Cell><Cell><Data ss:Type=\"String\">Fail</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\">" + string.Join(",", failureReasons) + "</Data></Cell></Row>");
                         }
                         else
-                        {// no transforms in play - list the notes and counts only
-                            sw.Write("<Worksheet ss:Name=\"Note Tags\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"350\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"62.5\"/>");
-                            sw.Write("<Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Note Text</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Occurrences</Data></Cell></Row>");
+                        {
+                            sw.Write("<Row><Cell><Data ss:Type=\"String\">Result</Data></Cell><Cell><Data ss:Type=\"String\">Pass</Data></Cell></Row>");
                         }
 
-                        foreach (KeyValuePair<string, int> noteEntry in aces.noteCounts)
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Qdb Utilization (%)</Data></Cell><Cell><Data ss:Type=\"Number\">" + aces.QdbUtilizationScore.ToString("0.00") + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                        sw.Write("<Row><Cell><Data ss:Type=\"String\">Validation tool</Data></Cell><Cell ss:StyleID=\"s64\" ss:HRef=\"https://autopartsource.com/ACESinspector\"><Data ss:Type=\"String\">ACESinspector version " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() + "</Data></Cell><Cell ss:StyleID=\"s62\"><Data ss:Type=\"String\"></Data></Cell></Row>");
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><Selected/><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+
+                        sw.Write("<Worksheet ss:Name=\"Parts\"><Table ss:ExpandedColumnCount=\"4\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Applications Count</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Types</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Positions</Data></Cell></Row>");
+                        foreach (KeyValuePair<string, int> partsAppCountEntry in aces.partsAppCounts)
                         {
-                            if (noteToQdbTransformDictionary.ContainsKey(noteEntry.Key))
-                            {
-                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(noteEntry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + noteEntry.Value + "</Data></Cell><Cell><Data ss:Type=\"String\">" + qdb.niceQdbQualifier(noteToQdbTransformDictionary[noteEntry.Key].qualifierId, noteToQdbTransformDictionary[noteEntry.Key].qualifierParameters) + "</Data></Cell></Row>");
+                            partTypeNameList.Clear(); foreach (int partTypeId in aces.partsPartTypes[partsAppCountEntry.Key]) { partTypeNameList.Add(pcdb.niceParttype(partTypeId)); }
+                            positionNameList.Clear(); foreach (int positionId in aces.partsPositions[partsAppCountEntry.Key]) { positionNameList.Add(pcdb.nicePosition(positionId)); }
+                            sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(partsAppCountEntry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + partsAppCountEntry.Value.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(string.Join(",", partTypeNameList)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(String.Join(",", positionNameList)) + "</Data></Cell></Row>");
+                        }
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+
+                        sw.Write("<Worksheet ss:Name=\"Part Types\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Index=\"2\" ss:AutoFitWidth=\"0\" ss:Width=\"183.75\"/>");
+                        foreach (int distinctPartType in aces.distinctPartTypes) { sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + distinctPartType + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.niceParttype(distinctPartType)) + "</Data></Cell></Row>"); }
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+
+                        if (aces.distinctMfrLabels.Count > 0)
+                        {
+                            sw.Write("<Worksheet ss:Name=\"MfrLabels\"><Table ss:ExpandedColumnCount=\"1\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"151.5\"/>");
+                            foreach (string distinctMfrLabel in aces.distinctMfrLabels) { sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(distinctMfrLabel) + "</Data></Cell></Row>"); }
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                        }
+
+                        if (aces.noteCounts.Count > 0)
+                        {
+                            if (noteToQdbTransformDictionary.Count() > 0)
+                            {// transforms are in play - they will be listed in the third column
+                                sw.Write("<Worksheet ss:Name=\"Note Tags\"><Table ss:ExpandedColumnCount=\"3\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"350\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"62.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"350\"/>");
+                                sw.Write("<Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Note Text</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Occurrences</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Qdb Transform</Data></Cell></Row>");
                             }
                             else
-                            {
-                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(noteEntry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + noteEntry.Value + "</Data></Cell></Row>");
+                            {// no transforms in play - list the notes and counts only
+                                sw.Write("<Worksheet ss:Name=\"Note Tags\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"350\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"62.5\"/>");
+                                sw.Write("<Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Note Text</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Occurrences</Data></Cell></Row>");
                             }
-                        }
-                        excelTabColorXMLtag = "";// "<TabColorIndex>13</TabColorIndex>";
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
 
-                    if (aces.parttypeDisagreementCount > 0)
-                    {
-                        sw.Write("<Worksheet ss:Name=\"Parttype Disagreement\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"78.75\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Parttypes</Data></Cell></Row>");
-                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_parttypeDisagreements.txt"))
-                        {
-                            while (!reader.EndOfStream)
+                            foreach (KeyValuePair<string, int> noteEntry in aces.noteCounts)
                             {
-                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
-                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[1] + "</Data></Cell></Row>");
-                            }
-                        }
-                        excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
-
-
-                    if (aces.qtyOutlierCount > 0)
-                    {
-                        sw.Write("<Worksheet ss:Name=\"Qty Outliers\"><Table ss:ExpandedColumnCount=\"13\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"180\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Qdb-coded qualifiers</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
-                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_qtyOutliers.txt"))
-                        {
-                            while (!reader.EndOfStream)
-                            {
-                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
-                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[12]) + "</Data></Cell></Row>");
-                            }
-                        }
-                        excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
-
-                    if (aces.parttypePositionErrorsCount > 0)
-                    {
-                        sw.Write("<Worksheet ss:Name=\"PartType-Position Errors\"><Table ss:ExpandedColumnCount=\"11\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"115\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
-                        foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
-                        {
-                            if (chunk.parttypePositionErrorsCount > 0)
-                            {
-                                try
+                                if (noteToQdbTransformDictionary.ContainsKey(noteEntry.Key))
                                 {
-                                    using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_parttypePositionErrors" + chunk.id.ToString() + ".txt"))
+                                    sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(noteEntry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + noteEntry.Value + "</Data></Cell><Cell><Data ss:Type=\"String\">" + qdb.niceQdbQualifier(noteToQdbTransformDictionary[noteEntry.Key].qualifierId, noteToQdbTransformDictionary[noteEntry.Key].qualifierParameters) + "</Data></Cell></Row>");
+                                }
+                                else
+                                {
+                                    sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(noteEntry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + noteEntry.Value + "</Data></Cell></Row>");
+                                }
+                            }
+                            excelTabColorXMLtag = "";// "<TabColorIndex>13</TabColorIndex>";
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                        }
+
+                        if (aces.parttypeDisagreementCount > 0)
+                        {
+                            sw.Write("<Worksheet ss:Name=\"Parttype Disagreement\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"78.75\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Parttypes</Data></Cell></Row>");
+                            using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_parttypeDisagreements.txt"))
+                            {
+                                while (!reader.EndOfStream)
+                                {
+                                    string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                    sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[1] + "</Data></Cell></Row>");
+                                }
+                            }
+                            excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                        }
+
+
+                        if (aces.qtyOutlierCount > 0)
+                        {
+                            sw.Write("<Worksheet ss:Name=\"Qty Outliers\"><Table ss:ExpandedColumnCount=\"13\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"180\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Qdb-coded qualifiers</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
+                            using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_qtyOutliers.txt"))
+                            {
+                                while (!reader.EndOfStream)
+                                {
+                                    string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                    sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[12]) + "</Data></Cell></Row>");
+                                }
+                            }
+                            excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                        }
+
+                        if (aces.parttypePositionErrorsCount > 0)
+                        {
+                            sw.Write("<Worksheet ss:Name=\"PartType-Position Errors\"><Table ss:ExpandedColumnCount=\"11\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"115\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
+                            foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                            {
+                                if (chunk.parttypePositionErrorsCount > 0)
+                                {
+                                    try
                                     {
-                                        while (!reader.EndOfStream)
+                                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_parttypePositionErrors" + chunk.id.ToString() + ".txt"))
                                         {
-                                            string line = reader.ReadLine(); string[] fileds = line.Split('\t');
-                                            sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell></Row>");
+                                            while (!reader.EndOfStream)
+                                            {
+                                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell></Row>");
+                                            }
                                         }
                                     }
+                                    catch (Exception ex) { }
                                 }
-                                catch (Exception ex) { }
                             }
+                            excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                         }
-                        excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
 
-                    if (aces.qdbErrorsCount > 0)
-                    {
-                        sw.Write("<Worksheet ss:Name=\"Qdb Errors\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"115\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
-                        foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                        if (aces.qdbErrorsCount > 0)
                         {
-                            if (chunk.qdbErrorsCount > 0)
+                            sw.Write("<Worksheet ss:Name=\"Qdb Errors\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"115\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
+                            foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
                             {
-                                try
+                                if (chunk.qdbErrorsCount > 0)
                                 {
-                                    using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_qdbErrors" + chunk.id.ToString() + ".txt"))
+                                    try
                                     {
-                                        while (!reader.EndOfStream)
+                                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_qdbErrors" + chunk.id.ToString() + ".txt"))
                                         {
-                                            string line = reader.ReadLine(); string[] fileds = line.Split('\t');
-                                            sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell></Row>");
+                                            while (!reader.EndOfStream)
+                                            {
+                                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell></Row>");
+                                            }
                                         }
                                     }
+                                    catch (Exception ex) { }
                                 }
-                                catch (Exception ex) { }
                             }
+                            excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                         }
-                        excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
 
 
-                    if (aces.questionableNotesCount > 0)
-                    {
-                        sw.Write("<Worksheet ss:Name=\"Questionable Notes\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"115\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
-                        foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                        if (aces.questionableNotesCount > 0)
                         {
-                            if (chunk.questionableNotesCount > 0)
+                            sw.Write("<Worksheet ss:Name=\"Questionable Notes\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"115\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
+                            foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
                             {
-                                try
+                                if (chunk.questionableNotesCount > 0)
                                 {
-                                    using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_questionableNotes" + chunk.id.ToString() + ".txt"))
+                                    try
                                     {
-                                        while (!reader.EndOfStream)
+                                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_questionableNotes" + chunk.id.ToString() + ".txt"))
                                         {
-                                            string line = reader.ReadLine(); string[] fileds = line.Split('\t');
-                                            sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell></Row>");
+                                            while (!reader.EndOfStream)
+                                            {
+                                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell></Row>");
+                                            }
                                         }
                                     }
+                                    catch (Exception ex) { }
                                 }
-                                catch (Exception ex) { }
                             }
+                            excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                         }
-                        excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
 
-                    //-----------
-                    if (aces.assetProblemsCount > 0)
-                    {
-                        sw.Write("<Worksheet ss:Name=\"Asset Problems\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"180\"/><Column ss:Width=\"50\"/><Column ss:Width=\"50\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"80\"/><Column ss:Width=\"46\"/><Column ss:Width=\"50\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Problem Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Reference</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
-                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_assetProblems.txt"))
+                        //-----------
+                        if (aces.assetProblemsCount > 0)
                         {
-                            while (!reader.EndOfStream)
+                            sw.Write("<Worksheet ss:Name=\"Asset Problems\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"180\"/><Column ss:Width=\"50\"/><Column ss:Width=\"50\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"80\"/><Column ss:Width=\"46\"/><Column ss:Width=\"50\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Problem Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Reference</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
+                            using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_assetProblems.txt"))
                             {
-                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
-                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[3] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[8]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[9] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell></Row>");
-                            }
-                        }
-                        excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
-                    //---------------
-
-                    if (aces.basevehicleidsErrorsCount > 0)
-                    {
-                        sw.Write("<Worksheet ss:Name =\"Invalid Base Vids\"><Table ss:ExpandedColumnCount=\"7\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:Width=\"77.25\"/><Column ss:Index=\"4\" ss:AutoFitWidth=\"0\" ss:Width=\"96\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"73.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"253.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"371.25\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Invalid BaseVid</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
-                        foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
-                        {
-                            if (chunk.basevehicleidsErrorsCount > 0)
-                            {
-                                try
+                                while (!reader.EndOfStream)
                                 {
-                                    using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_invalidBasevehicles" + chunk.id.ToString() + ".txt"))
+                                    string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                    sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[3] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[8]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[9] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell></Row>");
+                                }
+                            }
+                            excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                        }
+                        //---------------
+
+                        if (aces.basevehicleidsErrorsCount > 0)
+                        {
+                            sw.Write("<Worksheet ss:Name =\"Invalid Base Vids\"><Table ss:ExpandedColumnCount=\"7\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:Width=\"77.25\"/><Column ss:Index=\"4\" ss:AutoFitWidth=\"0\" ss:Width=\"96\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"73.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"253.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"371.25\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Invalid BaseVid</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
+                            foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                            {
+                                if (chunk.basevehicleidsErrorsCount > 0)
+                                {
+                                    try
                                     {
-                                        while (!reader.EndOfStream)
+                                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_invalidBasevehicles" + chunk.id.ToString() + ".txt"))
                                         {
-                                            string line = reader.ReadLine(); string[] fileds = line.Split('\t');
-                                            sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[2]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[4] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell></Row>");
+                                            while (!reader.EndOfStream)
+                                            {
+                                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                                sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[2]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[4] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell></Row>");
+                                            }
                                         }
                                     }
+                                    catch (Exception ex) { }
                                 }
-                                catch (Exception ex) { }
                             }
+                            excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><Print><ValidPrinterInfo/><HorizontalResolution>600</HorizontalResolution><VerticalResolution>600</VerticalResolution></Print>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                         }
-                        excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><Print><ValidPrinterInfo/><HorizontalResolution>600</HorizontalResolution><VerticalResolution>600</VerticalResolution></Print>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
 
-                    if (aces.vcdbCodesErrorsCount > 0)
-                    {
-                        sw.Write("<Worksheet ss:Name=\"Invalid VCdb Codes\"><Table ss:ExpandedColumnCount=\"10\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"78.75\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"99.75\"/><Column ss:Width=\"31.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"60\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"112.5\"/><Column ss:Width=\"43.5\"/><Column ss:Width =\"43.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"237\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"319.5\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb Attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
-                        foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                        if (aces.vcdbCodesErrorsCount > 0)
                         {
-                            if (chunk.vcdbCodesErrorsCount > 0)
+                            sw.Write("<Worksheet ss:Name=\"Invalid VCdb Codes\"><Table ss:ExpandedColumnCount=\"10\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"78.75\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"99.75\"/><Column ss:Width=\"31.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"60\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"112.5\"/><Column ss:Width=\"43.5\"/><Column ss:Width =\"43.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"237\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"319.5\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb Attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
+                            foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
                             {
-                                try
+                                if (chunk.vcdbCodesErrorsCount > 0)
                                 {
-                                    using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_invalidVCdbCodes" + chunk.id.ToString() + ".txt"))
+                                    try
                                     {
-                                        while (!reader.EndOfStream)
+                                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_invalidVCdbCodes" + chunk.id.ToString() + ".txt"))
                                         {
-                                            string line = reader.ReadLine(); string[] fileds = line.Split('\t');
-                                            sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[1]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[2]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[6] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type =\"String\">" + escapeXMLspecialChars(fileds[8]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell></Row>");
+                                            while (!reader.EndOfStream)
+                                            {
+                                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                                sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[1]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[2]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[6] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type =\"String\">" + escapeXMLspecialChars(fileds[8]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell></Row>");
+                                            }
                                         }
                                     }
+                                    catch (Exception ex) { }
                                 }
-                                catch (Exception ex) { }
                             }
+                            excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                         }
-                        excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
 
 
-                    if (aces.vcdbConfigurationsErrorsCount > 0)
-                    {
-                        sw.Write("<Worksheet ss:Name=\"Invalid VCdb Configs\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"78.75\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"99.75\"/><Column ss:Width=\"31.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"60\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"112.5\"/><Column ss:Width=\"43.5\"/><Column ss:Width =\"43.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"237\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"319.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"319.5\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehiclce id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded Attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Qdb-coded Qualifiers</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
-                        foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
+                        if (aces.vcdbConfigurationsErrorsCount > 0)
                         {
-                            if (chunk.vcdbConfigurationsErrorsCount > 0)
+                            sw.Write("<Worksheet ss:Name=\"Invalid VCdb Configs\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"78.75\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"99.75\"/><Column ss:Width=\"31.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"60\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"112.5\"/><Column ss:Width=\"43.5\"/><Column ss:Width =\"43.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"237\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"319.5\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"319.5\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehiclce id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded Attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Qdb-coded Qualifiers</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
+                            foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
                             {
-                                try
+                                if (chunk.vcdbConfigurationsErrorsCount > 0)
                                 {
-                                    using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_configurationErrors" + chunk.id.ToString() + ".txt"))
+                                    try
                                     {
-                                        while (!reader.EndOfStream)
+                                        using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_configurationErrors" + chunk.id.ToString() + ".txt"))
                                         {
-                                            string line = reader.ReadLine(); string[] fileds = line.Split('\t');
-                                            sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[2]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[7] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[8]) + "</Data></Cell><Cell><Data ss:Type =\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell></Row>");
+                                            while (!reader.EndOfStream)
+                                            {
+                                                string line = reader.ReadLine(); string[] fileds = line.Split('\t');
+                                                sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[2]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[7] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[8]) + "</Data></Cell><Cell><Data ss:Type =\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell></Row>");
+                                            }
                                         }
                                     }
+                                    catch (Exception ex) { }
                                 }
-                                catch (Exception ex) { }
                             }
+                            excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                         }
-                        excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
 
 
-                    if (aces.fitmentLogicProblemsCount > 0)
-                    {
-                        problemDescription = "";
-                        elementPrevalence = 0;
-                        fitmentElementPrevalence.Clear();
-
-                        sw.Write("<Worksheet ss:Name=\"Fitment Logic Problems\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Problem Description</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Group</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">BaseVehcile Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
-                        foreach (KeyValuePair<string, List<App>> entry in aces.fitmentProblemGroupsAppLists)
+                        if (aces.fitmentLogicProblemsCount > 0)
                         {
-                            // construct a tree in order to re-discover the problmes with it.
-                            aces.fitmentNodeList.Clear();
+                            problemDescription = "";
+                            elementPrevalence = 0;
                             fitmentElementPrevalence.Clear();
-                            foreach (string fitmentElement in aces.fitmentProblemGroupsBestPermutations[entry.Key])
+
+                            sw.Write("<Worksheet ss:Name=\"Fitment Logic Problems\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Problem Description</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Group</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">BaseVehcile Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell></Row>");
+                            foreach (KeyValuePair<string, List<App>> entry in aces.fitmentProblemGroupsAppLists)
                             {
-                                fitmentElementPrevalence.Add(fitmentElement, elementPrevalence); elementPrevalence++;
-                            }
-                            aces.fitmentNodeList.AddRange(aces.buildFitmentTreeFromAppList(entry.Value, fitmentElementPrevalence, -1, false,false, vcdb, qdb));
-                            problemDescription=aces.fitmentTreeProblemDescription(aces.fitmentNodeList, checkBoxConcernForDisparate.Checked);
+                                // construct a tree in order to re-discover the problmes with it.
+                                aces.fitmentNodeList.Clear();
+                                fitmentElementPrevalence.Clear();
+                                foreach (string fitmentElement in aces.fitmentProblemGroupsBestPermutations[entry.Key])
+                                {
+                                    fitmentElementPrevalence.Add(fitmentElement, elementPrevalence); elementPrevalence++;
+                                }
+                                aces.fitmentNodeList.AddRange(aces.buildFitmentTreeFromAppList(entry.Value, fitmentElementPrevalence, -1, false, false, vcdb, qdb));
+                                problemDescription = aces.fitmentTreeProblemDescription(aces.fitmentNodeList, checkBoxConcernForDisparate.Checked);
 
-                            foreach (App app in entry.Value)
+                                foreach (App app in entry.Value)
+                                {
+                                    sw.Write("<Row><Cell><Data ss:Type=\"String\">" + problemDescription + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(entry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + app.id.ToString() + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + app.basevehilceid.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(vcdb.niceModelOfBasevid(app.basevehilceid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + vcdb.niceYearOfBasevid(app.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.niceParttype(app.parttypeid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.nicePosition(app.positionid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + app.quantity.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + app.part + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(app.niceFullFitmentString(vcdb, qdb)) + "</Data></Cell></Row>");
+                                }
+                            }
+                            excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                        }
+
+                        if (diffaces.differentialParts.Count > 0)
+                        {
+                            sw.Write("<Worksheet ss:Name=\"Differential Parts\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Add/Drop</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell></Row>");
+                            foreach (string line in diffaces.differentialParts)
                             {
-                                sw.Write("<Row><Cell><Data ss:Type=\"String\">"+ problemDescription + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(entry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + app.id.ToString() + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + app.basevehilceid.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(vcdb.niceModelOfBasevid(app.basevehilceid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + vcdb.niceYearOfBasevid(app.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.niceParttype(app.parttypeid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.nicePosition(app.positionid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + app.quantity.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + app.part + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(app.niceFullFitmentString(vcdb, qdb)) + "</Data></Cell></Row>");
+                                string[] fields = line.Split('\t');
+                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[0]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[1]) + "</Data></Cell></Row>");
                             }
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                         }
-                        excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
 
-                    if (diffaces.differentialParts.Count > 0)
-                    {
-                        sw.Write("<Worksheet ss:Name=\"Differential Parts\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Add/Drop</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell></Row>");
-                        foreach (string line in diffaces.differentialParts)
+
+                        if (diffaces.differentialVehicles.Count > 0)
                         {
-                            string[] fields = line.Split('\t');
-                            sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[0])+ "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[1]) + "</Data></Cell></Row>");
+                            App tempApp = new App();
+
+                            sw.Write("<Worksheet ss:Name=\"Differential Vehicles\"><Table ss:ExpandedColumnCount=\"9\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Add/Drop</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">BaseVehcile Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Mfr Label</Data></Cell></Row>");
+                            foreach (string line in diffaces.differentialVehicles)
+                            {
+                                string[] fields = line.Split('\t');
+                                tempApp.Clear();
+                                tempApp.basevehilceid = Convert.ToInt32(fields[1]);
+                                if (vcdb.niceMakeOfBasevid(tempApp.basevehilceid) == "not found") { continue; }
+                                tempApp.parttypeid = Convert.ToInt32(fields[2]);
+                                tempApp.positionid = Convert.ToInt32(fields[3]);
+                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + tempApp.basevehilceid.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + vcdb.niceMakeOfBasevid(tempApp.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(vcdb.niceModelOfBasevid(tempApp.basevehilceid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + vcdb.niceYearOfBasevid(tempApp.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.niceParttype(tempApp.parttypeid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.nicePosition(tempApp.positionid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[5]) + "</Data></Cell></Row>");
+                            }
+                            sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                         }
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+                        sw.Write("</Workbook>");
                     }
-
-
-                    if (diffaces.differentialVehicles.Count > 0)
-                    {
-                        App tempApp = new App();
-
-                        sw.Write("<Worksheet ss:Name=\"Differential Vehicles\"><Table ss:ExpandedColumnCount=\"9\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Column ss:Width=\"100\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Add/Drop</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">BaseVehcile Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Fitment</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Mfr Label</Data></Cell></Row>");
-                        foreach (string line in diffaces.differentialVehicles)
-                        {
-                            string[] fields = line.Split('\t');
-                            tempApp.Clear();
-                            tempApp.basevehilceid = Convert.ToInt32(fields[1]);
-                            if(vcdb.niceMakeOfBasevid(tempApp.basevehilceid)== "not found"){continue;}
-                            tempApp.parttypeid = Convert.ToInt32(fields[2]);
-                            tempApp.positionid = Convert.ToInt32(fields[3]);
-                            sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + tempApp.basevehilceid.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + vcdb.niceMakeOfBasevid(tempApp.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(vcdb.niceModelOfBasevid(tempApp.basevehilceid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + vcdb.niceYearOfBasevid(tempApp.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.niceParttype(tempApp.parttypeid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.nicePosition(tempApp.positionid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[5]) + "</Data></Cell></Row>");
-                        }
-                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
-                    }
-                    sw.Write("</Workbook>");
+                    aces.logHistoryEvent("", "0\tAssessment file created (" + assessmentFilename + ")");
                 }
-                aces.logHistoryEvent("", "0\tAssessment file created (" + assessmentFilename + ")");
+                catch (Exception ex)
+                {
+                    aces.logHistoryEvent("", "0\tAssessment file NOT created: " + ex.Message);
+                }
             }
-            catch(Exception ex)
-            {
-                aces.logHistoryEvent("", "0\tAssessment file NOT created: " +ex.Message);
-            }
-
-
 
             //--------------------
-            if (lblAssessmentsPath.Text != "")
+            if (lblAssessmentsPath.Text != "" && comboBoxAssessmentFormat.SelectedIndex==1)
             {
                 int recordSequence = 0;
                 assessmentFilename = lblAssessmentsPath.Text + "\\" + Path.GetFileNameWithoutExtension(aces.filePath) + "_assessment.txt";
@@ -2462,7 +2492,9 @@ namespace ACESinspector
 
             if (aces.fitmentLogicProblemsCount > 0)
             {
-                tabControl1.TabPages.Add(hiddenLogicProblemsTab); highestVisableTab1Index++; 
+                tabControl1.TabPages.Add(hiddenLogicProblemsTab); highestVisableTab1Index++;
+                textBoxFitmentLogicElements.Visible = false;
+                btnClearFlaggedNodes.Visible = false;
 
                 if (aces.fitmentLogicProblemsCount > largeDatagridRecordThreshold)
                 {
@@ -2494,6 +2526,7 @@ namespace ACESinspector
                 {
                     dgFitmentLogicProblems.Visible = true;
                     pictureBoxFitmentTree.Visible = true;
+
                     foreach (KeyValuePair<string, List<App>> entry in aces.fitmentProblemGroupsAppLists)
                     {   // construct a tree in order to re-discover the problmes with it.
                         aces.fitmentNodeList.Clear(); fitmentElementPrevalence.Clear();
@@ -3149,7 +3182,7 @@ namespace ACESinspector
                     yPos -= verticalGenerationSpacing;
                 }
 
-                // I'm well aware of recursion - I decided not to use it here
+                // I'm well aware of recursion - I decided not to use it here - 
 
                 nodeIdsListA = nodes[0].childNodeIds;
                 foreach (int nodeIdA in nodeIdsListA)
@@ -3161,6 +3194,7 @@ namespace ACESinspector
                     g.DrawLine(aces.fitmentBranchPen(0, nodes, true), nodes[nodeIdA].graphicalXpos + (nodes[nodeIdA].graphicalWidth / 2), nodes[nodeIdA].graphicalYpos, nodes[0].graphicalXpos, 20 + treeCanvasYbase + treeCanvasYoffset);
                     g.DrawRectangle(penBox, nodes[nodeIdA].graphicalXpos, nodes[nodeIdA].graphicalYpos, nodes[nodeIdA].graphicalWidth, nodes[nodeIdA].graphicalHeight);
                     g.DrawString(nodes[nodeIdA].fitmentElementString, fitmentElementTitleFont, fitmentElementTitleBrush, fitmentBoxLayoutRcetangle, fitmentElementTitleStringFormat);
+                    if (nodes[nodeIdA].markedAsCosmetic) { g.DrawLine(Pens.Red, nodes[nodeIdA].graphicalXpos - 10, nodes[nodeIdA].graphicalYpos + nodes[nodeIdA].graphicalHeight / 2, nodes[nodeIdA].graphicalXpos + nodes[nodeIdA].graphicalWidth + 10, nodes[nodeIdA].graphicalYpos + nodes[nodeIdA].graphicalHeight / 2); }
 
                     List<int> nodeIdsListB = new List<int>();
                     nodeIdsListB = nodes[nodeIdA].childNodeIds;
@@ -3174,6 +3208,7 @@ namespace ACESinspector
                         g.DrawLine(aces.fitmentBranchPen(nodeIdA, nodes, true), nodes[nodeIdB].graphicalXpos + (nodes[nodeIdB].graphicalWidth / 2), nodes[nodeIdB].graphicalYpos, nodes[nodeIdA].graphicalXpos + (nodes[nodeIdA].graphicalWidth / (nodeIdsListB.Count() + 1) * nodeBcounter), nodes[nodeIdA].graphicalYpos + nodes[nodeIdA].graphicalHeight);
                         g.DrawRectangle(penBox, nodes[nodeIdB].graphicalXpos, nodes[nodeIdB].graphicalYpos, nodes[nodeIdB].graphicalWidth, nodes[nodeIdB].graphicalHeight);
                         g.DrawString(nodes[nodeIdB].fitmentElementString, fitmentElementTitleFont, fitmentElementTitleBrush, fitmentBoxLayoutRcetangle, fitmentElementTitleStringFormat);
+                        if(nodes[nodeIdB].markedAsCosmetic){g.DrawLine(Pens.Red, nodes[nodeIdB].graphicalXpos - 10, nodes[nodeIdB].graphicalYpos + nodes[nodeIdB].graphicalHeight / 2, nodes[nodeIdB].graphicalXpos + nodes[nodeIdB].graphicalWidth + 10, nodes[nodeIdB].graphicalYpos + nodes[nodeIdB].graphicalHeight / 2);}
 
                         List<int> nodeIdsListC = new List<int>();
                         nodeIdsListC = nodes[nodeIdB].childNodeIds;
@@ -3188,6 +3223,7 @@ namespace ACESinspector
                             g.DrawLine(aces.fitmentBranchPen(nodeIdB, nodes, true), nodes[nodeIdC].graphicalXpos + (nodes[nodeIdC].graphicalWidth / 2), nodes[nodeIdC].graphicalYpos, nodes[nodeIdB].graphicalXpos + (nodes[nodeIdB].graphicalWidth / (nodeIdsListC.Count() + 1) * nodeCcounter), nodes[nodeIdB].graphicalYpos + nodes[nodeIdB].graphicalHeight);
                             g.DrawRectangle(penBox, nodes[nodeIdC].graphicalXpos, nodes[nodeIdC].graphicalYpos, nodes[nodeIdC].graphicalWidth, nodes[nodeIdC].graphicalHeight);
                             g.DrawString(nodes[nodeIdC].fitmentElementString, fitmentElementTitleFont, fitmentElementTitleBrush, fitmentBoxLayoutRcetangle, fitmentElementTitleStringFormat);
+                            if (nodes[nodeIdC].markedAsCosmetic) { g.DrawLine(Pens.Red, nodes[nodeIdC].graphicalXpos - 10, nodes[nodeIdC].graphicalYpos + nodes[nodeIdC].graphicalHeight / 2, nodes[nodeIdC].graphicalXpos + nodes[nodeIdC].graphicalWidth + 10, nodes[nodeIdC].graphicalYpos + nodes[nodeIdC].graphicalHeight / 2); }
 
                             List<int> nodeIdsListD = new List<int>();
                             nodeIdsListD = nodes[nodeIdC].childNodeIds;
@@ -3201,6 +3237,7 @@ namespace ACESinspector
                                 g.DrawLine(aces.fitmentBranchPen(nodeIdC, nodes, true), nodes[nodeIdD].graphicalXpos + (nodes[nodeIdD].graphicalWidth / 2), nodes[nodeIdD].graphicalYpos, nodes[nodeIdC].graphicalXpos + (nodes[nodeIdC].graphicalWidth / (nodeIdsListD.Count() + 1) * nodeDcounter), nodes[nodeIdC].graphicalYpos + nodes[nodeIdC].graphicalHeight);
                                 g.DrawRectangle(penBox, nodes[nodeIdD].graphicalXpos, nodes[nodeIdD].graphicalYpos, nodes[nodeIdD].graphicalWidth, nodes[nodeIdD].graphicalHeight);
                                 g.DrawString(nodes[nodeIdD].fitmentElementString, fitmentElementTitleFont, fitmentElementTitleBrush, fitmentBoxLayoutRcetangle, fitmentElementTitleStringFormat);
+                                if (nodes[nodeIdD].markedAsCosmetic) { g.DrawLine(Pens.Red, nodes[nodeIdD].graphicalXpos - 10, nodes[nodeIdD].graphicalYpos + nodes[nodeIdD].graphicalHeight / 2, nodes[nodeIdD].graphicalXpos + nodes[nodeIdD].graphicalWidth + 10, nodes[nodeIdD].graphicalYpos + nodes[nodeIdD].graphicalHeight / 2); }
 
                                 List<int> nodeIdsListE = new List<int>();
                                 nodeIdsListE = nodes[nodeIdD].childNodeIds;
@@ -3214,6 +3251,7 @@ namespace ACESinspector
                                     g.DrawLine(aces.fitmentBranchPen(nodeIdD, nodes, true), nodes[nodeIdE].graphicalXpos + (nodes[nodeIdE].graphicalWidth / 2), nodes[nodeIdE].graphicalYpos, nodes[nodeIdD].graphicalXpos + (nodes[nodeIdD].graphicalWidth / (nodeIdsListE.Count() + 1) * nodeEcounter), nodes[nodeIdD].graphicalYpos + nodes[nodeIdD].graphicalHeight);
                                     g.DrawRectangle(penBox, nodes[nodeIdE].graphicalXpos, nodes[nodeIdE].graphicalYpos, nodes[nodeIdE].graphicalWidth, nodes[nodeIdE].graphicalHeight);
                                     g.DrawString(nodes[nodeIdE].fitmentElementString, fitmentElementTitleFont, fitmentElementTitleBrush, fitmentBoxLayoutRcetangle, fitmentElementTitleStringFormat);
+                                    if (nodes[nodeIdE].markedAsCosmetic) { g.DrawLine(Pens.Red, nodes[nodeIdE].graphicalXpos - 10, nodes[nodeIdE].graphicalYpos + nodes[nodeIdE].graphicalHeight / 2, nodes[nodeIdE].graphicalXpos + nodes[nodeIdE].graphicalWidth + 10, nodes[nodeIdE].graphicalYpos + nodes[nodeIdE].graphicalHeight / 2); }
 
                                     List<int> nodeIdsListF = new List<int>();
                                     nodeIdsListF = nodes[nodeIdE].childNodeIds;
@@ -3227,6 +3265,7 @@ namespace ACESinspector
                                         g.DrawLine(aces.fitmentBranchPen(nodeIdE, nodes, true), nodes[nodeIdF].graphicalXpos + (nodes[nodeIdF].graphicalWidth / 2), nodes[nodeIdF].graphicalYpos, nodes[nodeIdE].graphicalXpos + (nodes[nodeIdE].graphicalWidth / (nodeIdsListF.Count() + 1) * nodeFcounter), nodes[nodeIdE].graphicalYpos + nodes[nodeIdE].graphicalHeight);
                                         g.DrawRectangle(penBox, nodes[nodeIdF].graphicalXpos, nodes[nodeIdF].graphicalYpos, nodes[nodeIdF].graphicalWidth, nodes[nodeIdF].graphicalHeight);
                                         g.DrawString(nodes[nodeIdF].fitmentElementString, fitmentElementTitleFont, fitmentElementTitleBrush, fitmentBoxLayoutRcetangle, fitmentElementTitleStringFormat);
+                                        if (nodes[nodeIdF].markedAsCosmetic) { g.DrawLine(Pens.Red, nodes[nodeIdF].graphicalXpos - 10, nodes[nodeIdF].graphicalYpos + nodes[nodeIdF].graphicalHeight / 2, nodes[nodeIdF].graphicalXpos + nodes[nodeIdF].graphicalWidth + 10, nodes[nodeIdF].graphicalYpos + nodes[nodeIdF].graphicalHeight / 2); }
 
                                         List<int> nodeIdsListG = new List<int>();
                                         nodeIdsListG = nodes[nodeIdF].childNodeIds;
@@ -3240,6 +3279,7 @@ namespace ACESinspector
                                             g.DrawLine(aces.fitmentBranchPen(nodeIdF, nodes, true), nodes[nodeIdG].graphicalXpos + (nodes[nodeIdG].graphicalWidth / 2), nodes[nodeIdG].graphicalYpos, nodes[nodeIdF].graphicalXpos + (nodes[nodeIdF].graphicalWidth / (nodeIdsListG.Count() + 1) * nodeGcounter), nodes[nodeIdF].graphicalYpos + nodes[nodeIdF].graphicalHeight);
                                             g.DrawRectangle(penBox, nodes[nodeIdG].graphicalXpos, nodes[nodeIdG].graphicalYpos, nodes[nodeIdG].graphicalWidth, nodes[nodeIdG].graphicalHeight);
                                             g.DrawString(nodes[nodeIdG].fitmentElementString, fitmentElementTitleFont, fitmentElementTitleBrush, fitmentBoxLayoutRcetangle, fitmentElementTitleStringFormat);
+                                            if (nodes[nodeIdG].markedAsCosmetic) { g.DrawLine(Pens.Red, nodes[nodeIdG].graphicalXpos - 10, nodes[nodeIdG].graphicalYpos + nodes[nodeIdG].graphicalHeight / 2, nodes[nodeIdG].graphicalXpos + nodes[nodeIdG].graphicalWidth + 10, nodes[nodeIdG].graphicalYpos + nodes[nodeIdG].graphicalHeight / 2); }
 
                                             List<int> nodeIdsListH = new List<int>();
                                             nodeIdsListH = nodes[nodeIdG].childNodeIds;
@@ -3254,7 +3294,8 @@ namespace ACESinspector
                                                 g.DrawLine(aces.fitmentBranchPen(nodeIdG, nodes, true), nodes[nodeIdH].graphicalXpos + (nodes[nodeIdH].graphicalWidth / 2), nodes[nodeIdH].graphicalYpos, nodes[nodeIdG].graphicalXpos + (nodes[nodeIdG].graphicalWidth / (nodeIdsListH.Count() + 1) * nodeHcounter), nodes[nodeIdG].graphicalYpos + nodes[nodeIdG].graphicalHeight);
                                                 g.DrawRectangle(penBox, nodes[nodeIdH].graphicalXpos, nodes[nodeIdH].graphicalYpos, nodes[nodeIdH].graphicalWidth, nodes[nodeIdH].graphicalHeight);
                                                 g.DrawString(nodes[nodeIdH].fitmentElementString, fitmentElementTitleFont, fitmentElementTitleBrush, fitmentBoxLayoutRcetangle, fitmentElementTitleStringFormat);
-                                                                                                
+                                                if (nodes[nodeIdH].markedAsCosmetic) { g.DrawLine(Pens.Red, nodes[nodeIdH].graphicalXpos - 10, nodes[nodeIdH].graphicalYpos + nodes[nodeIdH].graphicalHeight / 2, nodes[nodeIdH].graphicalXpos + nodes[nodeIdH].graphicalWidth + 10, nodes[nodeIdH].graphicalYpos + nodes[nodeIdH].graphicalHeight / 2); }
+
                                                 List<int> nodeIdsListI = new List<int>();
                                                 nodeIdsListI = nodes[nodeIdH].childNodeIds;
                                                 nodeIcounter = 0;
@@ -3271,6 +3312,8 @@ namespace ACESinspector
                                                     g.DrawLine(aces.fitmentBranchPen(nodeIdH, nodes, true), nodes[nodeIdI].graphicalXpos + (nodes[nodeIdI].graphicalWidth / 2), nodes[nodeIdI].graphicalYpos, nodes[nodeIdH].graphicalXpos + (nodes[nodeIdH].graphicalWidth / (nodeIdsListI.Count() + 1) * nodeIcounter), nodes[nodeIdH].graphicalYpos + nodes[nodeIdH].graphicalHeight);
                                                     g.DrawRectangle(penBox, nodes[nodeIdI].graphicalXpos, nodes[nodeIdI].graphicalYpos, nodes[nodeIdI].graphicalWidth, nodes[nodeIdI].graphicalHeight);
                                                     g.DrawString(nodes[nodeIdI].fitmentElementString, fitmentElementTitleFont, fitmentElementTitleBrush, fitmentBoxLayoutRcetangle, fitmentElementTitleStringFormat);
+                                                    if (nodes[nodeIdI].markedAsCosmetic) { g.DrawLine(Pens.Red, nodes[nodeIdI].graphicalXpos - 10, nodes[nodeIdI].graphicalYpos + nodes[nodeIdI].graphicalHeight / 2, nodes[nodeIdI].graphicalXpos + nodes[nodeIdI].graphicalWidth + 10, nodes[nodeIdI].graphicalYpos + nodes[nodeIdI].graphicalHeight / 2); }
+
                                                 }
                                             }
                                         }
@@ -3300,19 +3343,87 @@ namespace ACESinspector
 
         private void pictureBoxFitmentTree_MouseDown(object sender, MouseEventArgs e)
         {//roll through all nodes in the nodes in the aces.fitmentNodes list to see if our click XY fell within the bounds of a specific node
+
+            bool apsFlavor = true;
+
             int i; mouseDownX = e.X; mouseDownY = e.Y;
             treeCanvasIsBeingDragged = true;
             pictureBoxFitmentTree.Invalidate();
+
             for (i=0; i<=aces.fitmentNodeList.Count()-1;i++)
             {
                 if (aces.fitmentNodeList[i].deleted || aces.fitmentNodeList[i].filler) { continue; }
                 aces.fitmentNodeList[i].touched = false;
-                if (e.X >= aces.fitmentNodeList[i].graphicalXpos && e.X<=(aces.fitmentNodeList[i].graphicalXpos+ aces.fitmentNodeList[i].graphicalWidth) && e.Y>= aces.fitmentNodeList[i].graphicalYpos && e.Y<= (aces.fitmentNodeList[i].graphicalYpos+ aces.fitmentNodeList[i].graphicalHeight))
+                if (e.X >= aces.fitmentNodeList[i].graphicalXpos-2 && e.X<=(aces.fitmentNodeList[i].graphicalXpos+ aces.fitmentNodeList[i].graphicalWidth)+2 && e.Y>= aces.fitmentNodeList[i].graphicalYpos-2 && e.Y<= (aces.fitmentNodeList[i].graphicalYpos+ aces.fitmentNodeList[i].graphicalHeight)+2)
                 {// mouse down XY is within the bounds of this node
                     treeCanvasIsBeingDragged = false;
 
                     if (e.Button == MouseButtons.Left)
                     {
+                        //xxx
+
+
+                        if (aces.fitmentNodeList[i].app == null)
+                        {// not an end-node
+                            if(!aces.fitmentNodeList[i].markedAsCosmetic)
+                            {
+                                aces.fitmentNodeList[i].markedAsCosmetic = true;
+                                List<App> tempAppList = new List<App>();
+                                tempAppList = aces.appsDescendentFromNode(aces.fitmentNodeList, i);
+                                List<string> tempStringList = new List<string>();
+                                foreach (App myapp in tempAppList)
+                                {
+                                    if (!apsFlavor)
+                                    {// general purpose PIM changes list
+                                        switch (aces.fitmentNodeList[i].fitmentElementType)
+                                        {
+                                            case "vcdb": tempStringList.Add("Modify app\t" + myapp.reference + "\tDrop VCdb attribute\t" + aces.fitmentNodeList[i].fitmentElementData); break;
+                                            case "qdb": tempStringList.Add("Modify app\t" + myapp.reference + "\tDrop Qdb qualifier\t" + aces.fitmentNodeList[i].fitmentElementData); break;
+                                            case "note": tempStringList.Add("Modify app\t" + myapp.reference + "\tDrop note\t" + aces.fitmentNodeList[i].fitmentElementString); break;
+                                            default: tempStringList.Add("Modify app\t" + myapp.reference + "Drop fitment\t" + aces.fitmentNodeList[i].fitmentElementString); break;
+                                        }
+                                    }
+                                    else
+                                    {// AutoPartSource-specific PIM systems SQL statements
+
+                                        switch (aces.fitmentNodeList[i].fitmentElementType)
+                                        {
+                                            case "vcdb": var vcdbFields = aces.fitmentNodeList[i].fitmentElementData.Split(':'); tempStringList.Add("update application_vehicle_attributes set optional='Y' where application_id=" + myapp.reference + " and attribute_name='" + vcdbFields[0] + "id' and attribute_value="+vcdbFields[1] + " and `type`='A' limit 1;"); break;
+                                            case "note": tempStringList.Add("update application_vehicle_attributes set optional='Y' where application_id=" + myapp.reference + " and attribute_name='" + aces.fitmentNodeList[i].fitmentElementString + "' and `type`='N' limit 1;"); break;
+                                            default: break;
+                                        }
+                                    }
+                                }
+                                aces.fitmentNodesFlaggedAsCosmetic.Add(aces.fitmentNodeList[i].logicProblemGroup + "," + i.ToString(), tempStringList);
+                            }
+                            else
+                            {
+                                aces.fitmentNodeList[i].markedAsCosmetic = false;
+                                aces.fitmentNodesFlaggedAsCosmetic.Remove(aces.fitmentNodeList[i].logicProblemGroup + "," + i.ToString());
+                            }
+                        }
+                        else
+                        {// this is an end-node
+                            if(aces.fitmentNodeList[i].markedAsCosmetic)
+                            {
+                                aces.fitmentNodeList[i].markedAsCosmetic = false;
+                                aces.appHashesFlaggedAsCosmetic.Remove(aces.fitmentNodeList[i].app.appHash());
+                            }
+                            else
+                            {
+                                aces.fitmentNodeList[i].markedAsCosmetic = true;
+                                if (!apsFlavor)
+                                {// general purpose PIM changes list
+                                    aces.appHashesFlaggedAsCosmetic.Add(aces.fitmentNodeList[i].app.appHash(), "Delete app\t" + aces.fitmentNodeList[i].app.reference);
+                                }
+                                else
+                                {// AutoPartSource-specific PIM systems SQL statements
+                                    aces.appHashesFlaggedAsCosmetic.Add(aces.fitmentNodeList[i].app.appHash(), "update application set cosmetic=1 where application_id=" + aces.fitmentNodeList[i].app.reference + " limit 1;");
+                                }
+                            }
+                        }
+
+
                         if (aces.fitmentNodeList[i].fitmentElementType == "note")
                         {
                             treeNodeBeingDragged.fitmentElementData = aces.fitmentNodeList[i].fitmentElementData;
@@ -3326,7 +3437,35 @@ namespace ACESinspector
                             treeNodeBeingDragged.deleted = false;
                         }
                     }
-                    
+
+
+                    textBoxFitmentLogicElements.Text = "";
+                    foreach (KeyValuePair<string, string> appEntry in aces.appHashesFlaggedAsCosmetic)
+                    {
+                        textBoxFitmentLogicElements.Text += appEntry.Value + Environment.NewLine;
+                    }
+
+                    foreach(KeyValuePair<string,List<string>> nodeEntry in aces.fitmentNodesFlaggedAsCosmetic)
+                    {
+                        foreach(string nodeString in nodeEntry.Value)
+                        {
+                            textBoxFitmentLogicElements.Text += nodeString + Environment.NewLine;
+                        }
+                    }
+
+                    if(textBoxFitmentLogicElements.Text=="")
+                    {
+                        textBoxFitmentLogicElements.Visible = false;
+                        btnClearFlaggedNodes.Visible = false;
+                    }
+                    else
+                    {
+                        textBoxFitmentLogicElements.Visible = true;
+                        btnClearFlaggedNodes.Visible = true;
+                    }
+
+
+
                     /*
                     aces.fitmentNodeList[i].touched = true;
                     if (e.Button == MouseButtons.Left)
@@ -3479,6 +3618,8 @@ namespace ACESinspector
             dgFitmentLogicProblems.Height = splitContainerFitmentLogic.Panel1.Height;
             pictureBoxFitmentTree.Height = splitContainerFitmentLogic.Panel2.Height;
             listBoxFitmentLogicElements.Height = splitContainerFitmentLogic.Panel2.Height;
+            textBoxFitmentLogicElements.Height = pictureBoxFitmentTree.Height / 2;
+            btnClearFlaggedNodes.Top = textBoxFitmentLogicElements.Height + 10;
         }
 
         private void numericUpDownQtyOutliersThreshold_ValueChanged(object sender, EventArgs e)
@@ -3681,6 +3822,25 @@ namespace ACESinspector
                             listBoxFitmentLogicElements.Items.Add(fitmentElement);
                         }
                         aces.fitmentNodeList.AddRange(aces.buildFitmentTreeFromAppList(aces.fitmentProblemGroupsAppLists[macroProblemGroupKeyInView], fitmentElementPrevalence, -1, true, true, vcdb, qdb));
+
+                        for(int i=0;i<aces.fitmentNodeList.Count();i++)
+                        {
+                            aces.fitmentNodeList[i].logicProblemGroup = macroProblemGroupKeyInView;
+                            if (aces.fitmentNodeList[i].app!=null)
+                            {// end node 
+                                if (aces.appHashesFlaggedAsCosmetic.ContainsKey(aces.fitmentNodeList[i].app.appHash()))
+                                {
+                                    aces.fitmentNodeList[i].markedAsCosmetic = true;
+                                }
+                            }
+                            else
+                            {// not an end node
+                                if(aces.fitmentNodesFlaggedAsCosmetic.ContainsKey(macroProblemGroupKeyInView.ToString() + "," + i.ToString()))
+                                {
+                                    aces.fitmentNodeList[i].markedAsCosmetic = true;
+                                }
+                            }
+                        }
                     }
                     pictureBoxFitmentTree.Invalidate();
                     treeCanvasXbase = 0; treeCanvasYbase = 0;
@@ -3699,7 +3859,6 @@ namespace ACESinspector
             {
                 ReportVCdbImportProgress(vcdb.importProgress);
             }
-
 
             if (aces.analysisRunning)
             {
@@ -3990,9 +4149,6 @@ namespace ACESinspector
                 if (pcdb.version != "" && qdb.version != "" && aces.successfulImport) { btnAnalyze.Enabled = true; }
             }
 
-
-
-            //xxx
             vcdb.connectionMySQLlist.Clear();
             vcdb.MySQLconnectionString = "SERVER=" + textBoxMySQLhost.Text.Trim() + ";" + "DATABASE=vcdbchanges;" + "UID=" + textBoxMySQLuser.Text.Trim() + ";" + "PASSWORD=" + textBoxMySQLpassword.Text.Trim() + ";SslMode=none;";
             vcdb.useRemoteDB = true;
@@ -4085,7 +4241,6 @@ namespace ACESinspector
                     if (fields.Count() == 2 && fields[0].Trim().Length > 0)
                     {//text must be exactly 2 columns seperated by tab
 
-                        //xxx
                         if (fields[1].Length>4 && fields[1].Substring(0, 4) == "Qdb:")
                         {// transform this note to a Qdb. string will look like one of these:
 
@@ -4260,6 +4415,67 @@ namespace ACESinspector
             aces.ignoreNAitems = checkBoxIgnoreNAitems.Checked;
             RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true); key.CreateSubKey("ACESinspector"); key = key.OpenSubKey("ACESinspector", true);
             if (checkBoxIgnoreNAitems.Checked) { key.SetValue("ignoreNAitems", "1"); } else { key.SetValue("ignoreNAitems", "0"); }
+        }
+
+        private void comboBoxAssessmentFormat_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true); key.CreateSubKey("ACESinspector"); key = key.OpenSubKey("ACESinspector", true);
+            key.SetValue("assessmentFileFormat", comboBoxAssessmentFormat.SelectedIndex.ToString());
+        }
+
+        private void numericUpDownAutomatedHour_ValueChanged(object sender, EventArgs e)
+        {
+            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
+            key.CreateSubKey("ACESinspector");
+            key = key.OpenSubKey("ACESinspector", true);
+            key.SetValue("automatedHour",numericUpDownAutomatedHour.Value);
+        }
+
+        private void buttonAutomatedInput_Click(object sender, EventArgs e)
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
+                key.CreateSubKey("ACESinspector");
+                key = key.OpenSubKey("ACESinspector", true);
+                if (key.GetValue("automatedInputDirectoryPath") != null) { fbd.SelectedPath = key.GetValue("automatedInputDirectoryPath").ToString(); }
+                DialogResult dialogResult = fbd.ShowDialog();
+                if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                {
+                    key.SetValue("automatedInputDirectoryPath", fbd.SelectedPath);
+                    labelAutomatedPath.Text = fbd.SelectedPath;
+                    Directory.CreateDirectory(labelAutomatedPath.Text);
+                }
+            }
+        }
+
+        private void checkBoxAutomatedOpperation_CheckedChanged(object sender, EventArgs e)
+        {
+            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
+            key.CreateSubKey("ACESinspector"); key = key.OpenSubKey("ACESinspector", true);
+            if(checkBoxAutomatedOpperation.Checked){key.SetValue("automatedOpperation", "1");}else{key.SetValue("automatedOpperation", "0");}
+        }
+
+        private void numericUpDownAutomatedMinute_ValueChanged(object sender, EventArgs e)
+        {
+            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
+            key.CreateSubKey("ACESinspector");
+            key = key.OpenSubKey("ACESinspector", true);
+            key.SetValue("automatedMinute", numericUpDownAutomatedMinute.Value);
+        }
+
+        private void pictureBoxFitmentTree_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnClearFlaggedNodes_Click(object sender, EventArgs e)
+        {
+            aces.appHashesFlaggedAsCosmetic.Clear();
+            aces.fitmentNodesFlaggedAsCosmetic.Clear();
+            textBoxFitmentLogicElements.Text = "";
+            for(int i = 0; i < aces.fitmentNodeList.Count(); i++) { aces.fitmentNodeList[i].markedAsCosmetic = false;}
+            pictureBoxFitmentTree.Invalidate();
         }
 
         private string escapeXMLspecialChars(string inputString)

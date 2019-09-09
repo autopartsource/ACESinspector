@@ -71,6 +71,13 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.tabPageSettings = new System.Windows.Forms.TabPage();
+            this.groupBoxAutomatedOpperation = new System.Windows.Forms.GroupBox();
+            this.labelAutomatedPath = new System.Windows.Forms.Label();
+            this.buttonAutomatedInput = new System.Windows.Forms.Button();
+            this.label18 = new System.Windows.Forms.Label();
+            this.numericUpDownAutomatedMinute = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDownAutomatedHour = new System.Windows.Forms.NumericUpDown();
+            this.checkBoxAutomatedOpperation = new System.Windows.Forms.CheckBox();
             this.groupBoxAssessmentFile = new System.Windows.Forms.GroupBox();
             this.textBoxFTPpass = new System.Windows.Forms.TextBox();
             this.textBoxFTPuser = new System.Windows.Forms.TextBox();
@@ -292,12 +299,17 @@
             this.progBarRefACESload = new System.Windows.Forms.ProgressBar();
             this.lblPrimeACESLoadStatus = new System.Windows.Forms.Label();
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
+            this.textBoxFitmentLogicElements = new System.Windows.Forms.TextBox();
+            this.btnClearFlaggedNodes = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxCommonErrors)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLogicProblems)).BeginInit();
             this.tabPageSettings.SuspendLayout();
+            this.groupBoxAutomatedOpperation.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownAutomatedMinute)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownAutomatedHour)).BeginInit();
             this.groupBoxAssessmentFile.SuspendLayout();
             this.groupBoxRemoteVCdb.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownThreads)).BeginInit();
@@ -770,6 +782,7 @@
             // 
             // tabPageSettings
             // 
+            this.tabPageSettings.Controls.Add(this.groupBoxAutomatedOpperation);
             this.tabPageSettings.Controls.Add(this.groupBoxAssessmentFile);
             this.tabPageSettings.Controls.Add(this.checkBoxIgnoreNAitems);
             this.tabPageSettings.Controls.Add(this.groupBoxRemoteVCdb);
@@ -791,6 +804,88 @@
             this.tabPageSettings.TabIndex = 17;
             this.tabPageSettings.Text = "Settings";
             this.tabPageSettings.UseVisualStyleBackColor = true;
+            // 
+            // groupBoxAutomatedOpperation
+            // 
+            this.groupBoxAutomatedOpperation.Controls.Add(this.labelAutomatedPath);
+            this.groupBoxAutomatedOpperation.Controls.Add(this.buttonAutomatedInput);
+            this.groupBoxAutomatedOpperation.Controls.Add(this.label18);
+            this.groupBoxAutomatedOpperation.Controls.Add(this.numericUpDownAutomatedMinute);
+            this.groupBoxAutomatedOpperation.Controls.Add(this.numericUpDownAutomatedHour);
+            this.groupBoxAutomatedOpperation.Controls.Add(this.checkBoxAutomatedOpperation);
+            this.groupBoxAutomatedOpperation.Location = new System.Drawing.Point(601, 150);
+            this.groupBoxAutomatedOpperation.Name = "groupBoxAutomatedOpperation";
+            this.groupBoxAutomatedOpperation.Size = new System.Drawing.Size(333, 118);
+            this.groupBoxAutomatedOpperation.TabIndex = 24;
+            this.groupBoxAutomatedOpperation.TabStop = false;
+            this.groupBoxAutomatedOpperation.Text = "Automated Opperation";
+            // 
+            // labelAutomatedPath
+            // 
+            this.labelAutomatedPath.AutoSize = true;
+            this.labelAutomatedPath.Location = new System.Drawing.Point(6, 49);
+            this.labelAutomatedPath.Name = "labelAutomatedPath";
+            this.labelAutomatedPath.Size = new System.Drawing.Size(16, 13);
+            this.labelAutomatedPath.TabIndex = 5;
+            this.labelAutomatedPath.Text = "---";
+            // 
+            // buttonAutomatedInput
+            // 
+            this.buttonAutomatedInput.Location = new System.Drawing.Point(77, 20);
+            this.buttonAutomatedInput.Name = "buttonAutomatedInput";
+            this.buttonAutomatedInput.Size = new System.Drawing.Size(85, 23);
+            this.buttonAutomatedInput.TabIndex = 4;
+            this.buttonAutomatedInput.Text = "Input Folder";
+            this.buttonAutomatedInput.UseVisualStyleBackColor = true;
+            this.buttonAutomatedInput.Click += new System.EventHandler(this.buttonAutomatedInput_Click);
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(3, 74);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(30, 13);
+            this.label18.TabIndex = 3;
+            this.label18.Text = "Time";
+            // 
+            // numericUpDownAutomatedMinute
+            // 
+            this.numericUpDownAutomatedMinute.Location = new System.Drawing.Point(88, 72);
+            this.numericUpDownAutomatedMinute.Maximum = new decimal(new int[] {
+            59,
+            0,
+            0,
+            0});
+            this.numericUpDownAutomatedMinute.Name = "numericUpDownAutomatedMinute";
+            this.numericUpDownAutomatedMinute.Size = new System.Drawing.Size(43, 20);
+            this.numericUpDownAutomatedMinute.TabIndex = 2;
+            this.numericUpDownAutomatedMinute.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numericUpDownAutomatedMinute.ValueChanged += new System.EventHandler(this.numericUpDownAutomatedMinute_ValueChanged);
+            // 
+            // numericUpDownAutomatedHour
+            // 
+            this.numericUpDownAutomatedHour.Location = new System.Drawing.Point(39, 72);
+            this.numericUpDownAutomatedHour.Maximum = new decimal(new int[] {
+            23,
+            0,
+            0,
+            0});
+            this.numericUpDownAutomatedHour.Name = "numericUpDownAutomatedHour";
+            this.numericUpDownAutomatedHour.Size = new System.Drawing.Size(43, 20);
+            this.numericUpDownAutomatedHour.TabIndex = 1;
+            this.numericUpDownAutomatedHour.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numericUpDownAutomatedHour.ValueChanged += new System.EventHandler(this.numericUpDownAutomatedHour_ValueChanged);
+            // 
+            // checkBoxAutomatedOpperation
+            // 
+            this.checkBoxAutomatedOpperation.AutoSize = true;
+            this.checkBoxAutomatedOpperation.Location = new System.Drawing.Point(6, 24);
+            this.checkBoxAutomatedOpperation.Name = "checkBoxAutomatedOpperation";
+            this.checkBoxAutomatedOpperation.Size = new System.Drawing.Size(65, 17);
+            this.checkBoxAutomatedOpperation.TabIndex = 0;
+            this.checkBoxAutomatedOpperation.Text = "Enabled";
+            this.checkBoxAutomatedOpperation.UseVisualStyleBackColor = true;
+            this.checkBoxAutomatedOpperation.CheckedChanged += new System.EventHandler(this.checkBoxAutomatedOpperation_CheckedChanged);
             // 
             // groupBoxAssessmentFile
             // 
@@ -814,15 +909,15 @@
             // textBoxFTPpass
             // 
             this.textBoxFTPpass.Enabled = false;
-            this.textBoxFTPpass.Location = new System.Drawing.Point(202, 91);
+            this.textBoxFTPpass.Location = new System.Drawing.Point(198, 91);
             this.textBoxFTPpass.Name = "textBoxFTPpass";
-            this.textBoxFTPpass.Size = new System.Drawing.Size(125, 20);
+            this.textBoxFTPpass.Size = new System.Drawing.Size(129, 20);
             this.textBoxFTPpass.TabIndex = 8;
             // 
             // textBoxFTPuser
             // 
             this.textBoxFTPuser.Enabled = false;
-            this.textBoxFTPuser.Location = new System.Drawing.Point(49, 91);
+            this.textBoxFTPuser.Location = new System.Drawing.Point(45, 91);
             this.textBoxFTPuser.Name = "textBoxFTPuser";
             this.textBoxFTPuser.Size = new System.Drawing.Size(116, 20);
             this.textBoxFTPuser.TabIndex = 7;
@@ -847,7 +942,7 @@
             // label20
             // 
             this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(167, 94);
+            this.label20.Location = new System.Drawing.Point(163, 94);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(29, 13);
             this.label20.TabIndex = 5;
@@ -866,7 +961,7 @@
             // label19
             // 
             this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(14, 94);
+            this.label19.Location = new System.Drawing.Point(9, 94);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(27, 13);
             this.label19.TabIndex = 4;
@@ -875,7 +970,6 @@
             // checkBoxFTPassessment
             // 
             this.checkBoxFTPassessment.AutoSize = true;
-            this.checkBoxFTPassessment.Enabled = false;
             this.checkBoxFTPassessment.Location = new System.Drawing.Point(9, 67);
             this.checkBoxFTPassessment.Name = "checkBoxFTPassessment";
             this.checkBoxFTPassessment.Size = new System.Drawing.Size(118, 17);
@@ -891,6 +985,7 @@
             this.comboBoxAssessmentFormat.Name = "comboBoxAssessmentFormat";
             this.comboBoxAssessmentFormat.Size = new System.Drawing.Size(149, 21);
             this.comboBoxAssessmentFormat.TabIndex = 1;
+            this.comboBoxAssessmentFormat.SelectedIndexChanged += new System.EventHandler(this.comboBoxAssessmentFormat_SelectedIndexChanged);
             // 
             // label17
             // 
@@ -1086,9 +1181,9 @@
             this.groupBoxValidateTagOptions.Controls.Add(this.radioButton1);
             this.groupBoxValidateTagOptions.Controls.Add(this.checkBoxRespectValidateTag);
             this.groupBoxValidateTagOptions.Enabled = false;
-            this.groupBoxValidateTagOptions.Location = new System.Drawing.Point(348, 50);
+            this.groupBoxValidateTagOptions.Location = new System.Drawing.Point(348, 45);
             this.groupBoxValidateTagOptions.Name = "groupBoxValidateTagOptions";
-            this.groupBoxValidateTagOptions.Size = new System.Drawing.Size(201, 94);
+            this.groupBoxValidateTagOptions.Size = new System.Drawing.Size(201, 99);
             this.groupBoxValidateTagOptions.TabIndex = 12;
             this.groupBoxValidateTagOptions.TabStop = false;
             this.groupBoxValidateTagOptions.Text = "Handling of validate=no";
@@ -1135,7 +1230,7 @@
             this.groupBoxQuantityOutlierSettings.Controls.Add(this.numericUpDownQtyOutliersThreshold);
             this.groupBoxQuantityOutlierSettings.Controls.Add(this.numericUpDownQtyOutliersSample);
             this.groupBoxQuantityOutlierSettings.Controls.Add(this.checkBoxQtyOutliers);
-            this.groupBoxQuantityOutlierSettings.Location = new System.Drawing.Point(555, 50);
+            this.groupBoxQuantityOutlierSettings.Location = new System.Drawing.Point(555, 45);
             this.groupBoxQuantityOutlierSettings.Name = "groupBoxQuantityOutlierSettings";
             this.groupBoxQuantityOutlierSettings.Size = new System.Drawing.Size(379, 99);
             this.groupBoxQuantityOutlierSettings.TabIndex = 11;
@@ -1286,7 +1381,7 @@
             this.groupBoxFitmentLogicSettings.Controls.Add(this.numericUpDownTreeConfigLimit);
             this.groupBoxFitmentLogicSettings.Location = new System.Drawing.Point(348, 150);
             this.groupBoxFitmentLogicSettings.Name = "groupBoxFitmentLogicSettings";
-            this.groupBoxFitmentLogicSettings.Size = new System.Drawing.Size(247, 99);
+            this.groupBoxFitmentLogicSettings.Size = new System.Drawing.Size(247, 118);
             this.groupBoxFitmentLogicSettings.TabIndex = 4;
             this.groupBoxFitmentLogicSettings.TabStop = false;
             this.groupBoxFitmentLogicSettings.Text = "App grouping analysis";
@@ -1294,7 +1389,7 @@
             // checkBoxReportAllAppsInProblemGroup
             // 
             this.checkBoxReportAllAppsInProblemGroup.AutoSize = true;
-            this.checkBoxReportAllAppsInProblemGroup.Location = new System.Drawing.Point(6, 41);
+            this.checkBoxReportAllAppsInProblemGroup.Location = new System.Drawing.Point(6, 46);
             this.checkBoxReportAllAppsInProblemGroup.Name = "checkBoxReportAllAppsInProblemGroup";
             this.checkBoxReportAllAppsInProblemGroup.Size = new System.Drawing.Size(178, 17);
             this.checkBoxReportAllAppsInProblemGroup.TabIndex = 9;
@@ -1305,7 +1400,7 @@
             // checkBoxConcernForDisparate
             // 
             this.checkBoxConcernForDisparate.AutoSize = true;
-            this.checkBoxConcernForDisparate.Location = new System.Drawing.Point(6, 18);
+            this.checkBoxConcernForDisparate.Location = new System.Drawing.Point(6, 23);
             this.checkBoxConcernForDisparate.Name = "checkBoxConcernForDisparate";
             this.checkBoxConcernForDisparate.Size = new System.Drawing.Size(154, 17);
             this.checkBoxConcernForDisparate.TabIndex = 4;
@@ -1316,7 +1411,7 @@
             // label24
             // 
             this.label24.AutoSize = true;
-            this.label24.Location = new System.Drawing.Point(3, 61);
+            this.label24.Location = new System.Drawing.Point(3, 74);
             this.label24.Name = "label24";
             this.label24.Size = new System.Drawing.Size(175, 13);
             this.label24.TabIndex = 2;
@@ -1329,7 +1424,7 @@
             0,
             0,
             0});
-            this.numericUpDownTreeConfigLimit.Location = new System.Drawing.Point(179, 59);
+            this.numericUpDownTreeConfigLimit.Location = new System.Drawing.Point(183, 72);
             this.numericUpDownTreeConfigLimit.Maximum = new decimal(new int[] {
             1000000,
             0,
@@ -2623,6 +2718,8 @@
             // 
             // splitContainerFitmentLogic.Panel2
             // 
+            this.splitContainerFitmentLogic.Panel2.Controls.Add(this.btnClearFlaggedNodes);
+            this.splitContainerFitmentLogic.Panel2.Controls.Add(this.textBoxFitmentLogicElements);
             this.splitContainerFitmentLogic.Panel2.Controls.Add(this.listBoxFitmentLogicElements);
             this.splitContainerFitmentLogic.Panel2.Controls.Add(this.pictureBoxFitmentTree);
             this.splitContainerFitmentLogic.Size = new System.Drawing.Size(1238, 529);
@@ -2785,6 +2882,7 @@
             this.pictureBoxFitmentTree.Size = new System.Drawing.Size(1023, 252);
             this.pictureBoxFitmentTree.TabIndex = 5;
             this.pictureBoxFitmentTree.TabStop = false;
+            this.pictureBoxFitmentTree.Click += new System.EventHandler(this.pictureBoxFitmentTree_Click);
             this.pictureBoxFitmentTree.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxFitmentTree_Paint);
             this.pictureBoxFitmentTree.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxFitmentTree_MouseDown);
             this.pictureBoxFitmentTree.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBoxFitmentTree_MouseMove);
@@ -3005,6 +3103,26 @@
             this.lblRefACESLoadStatus.TabIndex = 53;
             this.lblRefACESLoadStatus.Text = "label1";
             // 
+            // textBoxFitmentLogicElements
+            // 
+            this.textBoxFitmentLogicElements.Location = new System.Drawing.Point(1008, 7);
+            this.textBoxFitmentLogicElements.Multiline = true;
+            this.textBoxFitmentLogicElements.Name = "textBoxFitmentLogicElements";
+            this.textBoxFitmentLogicElements.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.textBoxFitmentLogicElements.Size = new System.Drawing.Size(223, 86);
+            this.textBoxFitmentLogicElements.TabIndex = 7;
+            this.textBoxFitmentLogicElements.WordWrap = false;
+            // 
+            // btnClearFlaggedNodes
+            // 
+            this.btnClearFlaggedNodes.Location = new System.Drawing.Point(1172, 99);
+            this.btnClearFlaggedNodes.Name = "btnClearFlaggedNodes";
+            this.btnClearFlaggedNodes.Size = new System.Drawing.Size(59, 21);
+            this.btnClearFlaggedNodes.TabIndex = 8;
+            this.btnClearFlaggedNodes.Text = "Clear List";
+            this.btnClearFlaggedNodes.UseVisualStyleBackColor = true;
+            this.btnClearFlaggedNodes.Click += new System.EventHandler(this.btnClearFlaggedNodes_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3057,6 +3175,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLogicProblems)).EndInit();
             this.tabPageSettings.ResumeLayout(false);
             this.tabPageSettings.PerformLayout();
+            this.groupBoxAutomatedOpperation.ResumeLayout(false);
+            this.groupBoxAutomatedOpperation.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownAutomatedMinute)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownAutomatedHour)).EndInit();
             this.groupBoxAssessmentFile.ResumeLayout(false);
             this.groupBoxAssessmentFile.PerformLayout();
             this.groupBoxRemoteVCdb.ResumeLayout(false);
@@ -3105,6 +3227,7 @@
             this.splitContainerFitmentLogic.Panel1.ResumeLayout(false);
             this.splitContainerFitmentLogic.Panel1.PerformLayout();
             this.splitContainerFitmentLogic.Panel2.ResumeLayout(false);
+            this.splitContainerFitmentLogic.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerFitmentLogic)).EndInit();
             this.splitContainerFitmentLogic.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgFitmentLogicProblems)).EndInit();
@@ -3377,6 +3500,15 @@
         private System.Windows.Forms.CheckBox checkBoxFTPassessment;
         private System.Windows.Forms.ComboBox comboBoxAssessmentFormat;
         private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.GroupBox groupBoxAutomatedOpperation;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.NumericUpDown numericUpDownAutomatedMinute;
+        private System.Windows.Forms.NumericUpDown numericUpDownAutomatedHour;
+        private System.Windows.Forms.CheckBox checkBoxAutomatedOpperation;
+        private System.Windows.Forms.Label labelAutomatedPath;
+        private System.Windows.Forms.Button buttonAutomatedInput;
+        private System.Windows.Forms.TextBox textBoxFitmentLogicElements;
+        private System.Windows.Forms.Button btnClearFlaggedNodes;
     }
 }
 

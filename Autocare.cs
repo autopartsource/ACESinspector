@@ -11,7 +11,7 @@ using System.Security;
 using Microsoft.Win32;
 using System.Drawing;
 //using System.Diagnostics;
-//using System.Security.Cryptography;
+using System.Security.Cryptography;
 using MySql.Data.MySqlClient;
 
 namespace ACESinspector
@@ -113,6 +113,7 @@ namespace ACESinspector
         public bool containsVCdbVolation;
         public bool hasBeenValidated;
         public List<validationProblem> problemsFound;
+        public string hash;
 
         public App()
         {
@@ -207,7 +208,20 @@ namespace ACESinspector
             return vcdb.niceMakeOfBasevid(this.basevehilceid) + ", " + vcdb.niceModelOfBasevid(this.basevehilceid) + ", " + vcdb.niceYearOfBasevid(this.basevehilceid);
         }
 
-/*        public string MMYstringOfdeletedBasevid(VCdb vcdb)
+
+        public string appHash()
+        {
+            string result = "";
+            using (MD5 md5Hash = MD5.Create())
+            {
+                byte[] data = md5Hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(basevehilceid.ToString() + parttypeid.ToString() + positionid.ToString() + quantity.ToString() + namevalpairString(true) + rawQdbDataString() + mfrlabel + part + asset + assetitemorder.ToString()));
+                for (int i = 0; i < data.Length; i++){result+=data[i].ToString("x2");}
+            }
+            return result;
+        }
+
+
+        /*        public string MMYstringOfdeletedBasevid(VCdb vcdb)
         {
 
 
@@ -388,10 +402,12 @@ namespace ACESinspector
         public int clickType;
         public bool deleted;
         public bool filler; // indicates that this node is a placeholder used in render process.
+        public bool markedAsCosmetic; // indicates that the user has deemed this node as cosmetic (not needed). 
         public int graphicalXpos; // for rendering in a graphical chart
         public int graphicalYpos;
         public int graphicalWidth;
         public int graphicalHeight;
+        public string logicProblemGroup; // relative group number displayed in the fitment logic problems datagrid. it is stored here for connecting a flagged-by-the-user node back to a cpecific group for reporting
         public App app;
 
         public bool isComplementaryTo(fitmentNode otherNode)
@@ -406,6 +422,18 @@ namespace ACESinspector
             if (nodeId == otherNode.nodeId) { return false; }  // don't return a match for a node seeing itself in the list
             if (fitmentElementType == otherNode.fitmentElementType && fitmentElementData == otherNode.fitmentElementData) { return true; }
             return false;
+        }
+
+        public string nodeHash()
+        {
+            //xxx
+            string result = "";
+            using (MD5 md5Hash = MD5.Create())
+            {
+                byte[] data = md5Hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(fitmentElementType+fitmentElementData));
+                for (int i = 0; i < data.Length; i++) { result += data[i].ToString("x2"); }
+            }
+            return result;
         }
     }
 
@@ -795,6 +823,9 @@ namespace ACESinspector
         public List<fitmentNode> fitmentNodeList = new List<fitmentNode>();
         public Dictionary<string, List<App>> fitmentProblemGroupsAppLists = new Dictionary<string, List<App>>(); // string key is the MMY/parttype/position/Mfrlabel/Asset/assetitemre/assetitemorder that defines "root" for every fitment tree
         public Dictionary<string, List<String>> fitmentProblemGroupsBestPermutations = new Dictionary<string, List<String>>(); // for keeping track of the least-bad fitment element permutation for each overlap group
+        public Dictionary<string, string> appHashesFlaggedAsCosmetic = new Dictionary<string, string>();
+        public Dictionary<string, List<string>> fitmentNodesFlaggedAsCosmetic = new Dictionary<string, List<string>>();
+
         public Dictionary<string, string> fitmentPermutationMiningCache = new Dictionary<string, string>();
         public List<analysisChunk> individualAnanlysisChunksList = new List<analysisChunk>();
         public List<analysisChunk> outlierAnanlysisChunksList = new List<analysisChunk>();
@@ -807,7 +838,8 @@ namespace ACESinspector
         public List<string> analysisHistory = new List<string>();
         public int logLevel;
         public bool logToFile;
-
+        
+        
 
         public ACES()
         {// populate XSD's as strings in a string/string dictionary.
@@ -897,6 +929,8 @@ namespace ACESinspector
             parttypeDisagreementCachefilesList.Clear();
             vcdbCodesErrorsCachefilesList.Clear();
             basevehicleidsErrorsCachefilesList.Clear();
+            appHashesFlaggedAsCosmetic.Clear();
+            fitmentNodesFlaggedAsCosmetic.Clear();
             noteCounts.Clear();
         }
 
@@ -990,6 +1024,7 @@ namespace ACESinspector
                     fitmentNode newNode = new fitmentNode();
                     newNode.nodeId = fitmentNodeList.Count();
                     newNode.parentNode = fitmentNodeList[i].nodeId;
+                    newNode.markedAsCosmetic = false;
                     newNode.childNodeIds = new List<int>();
                     newNode.pathFromRoot = new List<int>();
                     newNode.pathFromRoot.Add(newNode.nodeId);
@@ -1061,6 +1096,30 @@ namespace ACESinspector
                         {
                             appList.Add(nodes[j].app);
                         }
+                    }
+                }
+            }
+            return appList;
+        }
+
+
+
+        //compile an applist of apps that are downstream of a specific nodeid
+        //used for determining the apps that need to be edited when a fitment element is flagged by the user as cosmetic
+        public List<App> appsDescendentFromNode(List<fitmentNode> nodes, int targetNodeid)
+        {
+            List<App> appList = new List<App>();
+            if (nodes.Count() == 0) { return appList; }
+
+            for (int j = 0; j < nodes.Count(); j++)
+            {
+                if (nodes[j].app == null || nodes[j].deleted) { continue; }
+                // this is an app node - follow its path to root looking for a touch of the targetnode
+                foreach (int nodeId in nodes[j].pathFromRoot)
+                {
+                    if (nodeId == targetNodeid)
+                    {
+                        appList.Add(nodes[j].app);
                     }
                 }
             }
@@ -2723,10 +2782,10 @@ namespace ACESinspector
                 case "1896_106": return 1;
 
                 //electronic wear sensors
-                case "1920_22": return 2;
+//                case "1920_22": return 2;
                 case "1920_103": return 1;
                 case "1920_104": return 1;
-                case "1920_30": return 2;
+//                case "1920_30": return 2;
                 case "1920_105": return 1;
                 case "1920_106": return 1;
 
@@ -3336,6 +3395,7 @@ default: return 0;
                     appToAdd.QdbQualifiers = appTemp.QdbQualifiers;
                     appToAdd.quantity = appTemp.quantity;
                     appToAdd.VCdbAttributes = appTemp.VCdbAttributes;
+                    appToAdd.hash = appToAdd.appHash();
                     apps.Add(appToAdd);
                     vcdbUsageStatsTotalApps++;
                     NoteUsageCount += appTemp.notes.Count;
@@ -3366,7 +3426,7 @@ default: return 0;
         }
 
         public QdbQualifier QdbQualifierFromTransfromString(string input)
-        {//xxx
+        {
             // transform this note to a Qdb. string will look like one of these:
             // Qdb:20420:,                  -- no parms
             // Qdb:21720:Sport,             -- "name" parm

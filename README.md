@@ -14,6 +14,7 @@ Fixed "Part adds/drops list is too large to show here" message was showing up in
 Added results row to the stats tab of the assessment spreadsheet.
 Fixed net-changed ACES xml export. Had been broken since 1.0.2.1 due to changing from arrays of apps to lists of apps.
 Fixed differential vehilces datagrid - it was not showing any results if results count was above "limit".
+Added automated processing features
 
 1.2.0.31 (released 9/13/2018)
 Upgraded included MySQL client DLLs to latest generally-available version (8.0.12.0). Had to add "SslMode=none" to the connect string as a result.

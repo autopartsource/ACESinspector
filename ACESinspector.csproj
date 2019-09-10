@@ -14,7 +14,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>C:\Users\APS90\Desktop\ACESinspector\ACESinspector32-1_2_0_32\</PublishUrl>
+    <PublishUrl>C:\Users\APS90\Desktop\ACESinspector\ACESinspector64-1_2_0_32\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -25,7 +25,7 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>32</ApplicationRevision>
+    <ApplicationRevision>33</ApplicationRevision>
     <ApplicationVersion>1.2.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -54,16 +54,17 @@
     <StartupObject>ACESinspector.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>false</SignManifests>
+    <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>E9D215270E0993C808332AC1F7C12122655FC89D</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>E762A573149CF9E9FF4B0DDE21852F670096CC32</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>aps_codesigning_ends_20190323.pfx</ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestTimestampUrl>http://tsa.starfieldtech.com</ManifestTimestampUrl>
@@ -106,6 +107,13 @@
     <Reference Include="MySQL.Data.EntityFrameworkCore.Design, Version=8.0.11.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>MySQLdll\MySQL.Data.EntityFrameworkCore.Design.dll</HintPath>
+    </Reference>
+    <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>MySQLdll\Renci.SshNet.dll</HintPath>
+    </Reference>
+    <Reference Include="SshNet.Security.Cryptography">
+      <HintPath>MySQLdll\SshNet.Security.Cryptography.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration.Install" />

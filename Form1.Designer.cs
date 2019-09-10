@@ -273,6 +273,8 @@
             this.dgLogicProblemsQty = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dgLogicProblemsPart = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dgLogicProblemsFitment = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.btnClearFlaggedNodes = new System.Windows.Forms.Button();
+            this.textBoxFitmentLogicElements = new System.Windows.Forms.TextBox();
             this.listBoxFitmentLogicElements = new System.Windows.Forms.ListBox();
             this.pictureBoxFitmentTree = new System.Windows.Forms.PictureBox();
             this.lblStatus = new System.Windows.Forms.Label();
@@ -299,8 +301,6 @@
             this.progBarRefACESload = new System.Windows.Forms.ProgressBar();
             this.lblPrimeACESLoadStatus = new System.Windows.Forms.Label();
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
-            this.textBoxFitmentLogicElements = new System.Windows.Forms.TextBox();
-            this.btnClearFlaggedNodes = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -819,6 +819,7 @@
             this.groupBoxAutomatedOpperation.TabIndex = 24;
             this.groupBoxAutomatedOpperation.TabStop = false;
             this.groupBoxAutomatedOpperation.Text = "Automated Opperation";
+            this.groupBoxAutomatedOpperation.Visible = false;
             // 
             // labelAutomatedPath
             // 
@@ -899,7 +900,7 @@
             this.groupBoxAssessmentFile.Controls.Add(this.checkBoxFTPassessment);
             this.groupBoxAssessmentFile.Controls.Add(this.comboBoxAssessmentFormat);
             this.groupBoxAssessmentFile.Controls.Add(this.label17);
-            this.groupBoxAssessmentFile.Location = new System.Drawing.Point(9, 150);
+            this.groupBoxAssessmentFile.Location = new System.Drawing.Point(262, 150);
             this.groupBoxAssessmentFile.Name = "groupBoxAssessmentFile";
             this.groupBoxAssessmentFile.Size = new System.Drawing.Size(333, 118);
             this.groupBoxAssessmentFile.TabIndex = 23;
@@ -913,6 +914,7 @@
             this.textBoxFTPpass.Name = "textBoxFTPpass";
             this.textBoxFTPpass.Size = new System.Drawing.Size(129, 20);
             this.textBoxFTPpass.TabIndex = 8;
+            this.textBoxFTPpass.Visible = false;
             // 
             // textBoxFTPuser
             // 
@@ -921,6 +923,7 @@
             this.textBoxFTPuser.Name = "textBoxFTPuser";
             this.textBoxFTPuser.Size = new System.Drawing.Size(116, 20);
             this.textBoxFTPuser.TabIndex = 7;
+            this.textBoxFTPuser.Visible = false;
             // 
             // textBoxFTPhost
             // 
@@ -929,6 +932,7 @@
             this.textBoxFTPhost.Name = "textBoxFTPhost";
             this.textBoxFTPhost.Size = new System.Drawing.Size(199, 20);
             this.textBoxFTPhost.TabIndex = 6;
+            this.textBoxFTPhost.Visible = false;
             // 
             // lblAssessmentsPath
             // 
@@ -947,6 +951,7 @@
             this.label20.Size = new System.Drawing.Size(29, 13);
             this.label20.TabIndex = 5;
             this.label20.Text = "pass";
+            this.label20.Visible = false;
             // 
             // btnSelectAssessmentDir
             // 
@@ -966,6 +971,7 @@
             this.label19.Size = new System.Drawing.Size(27, 13);
             this.label19.TabIndex = 4;
             this.label19.Text = "user";
+            this.label19.Visible = false;
             // 
             // checkBoxFTPassessment
             // 
@@ -976,6 +982,7 @@
             this.checkBoxFTPassessment.TabIndex = 2;
             this.checkBoxFTPassessment.Text = "Send to FTP server";
             this.checkBoxFTPassessment.UseVisualStyleBackColor = true;
+            this.checkBoxFTPassessment.Visible = false;
             // 
             // comboBoxAssessmentFormat
             // 
@@ -1379,7 +1386,7 @@
             this.groupBoxFitmentLogicSettings.Controls.Add(this.checkBoxConcernForDisparate);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.label24);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.numericUpDownTreeConfigLimit);
-            this.groupBoxFitmentLogicSettings.Location = new System.Drawing.Point(348, 150);
+            this.groupBoxFitmentLogicSettings.Location = new System.Drawing.Point(9, 150);
             this.groupBoxFitmentLogicSettings.Name = "groupBoxFitmentLogicSettings";
             this.groupBoxFitmentLogicSettings.Size = new System.Drawing.Size(247, 118);
             this.groupBoxFitmentLogicSettings.TabIndex = 4;
@@ -2864,6 +2871,26 @@
             this.dgLogicProblemsFitment.ReadOnly = true;
             this.dgLogicProblemsFitment.Width = 66;
             // 
+            // btnClearFlaggedNodes
+            // 
+            this.btnClearFlaggedNodes.Location = new System.Drawing.Point(1172, 99);
+            this.btnClearFlaggedNodes.Name = "btnClearFlaggedNodes";
+            this.btnClearFlaggedNodes.Size = new System.Drawing.Size(59, 21);
+            this.btnClearFlaggedNodes.TabIndex = 8;
+            this.btnClearFlaggedNodes.Text = "Clear List";
+            this.btnClearFlaggedNodes.UseVisualStyleBackColor = true;
+            this.btnClearFlaggedNodes.Click += new System.EventHandler(this.btnClearFlaggedNodes_Click);
+            // 
+            // textBoxFitmentLogicElements
+            // 
+            this.textBoxFitmentLogicElements.Location = new System.Drawing.Point(1008, 7);
+            this.textBoxFitmentLogicElements.Multiline = true;
+            this.textBoxFitmentLogicElements.Name = "textBoxFitmentLogicElements";
+            this.textBoxFitmentLogicElements.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.textBoxFitmentLogicElements.Size = new System.Drawing.Size(223, 86);
+            this.textBoxFitmentLogicElements.TabIndex = 7;
+            this.textBoxFitmentLogicElements.WordWrap = false;
+            // 
             // listBoxFitmentLogicElements
             // 
             this.listBoxFitmentLogicElements.FormattingEnabled = true;
@@ -3102,26 +3129,6 @@
             this.lblRefACESLoadStatus.Size = new System.Drawing.Size(35, 13);
             this.lblRefACESLoadStatus.TabIndex = 53;
             this.lblRefACESLoadStatus.Text = "label1";
-            // 
-            // textBoxFitmentLogicElements
-            // 
-            this.textBoxFitmentLogicElements.Location = new System.Drawing.Point(1008, 7);
-            this.textBoxFitmentLogicElements.Multiline = true;
-            this.textBoxFitmentLogicElements.Name = "textBoxFitmentLogicElements";
-            this.textBoxFitmentLogicElements.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxFitmentLogicElements.Size = new System.Drawing.Size(223, 86);
-            this.textBoxFitmentLogicElements.TabIndex = 7;
-            this.textBoxFitmentLogicElements.WordWrap = false;
-            // 
-            // btnClearFlaggedNodes
-            // 
-            this.btnClearFlaggedNodes.Location = new System.Drawing.Point(1172, 99);
-            this.btnClearFlaggedNodes.Name = "btnClearFlaggedNodes";
-            this.btnClearFlaggedNodes.Size = new System.Drawing.Size(59, 21);
-            this.btnClearFlaggedNodes.TabIndex = 8;
-            this.btnClearFlaggedNodes.Text = "Clear List";
-            this.btnClearFlaggedNodes.UseVisualStyleBackColor = true;
-            this.btnClearFlaggedNodes.Click += new System.EventHandler(this.btnClearFlaggedNodes_Click);
             // 
             // Form1
             // 

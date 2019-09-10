@@ -20,19 +20,17 @@ namespace ACESinspector
         ACES refaces = new ACES();  // this instance can hold all the data imported from our "reference" ACES xml file
         ACES diffaces = new ACES(); // this instance can hold the difference found between the primary and reference datasets 
         ACES errorsaces = new ACES();// this instance can hold the VCdb-configuration errors found in the primary file. This can be used to export the errors to file or webservice
-        VCdb vcdb = new VCdb(); // this class will hold all the contents of the the imported VCdb M$Access file - mostly in "Dictionary" type variables for super-fast lookup (way faster than repeatedly querying the underlying Access file)
+        VCdb vcdb = new VCdb(); // this class will hold all the contents of the the imported VCdb M$Access file (or remote MySQL source) - mostly in "Dictionary" type variables for super-fast lookup (way faster than repeatedly querying the underlying Access file)
                                 // it can also holds a list of multiple in-parallel connections to a remote mysql database
         PCdb pcdb = new PCdb();
         Qdb qdb = new Qdb();
 
         List<string> cacheFilesToDeleteOnExit = new List<string>();
-
-
+        
         bool toolTipIsShown = false;
 
         int historyLineCountAtLastCheck = 0;
       
-
         // global stuff associated with the drawing of fitment tree diagrams
         int mouseDownX, mouseDownY; 
         int treeCanvasXoffset, treeCanvasYoffset;
@@ -67,6 +65,9 @@ namespace ACESinspector
 
         private int highestVisableTab1Index;
         private string newestVersionsAvail;
+
+        private List<string> endoresments = new List<string>(); // save secret-handshake stuff here for controlling friends-and-family special features that are not exactly public. If you are reading this, you are in that club.
+
 
         public Form1()
         {
@@ -389,6 +390,8 @@ namespace ACESinspector
                 }
             }
 
+            // check for friends-and-family reserved features
+            if (key.GetValue("endorsement:APSPIMformattedfitmentNodesFlaggedAsCosmetic") != null) { endoresments.Add("APSPIMformattedfitmentNodesFlaggedAsCosmetic"); }
 
             if (checkBoxAutoloadLocalDatabases.Checked)
             {
@@ -3344,7 +3347,7 @@ namespace ACESinspector
         private void pictureBoxFitmentTree_MouseDown(object sender, MouseEventArgs e)
         {//roll through all nodes in the nodes in the aces.fitmentNodes list to see if our click XY fell within the bounds of a specific node
 
-            bool apsFlavor = true;
+            bool apsFlavor = false; if (endoresments.Contains("APSPIMformattedfitmentNodesFlaggedAsCosmetic")) { apsFlavor = true; }
 
             int i; mouseDownX = e.X; mouseDownY = e.Y;
             treeCanvasIsBeingDragged = true;

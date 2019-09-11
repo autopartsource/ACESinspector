@@ -8,7 +8,7 @@ autopartsource.com/ACESinspector
 
 # Changelog
 
-1.2.0.32 (released 9/10/2019)
+1.2.0.32 (released 9/12/2019)
 Added new format option to assessment file layout in response to Tenneco's suggestion for CSV-style content that can be consumed into a BI system.
 Fixed "Part adds/drops list is too large to show here" message was showing up in error when vehicle diff list was above threshold
 Added results row to the stats tab of the assessment spreadsheet.
@@ -19,6 +19,7 @@ Added clickability to the fitment tree diagram in the logic problems tab. Clicki
 Removed brake wear-sensors from the list of typical parttype/qty analysis.
 Fixed loading of Access files was not updating version lables properly - Calvin @ Dr1ve identified this issue
 Upgraded included MySQL client DLLs to latest generally-available version (8.0.17.0).
+switched to from 4.7.1 to 4.8.0 .NET Framework
 
 1.2.0.31 (released 9/13/2018)
 Upgraded included MySQL client DLLs to latest generally-available version (8.0.12.0). Had to add "SslMode=none" to the connect string as a result.

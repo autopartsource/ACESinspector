@@ -8,6 +8,9 @@ autopartsource.com/ACESinspector
 
 # Changelog
 
+1.2.0.33 (not yet released)
+Added "Reference" field to flattened export.
+
 1.2.0.32 (released 9/12/2019)
 Added new format option to assessment file layout in response to Tenneco's suggestion for CSV-style content that can be consumed into a BI system.
 Fixed "Part adds/drops list is too large to show here" message was showing up in error when vehicle diff list was above threshold

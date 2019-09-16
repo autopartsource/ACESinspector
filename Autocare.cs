@@ -3627,7 +3627,7 @@ default: return 0;
 
                             string[] VCdbAttributeFields = new string[39];
                             string VCdbTagHeaders = ""; foreach (KeyValuePair<string, int> entry in tagDict) { VCdbTagHeaders += "\t" + entry.Key; }
-                            sw.WriteLine("Application id" + delimiter + "Base Vehicle id" + delimiter + "Make" + delimiter + "Model" + delimiter + "Year" + delimiter + "Part" + delimiter + "Part Type" + delimiter + "Position" + delimiter + "Quantity" + delimiter + "Qdb-coded Qualifiers" + delimiter + "Notes" + delimiter + "Mfr Label" + delimiter + "Asset" + VCdbTagHeaders);
+                            sw.WriteLine("Application id" + delimiter + "Reference" + delimiter + "Base Vehicle id" + delimiter + "Make" + delimiter + "Model" + delimiter + "Year" + delimiter + "Part" + delimiter + "Part Type" + delimiter + "Position" + delimiter + "Quantity" + delimiter + "Qdb-coded Qualifiers" + delimiter + "Notes" + delimiter + "Mfr Label" + delimiter + "Asset" + VCdbTagHeaders);
 
                             foreach (App app in apps)
                             {
@@ -3641,16 +3641,16 @@ default: return 0;
                                     }
                                 }
 
-                                sw.WriteLine(app.id.ToString() + delimiter + app.basevehilceid.ToString() + delimiter + vcdb.niceMakeOfBasevid(app.basevehilceid) + delimiter + vcdb.niceModelOfBasevid(app.basevehilceid) + delimiter + vcdb.niceYearOfBasevid(app.basevehilceid) + delimiter + app.part + delimiter + pcdb.niceParttype(app.parttypeid) + delimiter + pcdb.nicePosition(app.positionid) + delimiter + app.quantity.ToString() + delimiter + app.niceQdbQualifierString(qdb) + delimiter + string.Join(";", app.notes) + delimiter + app.mfrlabel + delimiter + app.asset + delimiter + string.Join(delimiter, VCdbAttributeFields.ToList()));
+                                sw.WriteLine(app.id.ToString() + delimiter + app.reference + delimiter + app.basevehilceid.ToString() + delimiter + vcdb.niceMakeOfBasevid(app.basevehilceid) + delimiter + vcdb.niceModelOfBasevid(app.basevehilceid) + delimiter + vcdb.niceYearOfBasevid(app.basevehilceid) + delimiter + app.part + delimiter + pcdb.niceParttype(app.parttypeid) + delimiter + pcdb.nicePosition(app.positionid) + delimiter + app.quantity.ToString() + delimiter + app.niceQdbQualifierString(qdb) + delimiter + string.Join(";", app.notes) + delimiter + app.mfrlabel + delimiter + app.asset + delimiter + string.Join(delimiter, VCdbAttributeFields.ToList()));
                                 if (progress != null) { percentProgress = Convert.ToInt32(((double)i / (double)apps.Count()) * 100); if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); } }
                             }
                             break;
 
                         case "Default":
-                            sw.WriteLine("Application id" + delimiter + "Base Vehicle id" + delimiter + "Make" + delimiter + "Model" + delimiter + "Year" + delimiter + "Part" + delimiter + "Part Type" + delimiter + "Position" + delimiter + "Quantity" + delimiter + "VCdb-coded Attributes" + delimiter + "Qdb-coded Qualifiers" + delimiter + "Notes" + delimiter + "Mfr Label" + delimiter + "Asset");
+                            sw.WriteLine("Application id" + delimiter + "Reference" + delimiter + "Base Vehicle id" + delimiter + "Make" + delimiter + "Model" + delimiter + "Year" + delimiter + "Part" + delimiter + "Part Type" + delimiter + "Position" + delimiter + "Quantity" + delimiter + "VCdb-coded Attributes" + delimiter + "Qdb-coded Qualifiers" + delimiter + "Notes" + delimiter + "Mfr Label" + delimiter + "Asset");
                             foreach (App app in apps)
                             {
-                                sw.WriteLine(app.id.ToString() + delimiter + app.basevehilceid.ToString() + delimiter + vcdb.niceMakeOfBasevid(app.basevehilceid) + delimiter + vcdb.niceModelOfBasevid(app.basevehilceid) + delimiter + vcdb.niceYearOfBasevid(app.basevehilceid) + delimiter + app.part + delimiter + pcdb.niceParttype(app.parttypeid) + delimiter + pcdb.nicePosition(app.positionid) + delimiter + app.quantity.ToString() + delimiter + app.niceAttributesString(vcdb, false) + delimiter + app.niceQdbQualifierString(qdb) + delimiter + string.Join(";", app.notes) + delimiter + app.mfrlabel + delimiter + app.asset);
+                                sw.WriteLine(app.id.ToString() + delimiter + app.reference + delimiter + app.basevehilceid.ToString() + delimiter + vcdb.niceMakeOfBasevid(app.basevehilceid) + delimiter + vcdb.niceModelOfBasevid(app.basevehilceid) + delimiter + vcdb.niceYearOfBasevid(app.basevehilceid) + delimiter + app.part + delimiter + pcdb.niceParttype(app.parttypeid) + delimiter + pcdb.nicePosition(app.positionid) + delimiter + app.quantity.ToString() + delimiter + app.niceAttributesString(vcdb, false) + delimiter + app.niceQdbQualifierString(qdb) + delimiter + string.Join(";", app.notes) + delimiter + app.mfrlabel + delimiter + app.asset);
                                 if (progress != null){percentProgress = Convert.ToInt32(((double)i / (double)apps.Count()) * 100); if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }}
                             }
                             break;

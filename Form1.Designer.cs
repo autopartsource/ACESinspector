@@ -301,6 +301,7 @@
             this.progBarRefACESload = new System.Windows.Forms.ProgressBar();
             this.lblPrimeACESLoadStatus = new System.Windows.Forms.Label();
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
+            this.btnExportAssets = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -525,7 +526,7 @@
             // 
             this.lblStatsQdbUtil.AutoSize = true;
             this.lblStatsQdbUtil.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStatsQdbUtil.Location = new System.Drawing.Point(144, 145);
+            this.lblStatsQdbUtil.Location = new System.Drawing.Point(144, 152);
             this.lblStatsQdbUtil.Name = "lblStatsQdbUtil";
             this.lblStatsQdbUtil.Size = new System.Drawing.Size(42, 20);
             this.lblStatsQdbUtil.TabIndex = 66;
@@ -535,7 +536,7 @@
             // 
             this.label16.AutoSize = true;
             this.label16.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label16.Location = new System.Drawing.Point(6, 145);
+            this.label16.Location = new System.Drawing.Point(6, 152);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(112, 20);
             this.label16.TabIndex = 65;
@@ -644,7 +645,7 @@
             // 
             this.lblStatsPartsCount.AutoSize = true;
             this.lblStatsPartsCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStatsPartsCount.Location = new System.Drawing.Point(144, 125);
+            this.lblStatsPartsCount.Location = new System.Drawing.Point(144, 131);
             this.lblStatsPartsCount.Name = "lblStatsPartsCount";
             this.lblStatsPartsCount.Size = new System.Drawing.Size(42, 20);
             this.lblStatsPartsCount.TabIndex = 15;
@@ -654,7 +655,7 @@
             // 
             this.lblStatsAppsCount.AutoSize = true;
             this.lblStatsAppsCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStatsAppsCount.Location = new System.Drawing.Point(144, 105);
+            this.lblStatsAppsCount.Location = new System.Drawing.Point(144, 109);
             this.lblStatsAppsCount.Name = "lblStatsAppsCount";
             this.lblStatsAppsCount.Size = new System.Drawing.Size(42, 20);
             this.lblStatsAppsCount.TabIndex = 14;
@@ -664,7 +665,7 @@
             // 
             this.lblStatsQdbVersion.AutoSize = true;
             this.lblStatsQdbVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStatsQdbVersion.Location = new System.Drawing.Point(144, 85);
+            this.lblStatsQdbVersion.Location = new System.Drawing.Point(144, 88);
             this.lblStatsQdbVersion.Name = "lblStatsQdbVersion";
             this.lblStatsQdbVersion.Size = new System.Drawing.Size(42, 20);
             this.lblStatsQdbVersion.TabIndex = 13;
@@ -674,7 +675,7 @@
             // 
             this.lblStatsPCdbVersion.AutoSize = true;
             this.lblStatsPCdbVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStatsPCdbVersion.Location = new System.Drawing.Point(144, 65);
+            this.lblStatsPCdbVersion.Location = new System.Drawing.Point(144, 67);
             this.lblStatsPCdbVersion.Name = "lblStatsPCdbVersion";
             this.lblStatsPCdbVersion.Size = new System.Drawing.Size(42, 20);
             this.lblStatsPCdbVersion.TabIndex = 12;
@@ -684,7 +685,7 @@
             // 
             this.lblStatsVCdbVersion.AutoSize = true;
             this.lblStatsVCdbVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStatsVCdbVersion.Location = new System.Drawing.Point(144, 45);
+            this.lblStatsVCdbVersion.Location = new System.Drawing.Point(144, 46);
             this.lblStatsVCdbVersion.Name = "lblStatsVCdbVersion";
             this.lblStatsVCdbVersion.Size = new System.Drawing.Size(42, 20);
             this.lblStatsVCdbVersion.TabIndex = 11;
@@ -704,7 +705,7 @@
             // 
             this.lblStatsTitle.AutoSize = true;
             this.lblStatsTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStatsTitle.Location = new System.Drawing.Point(144, 5);
+            this.lblStatsTitle.Location = new System.Drawing.Point(144, 3);
             this.lblStatsTitle.Name = "lblStatsTitle";
             this.lblStatsTitle.Size = new System.Drawing.Size(42, 20);
             this.lblStatsTitle.TabIndex = 9;
@@ -714,7 +715,7 @@
             // 
             this.label8.AutoSize = true;
             this.label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(6, 125);
+            this.label8.Location = new System.Drawing.Point(6, 131);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(85, 20);
             this.label8.TabIndex = 6;
@@ -724,7 +725,7 @@
             // 
             this.label7.AutoSize = true;
             this.label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label7.Location = new System.Drawing.Point(6, 105);
+            this.label7.Location = new System.Drawing.Point(6, 109);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(134, 20);
             this.label7.TabIndex = 5;
@@ -734,7 +735,7 @@
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.Location = new System.Drawing.Point(6, 85);
+            this.label6.Location = new System.Drawing.Point(6, 88);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(97, 20);
             this.label6.TabIndex = 4;
@@ -744,7 +745,7 @@
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(6, 65);
+            this.label5.Location = new System.Drawing.Point(6, 67);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(106, 20);
             this.label5.TabIndex = 3;
@@ -754,7 +755,7 @@
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(6, 45);
+            this.label4.Location = new System.Drawing.Point(6, 46);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(107, 20);
             this.label4.TabIndex = 2;
@@ -774,7 +775,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(4, 5);
+            this.label2.Location = new System.Drawing.Point(4, 3);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(38, 20);
             this.label2.TabIndex = 0;
@@ -1454,6 +1455,7 @@
             // 
             // tabPageExports
             // 
+            this.tabPageExports.Controls.Add(this.btnExportAssets);
             this.tabPageExports.Controls.Add(this.label11);
             this.tabPageExports.Controls.Add(this.comboBoxFlatExportFormat);
             this.tabPageExports.Controls.Add(this.btnDistinctVCdbExportSave);
@@ -3130,6 +3132,16 @@
             this.lblRefACESLoadStatus.TabIndex = 53;
             this.lblRefACESLoadStatus.Text = "label1";
             // 
+            // btnExportAssets
+            // 
+            this.btnExportAssets.Location = new System.Drawing.Point(8, 220);
+            this.btnExportAssets.Name = "btnExportAssets";
+            this.btnExportAssets.Size = new System.Drawing.Size(139, 21);
+            this.btnExportAssets.TabIndex = 60;
+            this.btnExportAssets.Text = "Export Asset List";
+            this.btnExportAssets.UseVisualStyleBackColor = true;
+            this.btnExportAssets.Click += new System.EventHandler(this.btnExportAssets_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3516,6 +3528,7 @@
         private System.Windows.Forms.Button buttonAutomatedInput;
         private System.Windows.Forms.TextBox textBoxFitmentLogicElements;
         private System.Windows.Forms.Button btnClearFlaggedNodes;
+        private System.Windows.Forms.Button btnExportAssets;
     }
 }
 

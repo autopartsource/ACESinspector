@@ -2958,7 +2958,7 @@ namespace ACESinspector
         }
 
         private void btnExportPrimaryACES_Click(object sender, EventArgs e)
-        {
+        {// This will dump the current "primary" aces object to an xml file. Where this is usefule is if the input ACES xml file had had its notes or parts translated on the way in
             string result = "";
 
             if (aces.apps.Count > 0)
@@ -2974,7 +2974,7 @@ namespace ACESinspector
                     {
                         key.SetValue("lastNetChangeDirectoryPath", fbd.SelectedPath);
                         if (checkBoxEncipherExport.Checked)
-                        {
+                        { // scrable the partnubers on the fly to make the output safe to give away as a sample to some you dont completely trust  - like a prospective customer
                             result = aces.exportXMLApps(fbd.SelectedPath + "\\" + Path.GetFileNameWithoutExtension(aces.filePath)+ "_enciphered.xml", "TEST", fbd.SelectedPath + "\\" + Path.GetFileNameWithoutExtension(aces.filePath) + "_decipher_interchange.txt", false);
                         }
                         else
@@ -4479,6 +4479,26 @@ namespace ACESinspector
             textBoxFitmentLogicElements.Text = "";
             for(int i = 0; i < aces.fitmentNodeList.Count(); i++) { aces.fitmentNodeList[i].markedAsCosmetic = false;}
             pictureBoxFitmentTree.Invalidate();
+        }
+
+        private void btnExportAssets_Click(object sender, EventArgs e)
+        {
+            string result = "";
+            using (var fbd = new FolderBrowserDialog())
+            {
+                DialogResult dialogResult = fbd.ShowDialog();
+                if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                {
+                    RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
+                    key.CreateSubKey("ACESinspector");
+                    key = key.OpenSubKey("ACESinspector", true);
+                    key.SetValue("lastAssetsListDirectoryPath", fbd.SelectedPath);
+                    string AssetsListFilename = fbd.SelectedPath + "\\" + Path.GetFileNameWithoutExtension(aces.filePath) + "_AssetsList.txt";
+                    result = aces.exportAssetsList(AssetsListFilename);
+                    MessageBox.Show(result);
+                }
+            }
+
         }
 
         private string escapeXMLspecialChars(string inputString)

@@ -3836,8 +3836,38 @@ default: return 0;
             }
         }
 
+        public string exportAssetsList(string _filePath)
+        {
+            Dictionary<string, string> distinctAssetNamesFromApps = new Dictionary<string, string>();
 
+            try
+            {
+                foreach(App apptemp in apps)
+                {
+                    if (!distinctAssetNamesFromApps.ContainsKey(apptemp.asset)) { distinctAssetNamesFromApps.Add(apptemp.asset, ""); }
+                }
 
+                using (StreamWriter sw = new StreamWriter(_filePath))
+                {
+                    sw.WriteLine("Asset\tSource");
+
+                    foreach (KeyValuePair<string,string> entry in distinctAssetNamesFromApps)
+                    {
+                        sw.WriteLine(entry.Key + "\tApps Section");
+                    }
+
+                    foreach (String assetName in distinctAssetNames)
+                    {
+                        sw.WriteLine(assetName+"\tStand-Alone Assets Section");
+                    }
+                }
+                return distinctAssetNamesFromApps.Count.ToString()+" fitment assets, "+ distinctAssetNames.Count.ToString()+" stand-alone assets list exported to " + _filePath;
+            }
+            catch (Exception ex)
+            {
+                return ex.ToString();
+            }
+        }
 
 
         // if cipherFilepath is populated, or anonymize is set, the partnumbers will be enciphered
@@ -3856,19 +3886,21 @@ default: return 0;
             string mfrlabelXMLtags = "";// \t\t<MfrLabel>"+app.mfrlabel+"</MfrLabel>\r\n
             string positionXMLtags = ""; // \t\t<Position id=\"22\"/>\r\n
             string notesXMLtags = "";// \t\t<Note>"+app.notes+"</Note>\r\n
+            string assetnameXMLtags = "";// \t\t<AssetName>"+app.asset+"</AssetName>\r\n
+            string assetitemorderXMLtags = "";
+
             List<string> stringList = new List<string>();
 
             string escapedPart;
             string randomPart="";
             
-            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ123456789";
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ123456789"; // avoid visually ambiguous characters (O0I)
             char[] trimlist = {' ', ';'};
 
             try
             {
                 using (StreamWriter sw = new StreamWriter(_filePath))
                 {
-                    //sw.WriteLine("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\r\n<ACES version=\""+exportVersion+"\">\r\n\t<Header>\r\n\t\t<Company>"+ SecurityElement.Escape(Company)+"</Company>\r\n\t\t<SenderName>"+ SecurityElement.Escape(SenderName)+"</SenderName>\r\n\t\t<SenderPhone>"+SenderPhone+"</SenderPhone>\r\n\t\t<TransferDate>"+TransferDate+"</TransferDate>\r\n"+brandAAIAIDtag+"\t\t<DocumentTitle>"+ SecurityElement.Escape(DocumentTitle) +"</DocumentTitle>\r\n\t\t<EffectiveDate>"+EffectiveDate+"</EffectiveDate>\r\n\t\t<SubmissionType>"+_SubmissionType+"</SubmissionType>\r\n\t\t<VcdbVersionDate>"+VcdbVersionDate+"</VcdbVersionDate>\r\n\t\t<QdbVersionDate>"+QdbVersionDate+"</QdbVersionDate>\r\n\t\t<PcdbVersionDate>"+PcdbVersionDate+"</PcdbVersionDate>\r\n\t</Header>");
                     sw.WriteLine("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\r\n<ACES version=\"" + exportVersion + "\">\r\n\t<Header>\r\n\t\t<Company>" + SecurityElement.Escape(Company) + "</Company>\r\n\t\t<SenderName>" + SecurityElement.Escape(SenderName) + "</SenderName>\r\n\t\t<SenderPhone>" + SenderPhone + "</SenderPhone>\r\n\t\t<TransferDate>" + TransferDate + "</TransferDate>\r\n" + brandAAIAIDtag + "\t\t<DocumentTitle>" + SecurityElement.Escape(DocumentTitle) + "</DocumentTitle>\r\n\t\t<EffectiveDate>" + EffectiveDate + "</EffectiveDate>\r\n\t\t<SubmissionType>" + _SubmissionType + "</SubmissionType>\r\n\t\t<VcdbVersionDate>" + VcdbVersionDate + "</VcdbVersionDate>\r\n\t\t<QdbVersionDate>" + QdbVersionDate + "</QdbVersionDate>\r\n\t\t<PcdbVersionDate>" + PcdbVersionDate + "</PcdbVersionDate>\r\n\t</Header>");
                     foreach (App app in apps)
                     {
@@ -3914,13 +3946,16 @@ default: return 0;
                                 notesXMLtags += "\t\t<Note>" + SecurityElement.Escape(noteString.Trim(trimlist)) + "</Note>\r\n";
                             }
                         }
-                        mfrlabelXMLtags = ""; if (app.mfrlabel != "") { mfrlabelXMLtags = "\t\t<MfrLabel>" + SecurityElement.Escape(app.mfrlabel) + "</MfrLabel>\r\n"; }
+                        mfrlabelXMLtags = ""; if (app.mfrlabel != null && app.mfrlabel != "") { mfrlabelXMLtags = "\t\t<MfrLabel>" + SecurityElement.Escape(app.mfrlabel) + "</MfrLabel>\r\n"; }
                         positionXMLtags = ""; if (app.positionid > 0) { positionXMLtags = "\t\t<Position id=\"" + app.positionid.ToString() + "\"/>\r\n"; }
-                        //sw.WriteLine("\t<App action=\""+app.action.ToString()+"\" id=\""+relativeAppId.ToString()+"\">\r\n\t\t<BaseVehicle id=\""+app.basevehilceid+"\"/>\r\n"+attributesXMLtags+notesXMLtags+"\t\t<Qty>"+app.quantity.ToString()+"</Qty>\r\n\t\t<PartType id=\""+app.parttypeid.ToString()+"\"/>\r\n"+mfrlabelXMLtags+positionXMLtags+"\t\t<Part>"+ escapedPart + "</Part>\r\n\t</App>");
-                        sw.WriteLine("\t<App action=\"" + app.action.ToString() + "\" id=\"" + relativeAppId.ToString() + "\">\r\n\t\t<BaseVehicle id=\"" + app.basevehilceid + "\"/>\r\n" + attributesXMLtags + notesXMLtags + "\t\t<Qty>" + app.quantity.ToString() + "</Qty>\r\n\t\t<PartType id=\"" + app.parttypeid.ToString() + "\"/>\r\n" + mfrlabelXMLtags + positionXMLtags + "\t\t<Part>" + escapedPart + "</Part>\r\n\t</App>");
+                        assetnameXMLtags = ""; if (app.asset != null && app.asset != "") { assetnameXMLtags = "\t\t<AssetName>" + SecurityElement.Escape(app.asset) + "</AssetName>\r\n"; }
+                        assetitemorderXMLtags = ""; if (app.assetitemorder > 0) { assetitemorderXMLtags = "\t\t<AssetItemOrder>" + SecurityElement.Escape(app.assetitemorder.ToString()) + "</AssetItemOrder>\r\n"; }
+                        sw.WriteLine("\t<App action=\"" + app.action.ToString() + "\" id=\"" + relativeAppId.ToString() + "\">\r\n\t\t<BaseVehicle id=\"" + app.basevehilceid + "\"/>\r\n" + attributesXMLtags + notesXMLtags + "\t\t<Qty>" + app.quantity.ToString() + "</Qty>\r\n\t\t<PartType id=\"" + app.parttypeid.ToString() + "\"/>\r\n" + mfrlabelXMLtags + positionXMLtags + "\t\t<Part>" + escapedPart + "</Part>\r\n"+ assetnameXMLtags + assetitemorderXMLtags + "\t</App>");
                         relativeAppId++;
                     }
-                    //sw.WriteLine("\t<Footer>\r\n\t\t<RecordCount>"+apps.Count.ToString()+"</RecordCount>\r\n\t</Footer>\r\n</ACES>");
+                    // write assets sections
+                    
+
                     sw.WriteLine("\t<Footer>\r\n\t\t<RecordCount>" + apps.Count.ToString() + "</RecordCount>\r\n\t</Footer>\r\n</ACES>");
                 }
 

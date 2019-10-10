@@ -143,6 +143,7 @@ namespace ACESinspector
             lblACESfilePath.Text = "";
             lblReferenceACESfilePath.Text = "";
             lblinterchangefilePath.Text = "";
+            lblAssetNameInterchangefilePath.Text = "";
             lblNoteTranslationfilePath.Text = "";
             progBarPrimeACESload.Visible = false;
             progBarRefACESload.Visible = false;
@@ -524,6 +525,7 @@ namespace ACESinspector
             btnSelectQdbFile.Enabled = false;
             btnSelectPartInterchange.Enabled = false;
             btnSelectNoteTranslationFile.Enabled = false;
+            btnSelectAssetNameInterchange.Enabled = false;
             btnExportRelatedParts.Enabled = false;
             btnAppExportSave.Enabled = false;
             progBarPrimeACESload.Visible = true;
@@ -771,7 +773,7 @@ namespace ACESinspector
                 {
                     MessageBox.Show("XML failed schema validation.\r\n\r\n" + aces.xmlValidationErrors[0]);
                     aces.logHistoryEvent("", "0\tXML failed schema validation.\r\n\r\n" + aces.xmlValidationErrors[0]);
-                    progBarPrimeACESload.Value = 0; progBarPrimeACESload.Visible = false; lblPrimeACESLoadStatus.Text = ""; lblPrimeACESLoadStatus.Visible = false; lblACESfilePath.Text = ""; lblStatus.Text = ""; btnSelectPartInterchange.Enabled = true; btnSelectNoteTranslationFile.Enabled = true;
+                    progBarPrimeACESload.Value = 0; progBarPrimeACESload.Visible = false; lblPrimeACESLoadStatus.Text = ""; lblPrimeACESLoadStatus.Visible = false; lblACESfilePath.Text = ""; lblStatus.Text = ""; btnSelectPartInterchange.Enabled = true; btnSelectNoteTranslationFile.Enabled = true; btnSelectAssetNameInterchange.Enabled = true;
                     lblACESfilePath.Left = 352;
                 }
             }
@@ -781,6 +783,7 @@ namespace ACESinspector
                 btnSelectACESfile.Enabled = true; // re-enable the select button for primary aces file
                 btnSelectPartInterchange.Enabled = true;
                 btnSelectNoteTranslationFile.Enabled = true;
+                btnSelectAssetNameInterchange.Enabled = true;
                 btnSelectVCdbFile.Enabled = true;
                 btnSelectPCdbFile.Enabled = true;
                 btnSelectQdbFile.Enabled = true;
@@ -1267,6 +1270,7 @@ namespace ACESinspector
             btnAnalyze.Enabled = false;
             btnSelectACESfile.Enabled = false;
             btnSelectPartInterchange.Enabled = false;
+            btnSelectAssetNameInterchange.Enabled = false;
             btnSelectReferenceACESfile.Enabled = false;
             btnSelectVCdbFile.Enabled = false;
             btnSelectPCdbFile.Enabled = false;
@@ -1354,7 +1358,7 @@ namespace ACESinspector
             aces.qtyOutlierThreshold = numericUpDownQtyOutliersThreshold.Value;
             aces.qtyOutlierSampleSize = numericUpDownQtyOutliersSample.Value;
 
-            aces.establishFitmentTreeRoots(); // maybe should move this to be the last step in the import process. It is not threadable, so it must be run in a blocking way before the threadable stuff is run
+            aces.establishFitmentTreeRoots(checkBoxAssetsAsFitment.Checked); // maybe should move this to be the last step in the import process. It is not threadable, so it must be run in a blocking way before the threadable stuff is run
 
             int numberOfSections =Convert.ToInt32(numericUpDownThreads.Value);
             if((numberOfSections*5) > aces.apps.Count()){numberOfSections = 1; } // ensure at least 5apps per sections or dont break up
@@ -4498,6 +4502,41 @@ namespace ACESinspector
                     MessageBox.Show(result);
                 }
             }
+
+        }
+
+        private void btnSelectAssetNameInterchange_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
+            key.CreateSubKey("ACESinspector");
+            key = key.OpenSubKey("ACESinspector", true);
+            if (key.GetValue("lastAssetNameInterchangeDirectoryPath") != null) { openFileDialog.InitialDirectory = key.GetValue("lastAssetNameInterchangeDirectoryPath").ToString(); }
+
+            openFileDialog.Title = "Open Asset Name interchange text file";
+            openFileDialog.RestoreDirectory = false;
+            openFileDialog.Filter = "Text files (*.txt)|*.txt";
+            DialogResult openFileResult = openFileDialog.ShowDialog();
+            if (openFileResult.ToString() == "OK")
+            {
+                aces.assetNameInterchange.Clear();
+                key.SetValue("lastAssetNameInterchangeDirectoryPath", Path.GetDirectoryName(openFileDialog.FileName));
+                aces.importAssetNameInterchange(openFileDialog.FileName);
+                if (aces.assetNameInterchange.Count() > 0)
+                {
+                    lblAssetNameInterchangefilePath.Text = Path.GetFileName(openFileDialog.FileName) + "   (Contains " + aces.assetNameInterchange.Count.ToString() + " asset name translation records)";
+                }
+                else
+                {
+                    lblAssetNameInterchangefilePath.Text = "";
+                    MessageBox.Show(openFileDialog.FileName + " does not contain any properly formatted asset name interchange records.\r\n\r\nFormat is:\r\n  <input asset name 1><tab><output asset name 1>\r\n  <input asset name 2><tab><output asset name 2>\r\n  <input asset name 3><tab><output asset name 3>\r\n  ...\r\n\r\nThe file must contain exactly two columns and contain no header row. Every app node in the imported ACES file will have its AssetName translated by lookup in the fist column. The stand-alon assets in the file will also be translated. Asset names not found in the first column will removed from the ACES file as it is imported.");
+                }
+            }
+
+        }
+
+        private void checkBoxAssetsAsFitment_CheckedChanged(object sender, EventArgs e)
+        {
 
         }
 

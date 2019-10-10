@@ -302,6 +302,8 @@
             this.lblPrimeACESLoadStatus = new System.Windows.Forms.Label();
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
             this.btnExportAssets = new System.Windows.Forms.Button();
+            this.btnSelectAssetNameInterchange = new System.Windows.Forms.Button();
+            this.lblAssetNameInterchangefilePath = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -355,7 +357,7 @@
             this.btnSelectACESfile.Name = "btnSelectACESfile";
             this.btnSelectACESfile.Size = new System.Drawing.Size(139, 22);
             this.btnSelectACESfile.TabIndex = 2;
-            this.btnSelectACESfile.Text = "Primary ACES file";
+            this.btnSelectACESfile.Text = "Primary ACES File";
             this.btnSelectACESfile.UseVisualStyleBackColor = true;
             this.btnSelectACESfile.Click += new System.EventHandler(this.btnSelectACESfile_Click);
             // 
@@ -371,11 +373,11 @@
             // 
             // btnSelectVCdbFile
             // 
-            this.btnSelectVCdbFile.Location = new System.Drawing.Point(12, 125);
+            this.btnSelectVCdbFile.Location = new System.Drawing.Point(12, 141);
             this.btnSelectVCdbFile.Name = "btnSelectVCdbFile";
             this.btnSelectVCdbFile.Size = new System.Drawing.Size(139, 23);
             this.btnSelectVCdbFile.TabIndex = 4;
-            this.btnSelectVCdbFile.Text = "Select VCdb file";
+            this.btnSelectVCdbFile.Text = "Select VCdb File";
             this.btnSelectVCdbFile.UseVisualStyleBackColor = true;
             this.btnSelectVCdbFile.Click += new System.EventHandler(this.btnSelectVCdbFile_Click);
             // 
@@ -383,7 +385,7 @@
             // 
             this.lblVCdbFilePath.AutoSize = true;
             this.lblVCdbFilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblVCdbFilePath.Location = new System.Drawing.Point(152, 129);
+            this.lblVCdbFilePath.Location = new System.Drawing.Point(152, 145);
             this.lblVCdbFilePath.Name = "lblVCdbFilePath";
             this.lblVCdbFilePath.Size = new System.Drawing.Size(45, 16);
             this.lblVCdbFilePath.TabIndex = 5;
@@ -391,11 +393,11 @@
             // 
             // btnSelectPCdbFile
             // 
-            this.btnSelectPCdbFile.Location = new System.Drawing.Point(12, 153);
+            this.btnSelectPCdbFile.Location = new System.Drawing.Point(12, 164);
             this.btnSelectPCdbFile.Name = "btnSelectPCdbFile";
             this.btnSelectPCdbFile.Size = new System.Drawing.Size(139, 21);
             this.btnSelectPCdbFile.TabIndex = 6;
-            this.btnSelectPCdbFile.Text = "Select PCdb file";
+            this.btnSelectPCdbFile.Text = "Select PCdb File";
             this.btnSelectPCdbFile.UseVisualStyleBackColor = true;
             this.btnSelectPCdbFile.Click += new System.EventHandler(this.btnSelectPCdbFile_Click);
             // 
@@ -403,7 +405,7 @@
             // 
             this.lblPCdbFilePath.AutoSize = true;
             this.lblPCdbFilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblPCdbFilePath.Location = new System.Drawing.Point(152, 157);
+            this.lblPCdbFilePath.Location = new System.Drawing.Point(152, 168);
             this.lblPCdbFilePath.Name = "lblPCdbFilePath";
             this.lblPCdbFilePath.Size = new System.Drawing.Size(45, 16);
             this.lblPCdbFilePath.TabIndex = 7;
@@ -411,9 +413,9 @@
             // 
             // btnAnalyze
             // 
-            this.btnAnalyze.Location = new System.Drawing.Point(14, 212);
+            this.btnAnalyze.Location = new System.Drawing.Point(12, 216);
             this.btnAnalyze.Name = "btnAnalyze";
-            this.btnAnalyze.Size = new System.Drawing.Size(137, 29);
+            this.btnAnalyze.Size = new System.Drawing.Size(139, 25);
             this.btnAnalyze.TabIndex = 11;
             this.btnAnalyze.Text = "Analyze";
             this.btnAnalyze.UseVisualStyleBackColor = true;
@@ -1369,6 +1371,7 @@
             this.checkBoxAssetsAsFitment.TabIndex = 7;
             this.checkBoxAssetsAsFitment.Text = "Treat Assets as fitment  elements";
             this.checkBoxAssetsAsFitment.UseVisualStyleBackColor = true;
+            this.checkBoxAssetsAsFitment.CheckedChanged += new System.EventHandler(this.checkBoxAssetsAsFitment_CheckedChanged);
             // 
             // checkBoxExplodeNotes
             // 
@@ -2921,7 +2924,7 @@
             // 
             this.lblStatus.AutoSize = true;
             this.lblStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStatus.Location = new System.Drawing.Point(157, 216);
+            this.lblStatus.Location = new System.Drawing.Point(157, 217);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(389, 20);
             this.lblStatus.TabIndex = 13;
@@ -2943,11 +2946,11 @@
             // 
             // btnSelectReferenceACESfile
             // 
-            this.btnSelectReferenceACESfile.Location = new System.Drawing.Point(12, 40);
+            this.btnSelectReferenceACESfile.Location = new System.Drawing.Point(12, 36);
             this.btnSelectReferenceACESfile.Name = "btnSelectReferenceACESfile";
             this.btnSelectReferenceACESfile.Size = new System.Drawing.Size(139, 22);
             this.btnSelectReferenceACESfile.TabIndex = 34;
-            this.btnSelectReferenceACESfile.Text = "Reference ACES file";
+            this.btnSelectReferenceACESfile.Text = "Reference ACES File";
             this.btnSelectReferenceACESfile.UseVisualStyleBackColor = true;
             this.btnSelectReferenceACESfile.Click += new System.EventHandler(this.btnSelectReferenceACESfile_Click);
             // 
@@ -2955,7 +2958,7 @@
             // 
             this.lblReferenceACESfilePath.AutoSize = true;
             this.lblReferenceACESfilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblReferenceACESfilePath.Location = new System.Drawing.Point(352, 43);
+            this.lblReferenceACESfilePath.Location = new System.Drawing.Point(352, 39);
             this.lblReferenceACESfilePath.Name = "lblReferenceACESfilePath";
             this.lblReferenceACESfilePath.Size = new System.Drawing.Size(45, 16);
             this.lblReferenceACESfilePath.TabIndex = 35;
@@ -2963,31 +2966,31 @@
             // 
             // btnSelectPartInterchange
             // 
-            this.btnSelectPartInterchange.Location = new System.Drawing.Point(12, 68);
+            this.btnSelectPartInterchange.Location = new System.Drawing.Point(12, 63);
             this.btnSelectPartInterchange.Name = "btnSelectPartInterchange";
             this.btnSelectPartInterchange.Size = new System.Drawing.Size(139, 23);
             this.btnSelectPartInterchange.TabIndex = 36;
-            this.btnSelectPartInterchange.Text = "Part Translation file";
+            this.btnSelectPartInterchange.Text = "Part Translation File";
             this.btnSelectPartInterchange.UseVisualStyleBackColor = true;
             this.btnSelectPartInterchange.Click += new System.EventHandler(this.btnSelectPartInterchange_Click);
             // 
             // lblinterchangefilePath
             // 
             this.lblinterchangefilePath.AutoSize = true;
-            this.lblinterchangefilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblinterchangefilePath.Location = new System.Drawing.Point(151, 71);
+            this.lblinterchangefilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblinterchangefilePath.Location = new System.Drawing.Point(151, 68);
             this.lblinterchangefilePath.Name = "lblinterchangefilePath";
-            this.lblinterchangefilePath.Size = new System.Drawing.Size(45, 16);
+            this.lblinterchangefilePath.Size = new System.Drawing.Size(35, 13);
             this.lblinterchangefilePath.TabIndex = 37;
             this.lblinterchangefilePath.Text = "label1";
             // 
             // btnSelectQdbFile
             // 
-            this.btnSelectQdbFile.Location = new System.Drawing.Point(12, 180);
+            this.btnSelectQdbFile.Location = new System.Drawing.Point(12, 186);
             this.btnSelectQdbFile.Name = "btnSelectQdbFile";
             this.btnSelectQdbFile.Size = new System.Drawing.Size(139, 21);
             this.btnSelectQdbFile.TabIndex = 38;
-            this.btnSelectQdbFile.Text = "Select Qdb file";
+            this.btnSelectQdbFile.Text = "Select Qdb File";
             this.btnSelectQdbFile.UseVisualStyleBackColor = true;
             this.btnSelectQdbFile.Click += new System.EventHandler(this.btnSelectQdbFile_Click);
             // 
@@ -2995,7 +2998,7 @@
             // 
             this.lblQdbFilePath.AutoSize = true;
             this.lblQdbFilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblQdbFilePath.Location = new System.Drawing.Point(152, 184);
+            this.lblQdbFilePath.Location = new System.Drawing.Point(152, 190);
             this.lblQdbFilePath.Name = "lblQdbFilePath";
             this.lblQdbFilePath.Size = new System.Drawing.Size(45, 16);
             this.lblQdbFilePath.TabIndex = 39;
@@ -3003,7 +3006,7 @@
             // 
             // btnSelectNoteTranslationFile
             // 
-            this.btnSelectNoteTranslationFile.Location = new System.Drawing.Point(12, 97);
+            this.btnSelectNoteTranslationFile.Location = new System.Drawing.Point(12, 86);
             this.btnSelectNoteTranslationFile.Name = "btnSelectNoteTranslationFile";
             this.btnSelectNoteTranslationFile.Size = new System.Drawing.Size(139, 23);
             this.btnSelectNoteTranslationFile.TabIndex = 40;
@@ -3014,10 +3017,10 @@
             // lblNoteTranslationfilePath
             // 
             this.lblNoteTranslationfilePath.AutoSize = true;
-            this.lblNoteTranslationfilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblNoteTranslationfilePath.Location = new System.Drawing.Point(151, 100);
+            this.lblNoteTranslationfilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblNoteTranslationfilePath.Location = new System.Drawing.Point(151, 91);
             this.lblNoteTranslationfilePath.Name = "lblNoteTranslationfilePath";
-            this.lblNoteTranslationfilePath.Size = new System.Drawing.Size(45, 16);
+            this.lblNoteTranslationfilePath.Size = new System.Drawing.Size(35, 13);
             this.lblNoteTranslationfilePath.TabIndex = 41;
             this.lblNoteTranslationfilePath.Text = "label1";
             // 
@@ -3031,14 +3034,14 @@
             // 
             this.comboBoxMySQLvcdbVersion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxMySQLvcdbVersion.FormattingEnabled = true;
-            this.comboBoxMySQLvcdbVersion.Location = new System.Drawing.Point(12, 126);
+            this.comboBoxMySQLvcdbVersion.Location = new System.Drawing.Point(12, 142);
             this.comboBoxMySQLvcdbVersion.Name = "comboBoxMySQLvcdbVersion";
             this.comboBoxMySQLvcdbVersion.Size = new System.Drawing.Size(97, 21);
             this.comboBoxMySQLvcdbVersion.TabIndex = 42;
             // 
             // buttonMySQLloadVCdb
             // 
-            this.buttonMySQLloadVCdb.Location = new System.Drawing.Point(111, 125);
+            this.buttonMySQLloadVCdb.Location = new System.Drawing.Point(111, 141);
             this.buttonMySQLloadVCdb.Name = "buttonMySQLloadVCdb";
             this.buttonMySQLloadVCdb.Size = new System.Drawing.Size(40, 23);
             this.buttonMySQLloadVCdb.TabIndex = 43;
@@ -3048,7 +3051,7 @@
             // 
             // progBarVCdbload
             // 
-            this.progBarVCdbload.Location = new System.Drawing.Point(157, 128);
+            this.progBarVCdbload.Location = new System.Drawing.Point(157, 144);
             this.progBarVCdbload.Name = "progBarVCdbload";
             this.progBarVCdbload.Size = new System.Drawing.Size(148, 18);
             this.progBarVCdbload.TabIndex = 44;
@@ -3057,14 +3060,14 @@
             // 
             this.comboBoxMySQLpcdbVersion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxMySQLpcdbVersion.FormattingEnabled = true;
-            this.comboBoxMySQLpcdbVersion.Location = new System.Drawing.Point(12, 153);
+            this.comboBoxMySQLpcdbVersion.Location = new System.Drawing.Point(12, 164);
             this.comboBoxMySQLpcdbVersion.Name = "comboBoxMySQLpcdbVersion";
             this.comboBoxMySQLpcdbVersion.Size = new System.Drawing.Size(97, 21);
             this.comboBoxMySQLpcdbVersion.TabIndex = 45;
             // 
             // buttonMySQLloadPCdb
             // 
-            this.buttonMySQLloadPCdb.Location = new System.Drawing.Point(111, 152);
+            this.buttonMySQLloadPCdb.Location = new System.Drawing.Point(111, 163);
             this.buttonMySQLloadPCdb.Name = "buttonMySQLloadPCdb";
             this.buttonMySQLloadPCdb.Size = new System.Drawing.Size(40, 23);
             this.buttonMySQLloadPCdb.TabIndex = 46;
@@ -3076,14 +3079,14 @@
             // 
             this.comboBoxMySQLqdbVersion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxMySQLqdbVersion.FormattingEnabled = true;
-            this.comboBoxMySQLqdbVersion.Location = new System.Drawing.Point(12, 180);
+            this.comboBoxMySQLqdbVersion.Location = new System.Drawing.Point(12, 186);
             this.comboBoxMySQLqdbVersion.Name = "comboBoxMySQLqdbVersion";
             this.comboBoxMySQLqdbVersion.Size = new System.Drawing.Size(97, 21);
             this.comboBoxMySQLqdbVersion.TabIndex = 47;
             // 
             // buttonMySQLloadQdb
             // 
-            this.buttonMySQLloadQdb.Location = new System.Drawing.Point(111, 179);
+            this.buttonMySQLloadQdb.Location = new System.Drawing.Point(111, 185);
             this.buttonMySQLloadQdb.Name = "buttonMySQLloadQdb";
             this.buttonMySQLloadQdb.Size = new System.Drawing.Size(40, 23);
             this.buttonMySQLloadQdb.TabIndex = 48;
@@ -3094,7 +3097,7 @@
             // lblVCdbLoadStatus
             // 
             this.lblVCdbLoadStatus.AutoSize = true;
-            this.lblVCdbLoadStatus.Location = new System.Drawing.Point(311, 130);
+            this.lblVCdbLoadStatus.Location = new System.Drawing.Point(311, 146);
             this.lblVCdbLoadStatus.Name = "lblVCdbLoadStatus";
             this.lblVCdbLoadStatus.Size = new System.Drawing.Size(35, 13);
             this.lblVCdbLoadStatus.TabIndex = 49;
@@ -3109,7 +3112,7 @@
             // 
             // progBarRefACESload
             // 
-            this.progBarRefACESload.Location = new System.Drawing.Point(154, 42);
+            this.progBarRefACESload.Location = new System.Drawing.Point(154, 38);
             this.progBarRefACESload.Name = "progBarRefACESload";
             this.progBarRefACESload.Size = new System.Drawing.Size(150, 18);
             this.progBarRefACESload.TabIndex = 51;
@@ -3126,7 +3129,7 @@
             // lblRefACESLoadStatus
             // 
             this.lblRefACESLoadStatus.AutoSize = true;
-            this.lblRefACESLoadStatus.Location = new System.Drawing.Point(311, 45);
+            this.lblRefACESLoadStatus.Location = new System.Drawing.Point(311, 41);
             this.lblRefACESLoadStatus.Name = "lblRefACESLoadStatus";
             this.lblRefACESLoadStatus.Size = new System.Drawing.Size(35, 13);
             this.lblRefACESLoadStatus.TabIndex = 53;
@@ -3142,11 +3145,32 @@
             this.btnExportAssets.UseVisualStyleBackColor = true;
             this.btnExportAssets.Click += new System.EventHandler(this.btnExportAssets_Click);
             // 
+            // btnSelectAssetNameInterchange
+            // 
+            this.btnSelectAssetNameInterchange.Location = new System.Drawing.Point(12, 109);
+            this.btnSelectAssetNameInterchange.Name = "btnSelectAssetNameInterchange";
+            this.btnSelectAssetNameInterchange.Size = new System.Drawing.Size(139, 23);
+            this.btnSelectAssetNameInterchange.TabIndex = 54;
+            this.btnSelectAssetNameInterchange.Text = "Asset Translation File";
+            this.btnSelectAssetNameInterchange.UseVisualStyleBackColor = true;
+            this.btnSelectAssetNameInterchange.Click += new System.EventHandler(this.btnSelectAssetNameInterchange_Click);
+            // 
+            // lblAssetNameInterchangefilePath
+            // 
+            this.lblAssetNameInterchangefilePath.AutoSize = true;
+            this.lblAssetNameInterchangefilePath.Location = new System.Drawing.Point(151, 114);
+            this.lblAssetNameInterchangefilePath.Name = "lblAssetNameInterchangefilePath";
+            this.lblAssetNameInterchangefilePath.Size = new System.Drawing.Size(35, 13);
+            this.lblAssetNameInterchangefilePath.TabIndex = 55;
+            this.lblAssetNameInterchangefilePath.Text = "label1";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1250, 711);
+            this.Controls.Add(this.lblAssetNameInterchangefilePath);
+            this.Controls.Add(this.btnSelectAssetNameInterchange);
             this.Controls.Add(this.lblRefACESLoadStatus);
             this.Controls.Add(this.lblPrimeACESLoadStatus);
             this.Controls.Add(this.lblStatus);
@@ -3529,6 +3553,8 @@
         private System.Windows.Forms.TextBox textBoxFitmentLogicElements;
         private System.Windows.Forms.Button btnClearFlaggedNodes;
         private System.Windows.Forms.Button btnExportAssets;
+        private System.Windows.Forms.Button btnSelectAssetNameInterchange;
+        private System.Windows.Forms.Label lblAssetNameInterchangefilePath;
     }
 }
 

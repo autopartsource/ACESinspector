@@ -806,6 +806,7 @@ namespace ACESinspector
 
         public Dictionary<string, int> partsAppCounts = new Dictionary<string, int>();
         public Dictionary<string, string> interchange = new Dictionary<string, string>();
+        public Dictionary<string, string> assetNameInterchange = new Dictionary<string, string>();
         public Dictionary<string, List<int>> partsPartTypes = new Dictionary<string, List<int>>();
         public Dictionary<string, List<int>> partsPositions = new Dictionary<string, List<int>>();
         public Dictionary<string, int> noteCounts = new Dictionary<string, int>();
@@ -1490,14 +1491,22 @@ namespace ACESinspector
         }
 
 
-        public void establishFitmentTreeRoots()
+        public void establishFitmentTreeRoots(bool treatAssetsAsFitment)
         {
             string hashkey = "";
             Dictionary<string, List<App>> fitmentTreeHashtable = new Dictionary<string, List<App>>();
 
             foreach (App app in apps)
             {//establish hashgroups (mmy/type/position/mfrlabel)
-                hashkey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid + "\t" + app.mfrlabel + "\t" + app.asset + "\t" + app.assetitemorder + "\t" + app.assetitemref;
+                if (treatAssetsAsFitment)
+                {
+                    hashkey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid + "\t" + app.mfrlabel + "\t" + app.asset + "\t" + app.assetitemorder + "\t" + app.assetitemref;
+                }
+                else
+                {
+                    hashkey = app.basevehilceid.ToString() + "\t" + app.parttypeid.ToString() + "\t" + app.positionid + "\t" + app.mfrlabel;
+                }
+
                 if (fitmentTreeHashtable.ContainsKey(hashkey)) { App appTemp = new App(); appTemp = app; fitmentTreeHashtable[hashkey].Add(appTemp); }
                 else
                 {// first time seeing this hashkey
@@ -2847,6 +2856,25 @@ default: return 0;
             return interchange.Count;
         }
 
+        public int importAssetNameInterchange(string interchangeFile)
+        {
+            using (var reader = new StreamReader(interchangeFile))
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    var fields = line.Split('\t');
+                    if (fields.Count() == 2 && fields[0].Trim().Length > 0 && fields[1].Trim().Length > 0)
+                    {//text must be exactly 2 columns seperated by tab
+                        assetNameInterchange[fields[0].Trim()] = fields[1].Trim();
+                    }
+                }
+            }
+            return assetNameInterchange.Count;
+        }
+
+        //xxx
+
         public void importFitmentPermutationMiningCache(string cacheFile)
         {
             fitmentPermutationMiningCache.Clear();
@@ -3001,7 +3029,7 @@ default: return 0;
                 DocumentTitle = (string)HeaderElement.Element("DocumentTitle");
             }
 
-            //--assets
+ //-- Stand-alone Assets (not the ones in the App) --------------------------------------------------------------------------------------------
             foreach (XElement assetElement in StreamAppElement(filePath, "Asset"))
             {
                 Asset assetTemp = new Asset();
@@ -3149,7 +3177,7 @@ default: return 0;
 
             }
 
-            //--/assets
+ //--End of Stand-alone assets -------------------------------------------------------------------------
 
 
             int percentProgress = 0;
@@ -3250,11 +3278,32 @@ default: return 0;
                     partsPositions.Add(appTemp.part, positionIdListTemp);
                 }
 
-                appTemp.asset = (string)appElement.Element("AssetName");
-                if (!distinctAssets.Contains(appTemp.asset)) { distinctAssets.Add(appTemp.asset); }
-                if ((string)appElement.Element("AssetItemRef") != null){appTemp.assetitemref = (string)appElement.Element("AssetItemRef");}
-                if ((string)appElement.Element("AssetItemOrder") != null) { appTemp.assetitemorder = Convert.ToInt32((string)appElement.Element("AssetItemOrder")); }
-                    
+
+                string assetNameTemp = (string)appElement.Element("AssetName");
+                appTemp.asset = ""; appTemp.assetitemref = ""; appTemp.assetitemorder = 0;
+
+                if(assetNameTemp != null)
+                {
+                    if (assetNameInterchange.ContainsKey(assetNameTemp))
+                    {//  AssetName translation record exists , and it is not "" - translated it 
+                        if (assetNameInterchange[assetNameTemp] == "")
+                        {
+                            appTemp.asset = assetNameInterchange[assetNameTemp];
+                            if ((string)appElement.Element("AssetItemRef") != null) { appTemp.assetitemref = (string)appElement.Element("AssetItemRef"); }
+                            if ((string)appElement.Element("AssetItemOrder") != null) { appTemp.assetitemorder = Convert.ToInt32((string)appElement.Element("AssetItemOrder")); }
+                        }
+                    }
+                    else
+                    {//no AssetName translation record exists - pull it in as-is
+                        appTemp.asset = assetNameTemp;
+                        if ((string)appElement.Element("AssetItemRef") != null) { appTemp.assetitemref = (string)appElement.Element("AssetItemRef"); }
+                        if ((string)appElement.Element("AssetItemOrder") != null)
+                        {
+                            appTemp.assetitemorder = Convert.ToInt32((string)appElement.Element("AssetItemOrder"));
+                        }
+                    }
+                    if (!distinctAssets.Contains(appTemp.asset)) { distinctAssets.Add(appTemp.asset); }
+                }
 
                 foreach (XElement noteElement in appElement.Descendants("Note"))
                 {

@@ -12,6 +12,7 @@ autopartsource.com/ACESinspector
 Added "Reference" field to flattened export.
 Added AssetName, AssetItemOrder to exported ACES xml file
 Added "Export Asset List" feature to "Exports" tab
+Added logic to respect the checkbox "Treat Assets as Fitment". It was permenantly true before now
 
 1.2.0.32 (released 9/12/2019)
 Added new format option to assessment file layout in response to Tenneco's suggestion for CSV-style content that can be consumed into a BI system.

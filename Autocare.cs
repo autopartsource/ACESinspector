@@ -2587,7 +2587,7 @@ namespace ACESinspector
             {
                 foreach (App app in chunk.appsList)
                 {// look for apps that refer to a missing asset name
-                    if(app.asset!=null && !distinctAssetNames.Contains(app.asset))
+                    if(app.asset!="" && !distinctAssetNames.Contains(app.asset))
                     {
                         sw.WriteLine("Asset (" + app.asset + ") is not present in the file\t" + app.id.ToString() + "\t" + app.reference + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceFullFitmentString(vcdb, qdb));
                         chunk.assetProblemsCount++;
@@ -3302,7 +3302,7 @@ default: return 0;
                             appTemp.assetitemorder = Convert.ToInt32((string)appElement.Element("AssetItemOrder"));
                         }
                     }
-                    if (!distinctAssets.Contains(appTemp.asset)) { distinctAssets.Add(appTemp.asset); }
+                    if (!distinctAssets.Contains(appTemp.asset) && appTemp.asset!="") { distinctAssets.Add(appTemp.asset); }
                 }
 
                 foreach (XElement noteElement in appElement.Descendants("Note"))

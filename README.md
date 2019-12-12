@@ -8,7 +8,9 @@ autopartsource.com/ACESinspector
 
 # Changelog
 
-1.2.0.33 (not yet released)
+1.2.0.33 (released 12/12/2019)
+- Added "Reference" field to VCdb code problems tab (and spreadsheet output).
+- Added "BAse Vehicel id" field to VCdb code problems tab (and spreadsheet output).
 - Added "Reference" field to flattened export.
 - Added AssetName, AssetItemOrder to exported ACES xml file
 - Added "Export Asset List" feature to "Exports" tab

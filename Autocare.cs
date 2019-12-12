@@ -2413,7 +2413,7 @@ namespace ACESinspector
                         if (errorString != "")
                         {
                             chunk.vcdbCodesErrorsCount++;
-                            sw.WriteLine(app.id + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + String.Join(";", app.notes));
+                            sw.WriteLine(app.id + "\t" +  app.reference + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + String.Join(";", app.notes));
                         }
                     }
                 }
@@ -3286,7 +3286,7 @@ default: return 0;
                 {
                     if (assetNameInterchange.ContainsKey(assetNameTemp))
                     {//  AssetName translation record exists , and it is not "" - translated it 
-                        if (assetNameInterchange[assetNameTemp] == "")
+                        if (assetNameInterchange[assetNameTemp] != "")
                         {
                             appTemp.asset = assetNameInterchange[assetNameTemp];
                             if ((string)appElement.Element("AssetItemRef") != null) { appTemp.assetitemref = (string)appElement.Element("AssetItemRef"); }

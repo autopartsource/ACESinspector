@@ -3019,7 +3019,7 @@ namespace ACESinspector
                 aces.fitmentTreeAddFillerNodes(0, 0);
                 nodes = aces.fitmentNodeList;
 
-                int nodeBcounter, nodeCcounter, nodeDcounter, nodeEcounter, nodeFcounter, nodeGcounter, nodeHcounter, nodeIcounter;
+                int nodeBcounter, nodeCcounter, nodeDcounter, nodeEcounter, nodeFcounter, nodeGcounter, nodeHcounter, nodeIcounter, nodeJcounter, nodeKcounter;
                 int xPos; int verticalGenerationSpacing; int fitmentElementBoxWidth = 100; //divide the canvas width by this number to get actual width of box
 
                 Pen penNormalLine = new Pen(Brushes.Black, 2);
@@ -3147,6 +3147,43 @@ namespace ACESinspector
                                                         if (nodes[nodeIdJ].deleted) { continue; }
                                                         nodes[nodeIdJ].graphicalWidth = Convert.ToInt32(g.MeasureString(nodes[nodeIdJ].fitmentElementString, fitmentElementTitleFont, fitmentElementBoxWidth, fitmentElementTitleStringFormat).Width);
                                                         nodes[nodeIdJ].graphicalHeight = Convert.ToInt32(g.MeasureString(nodes[nodeIdJ].fitmentElementString, fitmentElementTitleFont, fitmentElementBoxWidth, fitmentElementTitleStringFormat).Height);
+
+                                                        List<int> nodeIdsListK = new List<int>();
+                                                        nodeIdsListK = nodes[nodeIdJ].childNodeIds;
+                                                        foreach (int nodeIdK in nodeIdsListK)
+                                                        {
+                                                            if (nodes[nodeIdK].deleted) { continue; }
+                                                            nodes[nodeIdK].graphicalWidth = Convert.ToInt32(g.MeasureString(nodes[nodeIdK].fitmentElementString, fitmentElementTitleFont, fitmentElementBoxWidth, fitmentElementTitleStringFormat).Width);
+                                                            nodes[nodeIdK].graphicalHeight = Convert.ToInt32(g.MeasureString(nodes[nodeIdK].fitmentElementString, fitmentElementTitleFont, fitmentElementBoxWidth, fitmentElementTitleStringFormat).Height);
+
+                                                            List<int> nodeIdsListL = new List<int>();
+                                                            nodeIdsListL = nodes[nodeIdK].childNodeIds;
+                                                            foreach (int nodeIdL in nodeIdsListL)
+                                                            {
+                                                                if (nodes[nodeIdL].deleted) { continue; }
+                                                                nodes[nodeIdL].graphicalWidth = Convert.ToInt32(g.MeasureString(nodes[nodeIdL].fitmentElementString, fitmentElementTitleFont, fitmentElementBoxWidth, fitmentElementTitleStringFormat).Width);
+                                                                nodes[nodeIdL].graphicalHeight = Convert.ToInt32(g.MeasureString(nodes[nodeIdL].fitmentElementString, fitmentElementTitleFont, fitmentElementBoxWidth, fitmentElementTitleStringFormat).Height);
+
+                                                                List<int> nodeIdsListM = new List<int>();
+                                                                nodeIdsListM = nodes[nodeIdL].childNodeIds;
+                                                                foreach (int nodeIdM in nodeIdsListM)
+                                                                {
+                                                                    if (nodes[nodeIdM].deleted) { continue; }
+                                                                    nodes[nodeIdM].graphicalWidth = Convert.ToInt32(g.MeasureString(nodes[nodeIdM].fitmentElementString, fitmentElementTitleFont, fitmentElementBoxWidth, fitmentElementTitleStringFormat).Width);
+                                                                    nodes[nodeIdM].graphicalHeight = Convert.ToInt32(g.MeasureString(nodes[nodeIdM].fitmentElementString, fitmentElementTitleFont, fitmentElementBoxWidth, fitmentElementTitleStringFormat).Height);
+
+                                                                    List<int> nodeIdsListN = new List<int>();
+                                                                    nodeIdsListN = nodes[nodeIdM].childNodeIds;
+                                                                    foreach (int nodeIdN in nodeIdsListN)
+                                                                    {
+                                                                        if (nodes[nodeIdN].deleted) { continue; }
+                                                                        nodes[nodeIdN].graphicalWidth = Convert.ToInt32(g.MeasureString(nodes[nodeIdN].fitmentElementString, fitmentElementTitleFont, fitmentElementBoxWidth, fitmentElementTitleStringFormat).Width);
+                                                                        nodes[nodeIdN].graphicalHeight = Convert.ToInt32(g.MeasureString(nodes[nodeIdN].fitmentElementString, fitmentElementTitleFont, fitmentElementBoxWidth, fitmentElementTitleStringFormat).Height);
+
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
@@ -3321,6 +3358,47 @@ namespace ACESinspector
                                                     g.DrawString(nodes[nodeIdI].fitmentElementString, fitmentElementTitleFont, fitmentElementTitleBrush, fitmentBoxLayoutRcetangle, fitmentElementTitleStringFormat);
                                                     if (nodes[nodeIdI].markedAsCosmetic) { g.DrawLine(Pens.Red, nodes[nodeIdI].graphicalXpos - 10, nodes[nodeIdI].graphicalYpos + nodes[nodeIdI].graphicalHeight / 2, nodes[nodeIdI].graphicalXpos + nodes[nodeIdI].graphicalWidth + 10, nodes[nodeIdI].graphicalYpos + nodes[nodeIdI].graphicalHeight / 2); }
 
+                                                    //-------
+
+                                                    List<int> nodeIdsListJ = new List<int>();
+                                                    nodeIdsListJ = nodes[nodeIdI].childNodeIds;
+                                                    nodeJcounter = 0;
+                                                    foreach (int nodeIdJ in nodeIdsListJ)
+                                                    {
+                                                        if (nodes[nodeIdJ].deleted || nodes[nodeIdJ].filler) { continue; }
+                                                        nodeJcounter++;
+                                                        if (nodes[nodeIdJ].fitmentElementType == "vcdb") { penBox = penVCdbElement; }
+                                                        if (nodes[nodeIdJ].fitmentElementType == "qdb") { penBox = penQdbElement; }
+                                                        if (nodes[nodeIdJ].fitmentElementType == "note") { penBox = penNoteElement; }
+                                                        if (nodes[nodeIdJ].app != null) { penBox = penAppElement; if (nodes[nodeIdJ].app.id == fitmentProblemAppIdInView) { penBox = penAppElementHighlited; } }
+
+                                                        fitmentBoxLayoutRcetangle.X = nodes[nodeIdJ].graphicalXpos; fitmentBoxLayoutRcetangle.Y = nodes[nodeIdJ].graphicalYpos; fitmentBoxLayoutRcetangle.Width = nodes[nodeIdJ].graphicalWidth + 10; fitmentBoxLayoutRcetangle.Height = nodes[nodeIdI].graphicalHeight;
+                                                        g.DrawLine(aces.fitmentBranchPen(nodeIdI, nodes, true), nodes[nodeIdJ].graphicalXpos + (nodes[nodeIdJ].graphicalWidth / 2), nodes[nodeIdJ].graphicalYpos, nodes[nodeIdI].graphicalXpos + (nodes[nodeIdI].graphicalWidth / (nodeIdsListJ.Count() + 1) * nodeJcounter), nodes[nodeIdI].graphicalYpos + nodes[nodeIdI].graphicalHeight);
+                                                        g.DrawRectangle(penBox, nodes[nodeIdJ].graphicalXpos, nodes[nodeIdJ].graphicalYpos, nodes[nodeIdJ].graphicalWidth, nodes[nodeIdJ].graphicalHeight);
+                                                        g.DrawString(nodes[nodeIdJ].fitmentElementString, fitmentElementTitleFont, fitmentElementTitleBrush, fitmentBoxLayoutRcetangle, fitmentElementTitleStringFormat);
+                                                        if (nodes[nodeIdJ].markedAsCosmetic) { g.DrawLine(Pens.Red, nodes[nodeIdJ].graphicalXpos - 10, nodes[nodeIdJ].graphicalYpos + nodes[nodeIdJ].graphicalHeight / 2, nodes[nodeIdJ].graphicalXpos + nodes[nodeIdJ].graphicalWidth + 10, nodes[nodeIdJ].graphicalYpos + nodes[nodeIdJ].graphicalHeight / 2); }
+                                                        //-----
+
+                                                        List<int> nodeIdsListK = new List<int>();
+                                                        nodeIdsListK = nodes[nodeIdJ].childNodeIds;
+                                                        nodeKcounter = 0;
+                                                        foreach (int nodeIdK in nodeIdsListK)
+                                                        {
+                                                            if (nodes[nodeIdK].deleted || nodes[nodeIdK].filler) { continue; }
+                                                            nodeKcounter++;
+                                                            if (nodes[nodeIdK].fitmentElementType == "vcdb") { penBox = penVCdbElement; }
+                                                            if (nodes[nodeIdK].fitmentElementType == "qdb") { penBox = penQdbElement; }
+                                                            if (nodes[nodeIdK].fitmentElementType == "note") { penBox = penNoteElement; }
+                                                            if (nodes[nodeIdK].app != null) { penBox = penAppElement; if (nodes[nodeIdK].app.id == fitmentProblemAppIdInView) { penBox = penAppElementHighlited; } }
+
+                                                            fitmentBoxLayoutRcetangle.X = nodes[nodeIdK].graphicalXpos; fitmentBoxLayoutRcetangle.Y = nodes[nodeIdK].graphicalYpos; fitmentBoxLayoutRcetangle.Width = nodes[nodeIdK].graphicalWidth + 10; fitmentBoxLayoutRcetangle.Height = nodes[nodeIdJ].graphicalHeight;
+                                                            g.DrawLine(aces.fitmentBranchPen(nodeIdJ, nodes, true), nodes[nodeIdK].graphicalXpos + (nodes[nodeIdK].graphicalWidth / 2), nodes[nodeIdK].graphicalYpos, nodes[nodeIdJ].graphicalXpos + (nodes[nodeIdJ].graphicalWidth / (nodeIdsListK.Count() + 1) * nodeKcounter), nodes[nodeIdJ].graphicalYpos + nodes[nodeIdJ].graphicalHeight);
+                                                            g.DrawRectangle(penBox, nodes[nodeIdK].graphicalXpos, nodes[nodeIdK].graphicalYpos, nodes[nodeIdK].graphicalWidth, nodes[nodeIdK].graphicalHeight);
+                                                            g.DrawString(nodes[nodeIdK].fitmentElementString, fitmentElementTitleFont, fitmentElementTitleBrush, fitmentBoxLayoutRcetangle, fitmentElementTitleStringFormat);
+                                                            if (nodes[nodeIdK].markedAsCosmetic) { g.DrawLine(Pens.Red, nodes[nodeIdK].graphicalXpos - 10, nodes[nodeIdK].graphicalYpos + nodes[nodeIdK].graphicalHeight / 2, nodes[nodeIdK].graphicalXpos + nodes[nodeIdK].graphicalWidth + 10, nodes[nodeIdK].graphicalYpos + nodes[nodeIdK].graphicalHeight / 2); }
+                                                            //-----
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }

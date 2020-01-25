@@ -5,8 +5,10 @@ You can download the latest stable compiled version at
 autopartsource.com/ACESinspector
 
 
-
 # Changelog
+
+1.2.0.34 (released 1/25/2020)
+- Added 2 more levels of depth to logic diagram 
 
 1.2.0.33 (released 12/12/2019)
 - Added "Reference" field to VCdb code problems tab (and spreadsheet output).

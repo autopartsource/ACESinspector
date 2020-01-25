@@ -1787,6 +1787,22 @@ namespace ACESinspector
                                                     if (nodesList[nodeIdJ].deleted) { continue; }
                                                     if (level == 10) { returnList.Add(nodesList[nodeIdJ].nodeId); }
 
+                                                    List<int> listk = new List<int>(); listk = nodesList[nodeIdJ].childNodeIds;
+                                                    foreach (int nodeIdK in listk)
+                                                    {
+                                                        if (nodesList[nodeIdK].deleted) { continue; }
+                                                        if (level == 11) { returnList.Add(nodesList[nodeIdK].nodeId); }
+
+                                                        List<int> listl = new List<int>(); listl = nodesList[nodeIdK].childNodeIds;
+                                                        foreach (int nodeIdL in listl)
+                                                        {
+                                                            if (nodesList[nodeIdL].deleted) { continue; }
+                                                            if (level == 12) { returnList.Add(nodesList[nodeIdL].nodeId); }
+
+                                                            //xxx
+
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }

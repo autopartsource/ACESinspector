@@ -199,6 +199,18 @@
             this.tabPageInvalidVCdbCodes = new System.Windows.Forms.TabPage();
             this.lblInvalidVCdbCodesRedirect = new System.Windows.Forms.Label();
             this.dgVCdbCodes = new System.Windows.Forms.DataGridView();
+            this.dgVCdbCodesApplicationid = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgVCdbCodesReference = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgVCdbCodesBasevehicleid = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgVCdbCodesMake = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgVCdbCodesModel = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgVCdbCodesYear = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgVCdbCodesParttype = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgVCdbCodesPosition = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgVCdbCodesQty = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgVCdbCodesPart = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgVCdbCodesQualifiers = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgVCdbCodesNotes = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPageInvalidConfigs = new System.Windows.Forms.TabPage();
             this.lblVCdbConfigErrorRedirect = new System.Windows.Forms.Label();
             this.dgVCdbConfigs = new System.Windows.Forms.DataGridView();
@@ -294,18 +306,6 @@
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
             this.btnSelectAssetNameInterchange = new System.Windows.Forms.Button();
             this.lblAssetNameInterchangefilePath = new System.Windows.Forms.Label();
-            this.dgVCdbCodesApplicationid = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgVCdbCodesReference = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgVCdbCodesBasevehicleid = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgVCdbCodesMake = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgVCdbCodesModel = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgVCdbCodesYear = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgVCdbCodesParttype = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgVCdbCodesPosition = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgVCdbCodesQty = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgVCdbCodesPart = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgVCdbCodesQualifiers = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgVCdbCodesNotes = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -1516,7 +1516,8 @@
             this.comboBoxFlatExportFormat.FormattingEnabled = true;
             this.comboBoxFlatExportFormat.Items.AddRange(new object[] {
             "Default",
-            "Exploded VCdb tag columns"});
+            "Exploded VCdb tag columns",
+            "Coded-Values"});
             this.comboBoxFlatExportFormat.Location = new System.Drawing.Point(209, 7);
             this.comboBoxFlatExportFormat.Name = "comboBoxFlatExportFormat";
             this.comboBoxFlatExportFormat.Size = new System.Drawing.Size(152, 21);
@@ -2191,6 +2192,102 @@
             this.dgVCdbCodes.Name = "dgVCdbCodes";
             this.dgVCdbCodes.Size = new System.Drawing.Size(1228, 480);
             this.dgVCdbCodes.TabIndex = 2;
+            // 
+            // dgVCdbCodesApplicationid
+            // 
+            this.dgVCdbCodesApplicationid.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgVCdbCodesApplicationid.HeaderText = "App id";
+            this.dgVCdbCodesApplicationid.Name = "dgVCdbCodesApplicationid";
+            this.dgVCdbCodesApplicationid.ReadOnly = true;
+            this.dgVCdbCodesApplicationid.Width = 51;
+            // 
+            // dgVCdbCodesReference
+            // 
+            this.dgVCdbCodesReference.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgVCdbCodesReference.HeaderText = "Reference";
+            this.dgVCdbCodesReference.Name = "dgVCdbCodesReference";
+            this.dgVCdbCodesReference.ReadOnly = true;
+            this.dgVCdbCodesReference.Width = 82;
+            // 
+            // dgVCdbCodesBasevehicleid
+            // 
+            this.dgVCdbCodesBasevehicleid.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgVCdbCodesBasevehicleid.HeaderText = "Base Vehicle id";
+            this.dgVCdbCodesBasevehicleid.Name = "dgVCdbCodesBasevehicleid";
+            this.dgVCdbCodesBasevehicleid.ReadOnly = true;
+            this.dgVCdbCodesBasevehicleid.Width = 87;
+            // 
+            // dgVCdbCodesMake
+            // 
+            this.dgVCdbCodesMake.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgVCdbCodesMake.HeaderText = "Make";
+            this.dgVCdbCodesMake.Name = "dgVCdbCodesMake";
+            this.dgVCdbCodesMake.ReadOnly = true;
+            this.dgVCdbCodesMake.Width = 59;
+            // 
+            // dgVCdbCodesModel
+            // 
+            this.dgVCdbCodesModel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgVCdbCodesModel.HeaderText = "Model";
+            this.dgVCdbCodesModel.Name = "dgVCdbCodesModel";
+            this.dgVCdbCodesModel.ReadOnly = true;
+            this.dgVCdbCodesModel.Width = 61;
+            // 
+            // dgVCdbCodesYear
+            // 
+            this.dgVCdbCodesYear.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgVCdbCodesYear.HeaderText = "Year";
+            this.dgVCdbCodesYear.Name = "dgVCdbCodesYear";
+            this.dgVCdbCodesYear.ReadOnly = true;
+            this.dgVCdbCodesYear.Width = 54;
+            // 
+            // dgVCdbCodesParttype
+            // 
+            this.dgVCdbCodesParttype.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgVCdbCodesParttype.HeaderText = "Part Type";
+            this.dgVCdbCodesParttype.Name = "dgVCdbCodesParttype";
+            this.dgVCdbCodesParttype.ReadOnly = true;
+            this.dgVCdbCodesParttype.Width = 72;
+            // 
+            // dgVCdbCodesPosition
+            // 
+            this.dgVCdbCodesPosition.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgVCdbCodesPosition.HeaderText = "Position";
+            this.dgVCdbCodesPosition.Name = "dgVCdbCodesPosition";
+            this.dgVCdbCodesPosition.ReadOnly = true;
+            this.dgVCdbCodesPosition.Width = 69;
+            // 
+            // dgVCdbCodesQty
+            // 
+            this.dgVCdbCodesQty.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgVCdbCodesQty.HeaderText = "Qty";
+            this.dgVCdbCodesQty.Name = "dgVCdbCodesQty";
+            this.dgVCdbCodesQty.ReadOnly = true;
+            this.dgVCdbCodesQty.Width = 48;
+            // 
+            // dgVCdbCodesPart
+            // 
+            this.dgVCdbCodesPart.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgVCdbCodesPart.HeaderText = "Part";
+            this.dgVCdbCodesPart.Name = "dgVCdbCodesPart";
+            this.dgVCdbCodesPart.ReadOnly = true;
+            this.dgVCdbCodesPart.Width = 51;
+            // 
+            // dgVCdbCodesQualifiers
+            // 
+            this.dgVCdbCodesQualifiers.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgVCdbCodesQualifiers.HeaderText = "VCdb Coded Attributes";
+            this.dgVCdbCodesQualifiers.Name = "dgVCdbCodesQualifiers";
+            this.dgVCdbCodesQualifiers.ReadOnly = true;
+            this.dgVCdbCodesQualifiers.Width = 127;
+            // 
+            // dgVCdbCodesNotes
+            // 
+            this.dgVCdbCodesNotes.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.dgVCdbCodesNotes.HeaderText = "Notes";
+            this.dgVCdbCodesNotes.Name = "dgVCdbCodesNotes";
+            this.dgVCdbCodesNotes.ReadOnly = true;
+            this.dgVCdbCodesNotes.Width = 60;
             // 
             // tabPageInvalidConfigs
             // 
@@ -3087,102 +3184,6 @@
             this.lblAssetNameInterchangefilePath.Size = new System.Drawing.Size(35, 13);
             this.lblAssetNameInterchangefilePath.TabIndex = 55;
             this.lblAssetNameInterchangefilePath.Text = "label1";
-            // 
-            // dgVCdbCodesApplicationid
-            // 
-            this.dgVCdbCodesApplicationid.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgVCdbCodesApplicationid.HeaderText = "App id";
-            this.dgVCdbCodesApplicationid.Name = "dgVCdbCodesApplicationid";
-            this.dgVCdbCodesApplicationid.ReadOnly = true;
-            this.dgVCdbCodesApplicationid.Width = 62;
-            // 
-            // dgVCdbCodesReference
-            // 
-            this.dgVCdbCodesReference.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgVCdbCodesReference.HeaderText = "Reference";
-            this.dgVCdbCodesReference.Name = "dgVCdbCodesReference";
-            this.dgVCdbCodesReference.ReadOnly = true;
-            this.dgVCdbCodesReference.Width = 82;
-            // 
-            // dgVCdbCodesBasevehicleid
-            // 
-            this.dgVCdbCodesBasevehicleid.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgVCdbCodesBasevehicleid.HeaderText = "Base Vehicle id";
-            this.dgVCdbCodesBasevehicleid.Name = "dgVCdbCodesBasevehicleid";
-            this.dgVCdbCodesBasevehicleid.ReadOnly = true;
-            this.dgVCdbCodesBasevehicleid.Width = 87;
-            // 
-            // dgVCdbCodesMake
-            // 
-            this.dgVCdbCodesMake.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgVCdbCodesMake.HeaderText = "Make";
-            this.dgVCdbCodesMake.Name = "dgVCdbCodesMake";
-            this.dgVCdbCodesMake.ReadOnly = true;
-            this.dgVCdbCodesMake.Width = 59;
-            // 
-            // dgVCdbCodesModel
-            // 
-            this.dgVCdbCodesModel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgVCdbCodesModel.HeaderText = "Model";
-            this.dgVCdbCodesModel.Name = "dgVCdbCodesModel";
-            this.dgVCdbCodesModel.ReadOnly = true;
-            this.dgVCdbCodesModel.Width = 61;
-            // 
-            // dgVCdbCodesYear
-            // 
-            this.dgVCdbCodesYear.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgVCdbCodesYear.HeaderText = "Year";
-            this.dgVCdbCodesYear.Name = "dgVCdbCodesYear";
-            this.dgVCdbCodesYear.ReadOnly = true;
-            this.dgVCdbCodesYear.Width = 54;
-            // 
-            // dgVCdbCodesParttype
-            // 
-            this.dgVCdbCodesParttype.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgVCdbCodesParttype.HeaderText = "Part Type";
-            this.dgVCdbCodesParttype.Name = "dgVCdbCodesParttype";
-            this.dgVCdbCodesParttype.ReadOnly = true;
-            this.dgVCdbCodesParttype.Width = 72;
-            // 
-            // dgVCdbCodesPosition
-            // 
-            this.dgVCdbCodesPosition.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgVCdbCodesPosition.HeaderText = "Position";
-            this.dgVCdbCodesPosition.Name = "dgVCdbCodesPosition";
-            this.dgVCdbCodesPosition.ReadOnly = true;
-            this.dgVCdbCodesPosition.Width = 69;
-            // 
-            // dgVCdbCodesQty
-            // 
-            this.dgVCdbCodesQty.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgVCdbCodesQty.HeaderText = "Qty";
-            this.dgVCdbCodesQty.Name = "dgVCdbCodesQty";
-            this.dgVCdbCodesQty.ReadOnly = true;
-            this.dgVCdbCodesQty.Width = 48;
-            // 
-            // dgVCdbCodesPart
-            // 
-            this.dgVCdbCodesPart.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgVCdbCodesPart.HeaderText = "Part";
-            this.dgVCdbCodesPart.Name = "dgVCdbCodesPart";
-            this.dgVCdbCodesPart.ReadOnly = true;
-            this.dgVCdbCodesPart.Width = 51;
-            // 
-            // dgVCdbCodesQualifiers
-            // 
-            this.dgVCdbCodesQualifiers.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgVCdbCodesQualifiers.HeaderText = "VCdb Coded Attributes";
-            this.dgVCdbCodesQualifiers.Name = "dgVCdbCodesQualifiers";
-            this.dgVCdbCodesQualifiers.ReadOnly = true;
-            this.dgVCdbCodesQualifiers.Width = 127;
-            // 
-            // dgVCdbCodesNotes
-            // 
-            this.dgVCdbCodesNotes.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.dgVCdbCodesNotes.HeaderText = "Notes";
-            this.dgVCdbCodesNotes.Name = "dgVCdbCodesNotes";
-            this.dgVCdbCodesNotes.ReadOnly = true;
-            this.dgVCdbCodesNotes.Width = 60;
             // 
             // Form1
             // 

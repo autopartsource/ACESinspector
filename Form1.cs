@@ -326,7 +326,7 @@ namespace ACESinspector
             if (key.GetValue("threadCount") != null) { numericUpDownThreads.Value = Convert.ToDecimal(key.GetValue("threadCount")); } else { numericUpDownThreads.Value = 20; }
             if (key.GetValue("automatedHour") != null) { numericUpDownAutomatedHour.Value = Convert.ToDecimal(key.GetValue("automatedHour")); } else { numericUpDownAutomatedHour.Value = 23; }
             if (key.GetValue("automatedMinute") != null) { numericUpDownAutomatedMinute.Value = Convert.ToDecimal(key.GetValue("automatedMinute")); } else { numericUpDownAutomatedMinute.Value = 0; }
-
+            if ((string)key.GetValue("assetsAsFitment") == "1") { checkBoxAssetsAsFitment.Checked = true; } else { checkBoxAssetsAsFitment.Checked = false; }
 
             // look for the "secret" key in the registry that entitles bad-branch detection. If you are reading this, you are in pretty exclusive club and 
             // should feel free to add this key to your own registry to enable the feature. Bad branch detection is a feature (among others planned) that is held back from public view. 
@@ -4615,7 +4615,8 @@ namespace ACESinspector
 
         private void checkBoxAssetsAsFitment_CheckedChanged(object sender, EventArgs e)
         {
-
+            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true); key.CreateSubKey("ACESinspector"); key = key.OpenSubKey("ACESinspector", true);
+            if (checkBoxAssetsAsFitment.Checked) { key.SetValue("assetsAsFitment", "1"); } else { key.SetValue("assetsAsFitment", "0"); }
         }
 
         private string escapeXMLspecialChars(string inputString)

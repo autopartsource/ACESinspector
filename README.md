@@ -10,7 +10,8 @@ autopartsource.com/ACESinspector
 
 1.2.0.35 (not yet released)
 - Added "Coded-Values" format option to the "Export Simplified (flat) apps" function. This was to meet an internal need of my own for import of ACES files from trading partners into my PIM system
-- fixed "Treat Assets as Fitment" checkox to be sticky in registry
+- fixed "Treat Assets as Fitment" checkbox to be sticky in registry
+- added ACES 4.1 xsd data to schemas
 
 1.2.0.34 (released 1/25/2020)
 - Added 2 more levels of depth to logic diagram 

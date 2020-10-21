@@ -11,6 +11,11 @@ using System.Security.Cryptography;
 using MySql.Data.MySqlClient;
 using System.Net;
 
+// ability to include/exclude the MFRlabel in overlap detection (checkbox in settings. Default is include)
+// add basevid to holes report
+
+
+
 namespace ACESinspector
 {
 
@@ -147,6 +152,7 @@ namespace ACESinspector
             lblNoteTranslationfilePath.Text = "";
             progBarPrimeACESload.Visible = false;
             progBarRefACESload.Visible = false;
+            progBarExportFlatApps.Value = 0; progBarExportFlatApps.Visible = false;
 
             lblPartsTabRedirect.Visible = false;
             lblFitmentLogicProblemsTabRedirect.Visible = false;
@@ -3499,11 +3505,17 @@ namespace ACESinspector
                                 aces.fitmentNodeList[i].markedAsCosmetic = true;
                                 if (!apsFlavor)
                                 {// general purpose PIM changes list
-                                    aces.appHashesFlaggedAsCosmetic.Add(aces.fitmentNodeList[i].app.appHash(), "Delete app\t" + aces.fitmentNodeList[i].app.reference);
+                                    if (!aces.appHashesFlaggedAsCosmetic.ContainsKey(aces.fitmentNodeList[i].app.appHash()))
+                                    {
+                                        aces.appHashesFlaggedAsCosmetic.Add(aces.fitmentNodeList[i].app.appHash(), "Delete app\t" + aces.fitmentNodeList[i].app.reference);
+                                    }
                                 }
                                 else
                                 {// AutoPartSource-specific PIM systems SQL statements
-                                    aces.appHashesFlaggedAsCosmetic.Add(aces.fitmentNodeList[i].app.appHash(), "update application set cosmetic=1 where application_id=" + aces.fitmentNodeList[i].app.reference + " limit 1;");
+                                    if(!aces.appHashesFlaggedAsCosmetic.ContainsKey(aces.fitmentNodeList[i].app.appHash()))
+                                    {
+                                        aces.appHashesFlaggedAsCosmetic.Add(aces.fitmentNodeList[i].app.appHash(), "update application set cosmetic=1 where application_id=" + aces.fitmentNodeList[i].app.reference + " limit 1;");
+                                    }
                                 }
                             }
                         }

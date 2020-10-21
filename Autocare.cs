@@ -2975,7 +2975,7 @@ default: return 0;
             successfulImport = false; string schemaString = ""; //bool found; //int i;
             XDocument xmlDoc = null;
             XmlSchemaSet schemas = new XmlSchemaSet();
-            string[] VCdbAttributeNames = new string[] { "Aspiration", "BedLength", "BedType", "BodyNumDoors", "BodyType", "BrakeABS", "BrakeSystem", "CylinderHeadType", "DriveType", "EngineBase", "EngineDesignation", "EngineMfr", "EngineVIN", "EngineVersion", "FrontBrakeType", "FrontSpringType", "FuelDeliverySubType", "FuelDeliveryType", "FuelSystemControlType", "FuelSystemDesign", "FuelType", "IgnitionSystemType", "MfrBodyCode", "PowerOutput", "RearBrakeType", "RearSpringType", "Region", "SteeringSystem", "SteeringType", "SubModel", "TransElecControlled", "TransmissionBase", "TransmissionControlType", "TransmissionMfr", "TransmissionMfrCode", "TransmissionNumSpeeds", "TransmissionType", "ValvesPerEngine", "VehicleType", "WheelBase" };
+            string[] VCdbAttributeNames = new string[] { "Aspiration", "BedLength", "BedType", "BodyNumDoors", "BodyType", "BrakeABS", "BrakeSystem", "CylinderHeadType", "DriveType", "EngineBase", "EngineDesignation", "EngineMfr", "EngineVIN", "EngineVersion", "EngineBlock","FrontBrakeType", "FrontSpringType", "FuelDeliverySubType", "FuelDeliveryType", "FuelSystemControlType", "FuelSystemDesign", "FuelType", "IgnitionSystemType", "MfrBodyCode", "PowerOutput", "RearBrakeType", "RearSpringType", "Region", "SteeringSystem", "SteeringType", "SubModel", "TransElecControlled", "TransmissionBase", "TransmissionControlType", "TransmissionMfr", "TransmissionMfrCode", "TransmissionNumSpeeds", "TransmissionType", "ValvesPerEngine", "VehicleType", "WheelBase" };
             string noteTemp;
             bool splitNotesBySemicolon = true;
             List<int> basevidsInRange = new List<int>();
@@ -3407,7 +3407,15 @@ default: return 0;
                         }
                     }
                     QdbQualifierTemp.qualifierParameters = myParametersList;
-                    appTemp.QdbQualifiers.Add(QdbQualifierTemp);
+
+                    bool foundExistingQdbQualifier = false;
+                    foreach (QdbQualifier existinQdbQualifier in appTemp.QdbQualifiers)
+                    {// skip the import of multiple qualifiers with the same ID
+                        if (QdbQualifierTemp.qualifierId == existinQdbQualifier.qualifierId) { 
+                            foundExistingQdbQualifier = true; break; 
+                        }
+                    }
+                    if(!foundExistingQdbQualifier){appTemp.QdbQualifiers.Add(QdbQualifierTemp);}
                 }
 
                 // see if any of the note strings in the app have Qdb transforms defined
@@ -3730,7 +3738,8 @@ default: return 0;
                             }
                             break;
 
-                        default:break;
+
+                        default: break;
                     }   
 
 
@@ -3849,30 +3858,29 @@ default: return 0;
             BaseVehicle basevehicle = new BaseVehicle();
             List<BaseVehicle> missingBasevids = new List<BaseVehicle>();
             int i = 0;
-
-            foreach (KeyValuePair<int, BaseVehicle> entry in vcdb.vcdbBasevhicleDict)
-            {
-                i++;
-                if(!basevidOccurrences.ContainsKey(entry.Key))
-                {
-                    //if ( Convert.ToInt32(entry.Value.YearId) >= 2016 && entry.Value.VehicleTypeName=="Car")
-                    //{
-                        missingBasevids.Add(entry.Value);
-                    //}
-                }
-            }
+            int hitcount = 0;
 
             try
             {
                 using (StreamWriter sw = new StreamWriter(_filePath))
                 {
-                    sw.WriteLine("Make\tModel\tYear\tVehicle Type");
-                    foreach (BaseVehicle basevid in missingBasevids)
+                    sw.WriteLine("BaseVid\tMake\tModel\tYear\tVehicle Type");
+
+                    foreach (KeyValuePair<int, BaseVehicle> entry in vcdb.vcdbBasevhicleDict)
                     {
-                        sw.WriteLine(basevid.MakeName + "\t" + basevid.ModelName + "\t" + basevid.YearId + "\t" + basevid.VehicleTypeName);
+                        i++;
+                        if (!basevidOccurrences.ContainsKey(entry.Key))
+                        {
+                            //if ( Convert.ToInt32(entry.Value.YearId) >= 2016 && entry.Value.VehicleTypeName=="Car")
+                            //{
+
+                            sw.WriteLine(entry.Key.ToString() + "\t" + entry.Value.MakeName + "\t" + entry.Value.ModelName + "\t" + entry.Value.YearId + "\t" + entry.Value.VehicleTypeName);
+                            hitcount++;
+                            //}
+                        }
                     }
                 }
-                return missingBasevids.Count().ToString() + " missing base vehicles exported to " + _filePath;
+                return hitcount.ToString() + " missing base vehicles exported to " + _filePath;
             }
             catch (Exception ex)
             {
@@ -4131,6 +4139,7 @@ default: return 0;
         public Dictionary<int, BaseVehicle> vcdbBasevhicleDict = new Dictionary<int, BaseVehicle>();
         public Dictionary<string,int> vcdbReverseBasevhicleDict = new Dictionary<string, int>();
         public Dictionary<int, String> enginebaseDict = new Dictionary<int, string>();
+        public Dictionary<int, String> engineblockDict = new Dictionary<int, string>();
         public Dictionary<int, String> submodelDict = new Dictionary<int, string>();
         public Dictionary<int, String> drivetypeDict = new Dictionary<int, string>();
         public Dictionary<int, String> aspirationDict = new Dictionary<int, string>();
@@ -4248,6 +4257,7 @@ default: return 0;
             vcdbBasevhicleDict.Clear();
             vcdbReverseBasevhicleDict.Clear();
             enginebaseDict.Clear();
+            engineblockDict.Clear();
             submodelDict.Clear();
             drivetypeDict.Clear();
             aspirationDict.Clear();
@@ -4297,6 +4307,7 @@ default: return 0;
             switch (attribute.name)
             {
                 case "EngineBase": gotValue = enginebaseDict.TryGetValue(attribute.value, out niceValue); break;
+                case "EngineBlock": gotValue = engineblockDict.TryGetValue(attribute.value, out niceValue); break;
                 case "SubModel": gotValue = submodelDict.TryGetValue(attribute.value, out niceValue); break;
                 case "DriveType": gotValue = drivetypeDict.TryGetValue(attribute.value, out niceValue); break;
                 case "Aspiration": gotValue = aspirationDict.TryGetValue(attribute.value, out niceValue); break;
@@ -4399,6 +4410,7 @@ default: return 0;
             switch (attribute.name)
             {
                 case "EngineBase": return enginebaseDict.TryGetValue(attribute.value, out niceValue);
+                case "EngineBlock": return engineblockDict.TryGetValue(attribute.value, out niceValue);
                 case "SubModel": return submodelDict.TryGetValue(attribute.value, out niceValue);
                 case "DriveType": return drivetypeDict.TryGetValue(attribute.value, out niceValue);
                 case "Aspiration": return aspirationDict.TryGetValue(attribute.value, out niceValue);

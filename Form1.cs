@@ -12,8 +12,6 @@ using MySql.Data.MySqlClient;
 using System.Net;
 
 // ability to include/exclude the MFRlabel in overlap detection (checkbox in settings. Default is include)
-// add basevid to holes report
-
 
 
 namespace ACESinspector
@@ -431,8 +429,14 @@ namespace ACESinspector
                     btnSelectQdbFile.Enabled = true;
 
 
-                    if (pcdb.version != "" && qdb.version != "" && aces.successfulImport) { btnAnalyze.Enabled = true; }
-
+                    if (pcdb.version != "" && qdb.version != "" && aces.successfulImport)
+                    {
+                        btnAnalyze.Enabled = true;
+                    }
+                    else
+                    {
+                        aces.logHistoryEvent("", "0\tAnalyze not enabled. aces.successfulImport=" + aces.successfulImport.ToString());
+                    }
                 }
             }
 
@@ -651,7 +655,6 @@ namespace ACESinspector
                 lblACESfilePath.Left = 352;
                 lblACESfilePath.Visible = true;
 
-                aces.logHistoryEvent("", "10\tbtnSelectACESfile - calculating md5 hash of selected ACES file ("+ openFileDialog.FileName + ")");
 
                 // calculate an md5 hash of the ACES file for later storage in the registry
                 using (var md5 = MD5.Create())
@@ -659,12 +662,15 @@ namespace ACESinspector
                     using (var stream = File.OpenRead(openFileDialog.FileName))
                     {
                         aces.fileMD5hash = BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty);
+                        aces.logHistoryEvent("", "10\tbtnSelectACESfile - calculating md5 hash of selected ACES file (" + openFileDialog.FileName + "): "+ aces.fileMD5hash);
                     }
                 }
 
-                aces.logHistoryEvent("", "10\tbtnSelectACESfile - importing ACES file");
+                aces.logHistoryEvent("", "10\tbtnSelectACESfile - starting import of ACES file");
 
-                var result = await Task.Run(() => aces.importXML(openFileDialog.FileName, "", checkBoxRespectValidateTag.Checked,noteTranslationDictionary,noteToQdbTransformDictionary,vcdb, progressIndicator));
+                var result = await Task.Run(() => aces.importXML(openFileDialog.FileName, "", checkBoxRespectValidateTag.Checked, checkBoxImportDeletes.Checked, noteTranslationDictionary,noteToQdbTransformDictionary,vcdb, progressIndicator));
+
+                aces.logHistoryEvent("", "10\tbtnSelectACESfile - completed import of ACES file. " +result.ToString()+ " apps imported.");
 
                 if (aces.discardedDeletsOnImport > 0) { MessageBox.Show(openFileDialog.FileName + " contains \"D\" (delete) applications. These were excluded from the import. Only the \"A\" (add) application are used.");  aces.logHistoryEvent("", "10\tbtnSelectACESfile - found some deleted apps in import");}
 
@@ -767,8 +773,16 @@ namespace ACESinspector
                     aces.logHistoryEvent("", "0\tXSD-validated ACES "+aces.version+" file imported as primary: "+ Path.GetFileName(aces.filePath));
                     btnAppExportSave.Enabled = true;
                     btnExportRelatedParts.Enabled = true;
-                    
-                    if ( vcdb.importSuccess  && pcdb.importSuccess && qdb.importSuccess && aces.successfulImport) { btnAnalyze.Enabled = true; }
+
+                    if (vcdb.importSuccess && pcdb.importSuccess && qdb.importSuccess && aces.successfulImport)
+                    {
+                        aces.logHistoryEvent("", "10\tGo for throttle-up. Analyze button is enabled");
+                        btnAnalyze.Enabled = true;
+                    }
+                    else
+                    {
+                        aces.logHistoryEvent("", "0\tAnalyze not enabled. vcdb.importSuccess="+vcdb.importSuccess.ToString() +", pcdb.importSuccess="+ pcdb.importSuccess.ToString()+ ", qdb.importSuccess="+qdb.importSuccess.ToString()+", aces.successfulImport="+aces.successfulImport.ToString());
+                    }
 
                     key.SetValue("lastACESDirectoryPath", Path.GetDirectoryName(openFileDialog.FileName));
 
@@ -832,7 +846,7 @@ namespace ACESinspector
 
                 if (refaces.fileHasBeenAnalyzed(vcdb.version, pcdb.version)>0)
                 {
-                    var result = await Task.Run(() => refaces.importXML(openFileDialog.FileName, "", checkBoxRespectValidateTag.Checked,noteTranslationDictionary, noteToQdbTransformDictionary, vcdb, progressIndicator));
+                    var result = await Task.Run(() => refaces.importXML(openFileDialog.FileName, "", checkBoxRespectValidateTag.Checked, checkBoxImportDeletes.Checked, noteTranslationDictionary, noteToQdbTransformDictionary, vcdb, progressIndicator));
                     lblDifferentialsLabel.Visible = true; lblDifferentialsSummary.Visible = true; progressBarDifferentials.Visible = true;
                     progBarRefACESload.Value = 0; progBarRefACESload.Visible = false; lblRefACESLoadStatus.Text = ""; lblRefACESLoadStatus.Visible = false;
                     lblReferenceACESfilePath.Left = progBarRefACESload.Left;
@@ -899,7 +913,7 @@ namespace ACESinspector
                     lblVCdbFilePath.Text = "Local VCdb Version: " + vcdb.version;
                     lblVCdbLoadStatus.Text = "";
                     progBarVCdbload.Value = 0; progBarVCdbload.Visible = false;
-                    if (vcdb.version != "")
+                    if (vcdb.version != "" && result == "")
                     {
                         key.SetValue("lastVCdbDirectoryPath", Path.GetDirectoryName(openFileDialog.FileName));
                         key.SetValue("lastVCdbFilePath", openFileDialog.FileName);
@@ -945,7 +959,7 @@ namespace ACESinspector
                     pcdb.connectLocalOLEDB(openFileDialog.FileName);
                     var result = await Task.Run(() => pcdb.importOLEdb());
                     lblPCdbFilePath.Text = "Local PCdb Version: " + pcdb.version;
-                    if (pcdb.version != "")
+                    if (pcdb.version != "" && result == "")
                     {
                         key.SetValue("lastPCdbDirectoryPath", Path.GetDirectoryName(openFileDialog.FileName));
                         key.SetValue("lastPCdbFilePath", openFileDialog.FileName);
@@ -993,7 +1007,7 @@ namespace ACESinspector
                     qdb.connectLocalOLEDB(openFileDialog.FileName);
                     var result = await Task.Run(() => qdb.importOLEdb());
                     lblQdbFilePath.Text = "Local Qdb Version: " + qdb.version;
-                    if (qdb.version != "")
+                    if (qdb.version != "" && result == "")
                     {
                         key.SetValue("lastQdbDirectoryPath", Path.GetDirectoryName(openFileDialog.FileName));
                         key.SetValue("lastQdbFilePath", openFileDialog.FileName);
@@ -1282,6 +1296,7 @@ namespace ACESinspector
             btnSelectPCdbFile.Enabled = false;
             btnSelectQdbFile.Enabled = false;
             progressBarDifferentials.Value = 0;
+            pictureBoxFitmentTree.Visible = false;
             string problemDescription = "";
             int elementPrevalence = 0;
             Dictionary<string, int> fitmentElementPrevalence = new Dictionary<string, int>();
@@ -4015,7 +4030,7 @@ namespace ACESinspector
                     {
                         if (aces.analysisHistory[i] == null) { continue; }
                         var fields = aces.analysisHistory[i].Split('\t');
-                        if (aces.logLevel >= Convert.ToInt32(fields[0]))
+                        if (checkBoxVerboseLogging.Checked || aces.logLevel >= Convert.ToInt32(fields[0]))
                         {
                             textBoxAnalysisHostory.Text += fields[1] + "\r\n";
                         }

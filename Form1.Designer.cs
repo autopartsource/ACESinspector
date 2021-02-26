@@ -71,6 +71,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.tabPageSettings = new System.Windows.Forms.TabPage();
+            this.checkBoxImportDeletes = new System.Windows.Forms.CheckBox();
             this.groupBoxAutomatedOpperation = new System.Windows.Forms.GroupBox();
             this.labelAutomatedPath = new System.Windows.Forms.Label();
             this.buttonAutomatedInput = new System.Windows.Forms.Button();
@@ -306,6 +307,7 @@
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
             this.btnSelectAssetNameInterchange = new System.Windows.Forms.Button();
             this.lblAssetNameInterchangefilePath = new System.Windows.Forms.Label();
+            this.checkBoxVerboseLogging = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -787,6 +789,8 @@
             // 
             // tabPageSettings
             // 
+            this.tabPageSettings.Controls.Add(this.checkBoxVerboseLogging);
+            this.tabPageSettings.Controls.Add(this.checkBoxImportDeletes);
             this.tabPageSettings.Controls.Add(this.groupBoxAutomatedOpperation);
             this.tabPageSettings.Controls.Add(this.groupBoxAssessmentFile);
             this.tabPageSettings.Controls.Add(this.checkBoxIgnoreNAitems);
@@ -810,6 +814,16 @@
             this.tabPageSettings.Text = "Settings";
             this.tabPageSettings.UseVisualStyleBackColor = true;
             // 
+            // checkBoxImportDeletes
+            // 
+            this.checkBoxImportDeletes.AutoSize = true;
+            this.checkBoxImportDeletes.Location = new System.Drawing.Point(254, 313);
+            this.checkBoxImportDeletes.Name = "checkBoxImportDeletes";
+            this.checkBoxImportDeletes.Size = new System.Drawing.Size(138, 17);
+            this.checkBoxImportDeletes.TabIndex = 25;
+            this.checkBoxImportDeletes.Text = "Import Action=\"D\" apps";
+            this.checkBoxImportDeletes.UseVisualStyleBackColor = true;
+            // 
             // groupBoxAutomatedOpperation
             // 
             this.groupBoxAutomatedOpperation.Controls.Add(this.labelAutomatedPath);
@@ -818,7 +832,7 @@
             this.groupBoxAutomatedOpperation.Controls.Add(this.numericUpDownAutomatedMinute);
             this.groupBoxAutomatedOpperation.Controls.Add(this.numericUpDownAutomatedHour);
             this.groupBoxAutomatedOpperation.Controls.Add(this.checkBoxAutomatedOpperation);
-            this.groupBoxAutomatedOpperation.Location = new System.Drawing.Point(601, 150);
+            this.groupBoxAutomatedOpperation.Location = new System.Drawing.Point(751, 150);
             this.groupBoxAutomatedOpperation.Name = "groupBoxAutomatedOpperation";
             this.groupBoxAutomatedOpperation.Size = new System.Drawing.Size(333, 118);
             this.groupBoxAutomatedOpperation.TabIndex = 24;
@@ -907,7 +921,7 @@
             this.groupBoxAssessmentFile.Controls.Add(this.label17);
             this.groupBoxAssessmentFile.Location = new System.Drawing.Point(262, 150);
             this.groupBoxAssessmentFile.Name = "groupBoxAssessmentFile";
-            this.groupBoxAssessmentFile.Size = new System.Drawing.Size(333, 118);
+            this.groupBoxAssessmentFile.Size = new System.Drawing.Size(483, 118);
             this.groupBoxAssessmentFile.TabIndex = 23;
             this.groupBoxAssessmentFile.TabStop = false;
             this.groupBoxAssessmentFile.Text = "Assessment File";
@@ -1516,6 +1530,7 @@
             this.comboBoxFlatExportFormat.FormattingEnabled = true;
             this.comboBoxFlatExportFormat.Items.AddRange(new object[] {
             "Default",
+            "Include Deletes",
             "Exploded VCdb tag columns",
             "Coded-Values"});
             this.comboBoxFlatExportFormat.Location = new System.Drawing.Point(209, 7);
@@ -3185,6 +3200,16 @@
             this.lblAssetNameInterchangefilePath.TabIndex = 55;
             this.lblAssetNameInterchangefilePath.Text = "label1";
             // 
+            // checkBoxVerboseLogging
+            // 
+            this.checkBoxVerboseLogging.AutoSize = true;
+            this.checkBoxVerboseLogging.Location = new System.Drawing.Point(254, 336);
+            this.checkBoxVerboseLogging.Name = "checkBoxVerboseLogging";
+            this.checkBoxVerboseLogging.Size = new System.Drawing.Size(106, 17);
+            this.checkBoxVerboseLogging.TabIndex = 26;
+            this.checkBoxVerboseLogging.Text = "Verbose Logging";
+            this.checkBoxVerboseLogging.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3578,6 +3603,8 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dgVCdbCodesPart;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgVCdbCodesQualifiers;
         private System.Windows.Forms.DataGridViewTextBoxColumn dgVCdbCodesNotes;
+        private System.Windows.Forms.CheckBox checkBoxImportDeletes;
+        private System.Windows.Forms.CheckBox checkBoxVerboseLogging;
     }
 }
 

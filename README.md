@@ -7,8 +7,14 @@ autopartsource.com/ACESinspector
 
 # Changelog
 
+1.2.0.40 (not yet released)
+ - Added "Asset Item Order" to flattened export (at the request of Ben B. at Dr1v)
+ - Added the imporation of Action="Deleted" apps (at the request of Ben B. at Dr1v) so that they could be exported to the flattened output
+ - Added missing Qdb qualifiers in Net-Change export
+ - Added XSD schema 4.2 (RC2) to the list
 
-1.2.0.35 (not yet 10/21/2020)
+
+1.2.0.35 (released 10/21/2020)
 - Added "Coded-Values" format option to the "Export Simplified (flat) apps" function. This was to meet an internal need of my own for import of ACES files from trading partners into my PIM system (sandPIM)
 - fixed "Treat Assets as Fitment" checkbox to be sticky in registry
 - added ACES 4.1 xsd data to schemas

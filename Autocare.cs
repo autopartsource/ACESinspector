@@ -1081,21 +1081,21 @@ namespace ACESinspector
 
 
         // grade a node-tree for number and severity of bad branches 
-        public int fitmentTreeTotalBadBranches(List<fitmentNode> nodes, bool detectIncompatibleBranches)
+        public int fitmentTreeTotalBadBranches(List<fitmentNode> nodes, Qdb qdb, bool detectIncompatibleBranches, bool respectQdbType)
         {
             int score = 0;
             if (nodes.Count() == 0) { return score; }
             foreach (fitmentNode myNode in nodes)
             {
                 if (myNode.deleted || myNode.childNodeIds.Count() < 2) { continue; }
-                score += (fitmentBranchCompare(myNode.nodeId, nodes, detectIncompatibleBranches) * myNode.childNodeIds.Count());
+                score += (fitmentBranchCompare(myNode.nodeId, nodes, qdb,detectIncompatibleBranches, respectQdbType) * myNode.childNodeIds.Count());
             }
             return score;
         }
 
         //compile an applist of apps that are downstream of a badbranch
         // used for isolating the apps in a tree that actually contribute to a problem
-        public List<App> badbrabchAppsFromNodelist(List<fitmentNode> nodes, bool detectIncompatibleBranches)
+        public List<App> badbrabchAppsFromNodelist(List<fitmentNode> nodes, Qdb qdb, bool detectIncompatibleBranches, bool respectQdbType)
         {
             List<App> appList = new List<App>();
             if (nodes.Count() == 0) { return appList; }
@@ -1104,7 +1104,7 @@ namespace ACESinspector
             for(int i=0; i< nodes.Count(); i++)
             {
                 if (nodes[i].deleted || nodes[i].childNodeIds.Count() < 2) { continue; }
-                score = fitmentBranchCompare(nodes[i].nodeId, nodes, detectIncompatibleBranches);
+                score = fitmentBranchCompare(nodes[i].nodeId, nodes, qdb, detectIncompatibleBranches, respectQdbType);
                 if (score > 0)
                 {// this (i's) node's children are bad branching. look for app nodes that are descndants of this current node
                     for (int j = 0; j < nodes.Count(); j++)
@@ -1155,7 +1155,7 @@ namespace ACESinspector
 
 
         // compile a string list of problems found in a nodeTree
-        public string fitmentTreeProblemDescription(List<fitmentNode> nodes, bool detectIncompatibleBranches)
+        public string fitmentTreeProblemDescription(List<fitmentNode> nodes, Qdb qdb, bool detectIncompatibleBranches, bool respectQdbType)
         {
             List<string> problemsList=new List<string>(); 
             int score = 0;
@@ -1163,7 +1163,7 @@ namespace ACESinspector
             foreach (fitmentNode myNode in nodes)
             {
                 if (myNode.deleted || myNode.childNodeIds.Count() < 2) { continue; }
-                score = fitmentBranchCompare(myNode.nodeId, nodes, detectIncompatibleBranches);
+                score = fitmentBranchCompare(myNode.nodeId, nodes, qdb, detectIncompatibleBranches, respectQdbType);
 
                 switch(score)
                 {
@@ -1624,7 +1624,7 @@ namespace ACESinspector
         // remaining - this would be the case when attaching the first app the the tree. It would also be the case in our example diagram for the attachment of MF345. 
         // Because the tree was mostly empty when MF345 was presented, bestPath would be identified as the path ending at "root" and "FWD"+"Turbo" would remain to then
         // be attached in sequence at root.
-        public void findFitmentLogicProblems(analysisChunkGroup chunkGroup, VCdb vcdb, PCdb pcdb, Qdb qdb, string permutationCacheFilePath, int iterationLimit, string cacheDirectory, bool concernForDisparates)
+        public void findFitmentLogicProblems(analysisChunkGroup chunkGroup, VCdb vcdb, PCdb pcdb, Qdb qdb, string permutationCacheFilePath, int iterationLimit, string cacheDirectory, bool concernForDisparates, bool respectQdbType)
         {
             logHistoryEvent("", "5\tLooking for fitment logic problems");
 
@@ -1691,7 +1691,7 @@ namespace ACESinspector
                 chunk.lowestBadnessPermutation.Clear(); foreach (KeyValuePair<string, int> prevalenceEntry in fitmentElementPrevalenceTemp) { chunk.lowestBadnessPermutation.Add(prevalenceEntry.Key); }
 
                 nodesList.AddRange(buildFitmentTreeFromAppList(chunk.appsList, fitmentElementPrevalence, -1, false, false, vcdb, qdb));
-                badness = fitmentTreeTotalBadBranches(nodesList, concernForDisparates);
+                badness = fitmentTreeTotalBadBranches(nodesList, qdb, concernForDisparates, respectQdbType);
 
                 /*
                 if (badness > 0 && fitmentElements.Count() < 8)
@@ -1736,9 +1736,9 @@ namespace ACESinspector
                 if (badness > 0)
                 {
                     chunkGroup.errorsCount++;
-                    chunk.problemAppsList = badbrabchAppsFromNodelist(nodesList, concernForDisparates);// extract the subset of apps that participate in a problem
+                    chunk.problemAppsList = badbrabchAppsFromNodelist(nodesList, qdb, concernForDisparates, respectQdbType);// extract the subset of apps that participate in a problem
                     chunk.problems.Add(badness.ToString());
-                    chunk.problemsDescription=fitmentTreeProblemDescription(nodesList, concernForDisparates);
+                    chunk.problemsDescription=fitmentTreeProblemDescription(nodesList, qdb, concernForDisparates, respectQdbType);
                 }
             }
             chunkGroup.complete = true;
@@ -1843,10 +1843,10 @@ namespace ACESinspector
             return returnList;
         }
 
-        public Pen fitmentBranchPen(int targetNodeId, List<fitmentNode> nodesList,bool detectIncompatibleBranches)
+        public Pen fitmentBranchPen(int targetNodeId, List<fitmentNode> nodesList,bool detectIncompatibleBranches, Qdb qdb, bool respectQdbType)
         {
             Pen returnValue;
-            switch (fitmentBranchCompare(targetNodeId, nodesList,detectIncompatibleBranches))
+            switch (fitmentBranchCompare(targetNodeId, nodesList, qdb, detectIncompatibleBranches, respectQdbType))
             {
                 case 0: { returnValue = new Pen(Brushes.Black, 2); break; }
                 case 1: { returnValue = new Pen(Brushes.DarkOliveGreen, 3); break; }
@@ -1875,12 +1875,12 @@ namespace ACESinspector
         //Note - Part           bad (clasic "CNC")              return 3
         //Part - Part           bad (simple overlap)            return 4
         //VCdbSysX - VCdbSysY   bad (ex: EngineBase-DriveType)  return 5
-        public int fitmentBranchCompare(int targetNodeId, List<fitmentNode> nodesList, bool detectIncompatibleBranches)
+        public int fitmentBranchCompare(int targetNodeId, List<fitmentNode> nodesList, Qdb qdb,bool detectIncompatibleBranches,bool repectQdbType)
         {
             int returnValue = 0;
             List<int> childNodeIds = new List<int>();
             childNodeIds = nodesList[targetNodeId].childNodeIds;
-
+            
             if (childNodeIds.Count() > 1)
             {// this node has multiple children
 
@@ -1899,7 +1899,16 @@ namespace ACESinspector
                     }
                     if (nodesList[childNodeId].fitmentElementType == "qdb")
                     {
-                        QdbQualifiersInGroup.Add(nodesList[childNodeId].fitmentElementString);
+                        string[] elementChunks = nodesList[childNodeId].fitmentElementData.Split(':');
+                        int QdbIDtemp = Convert.ToInt32(elementChunks[0]);
+                        int qualifierTypeID = 0;
+                        qdb.qualifiersTypes.TryGetValue(QdbIDtemp, out qualifierTypeID);
+                  
+                        if(qualifierTypeID==1 || !repectQdbType)
+                        {// type 1 Qdb's are "fitment" the other types are informational and can be ignored for the purpose of scoring branches
+                            QdbQualifiersInGroup.Add(nodesList[childNodeId].fitmentElementData);
+                        }
+
                     }
                     if (nodesList[childNodeId].fitmentElementType == "note")
                     {
@@ -1927,13 +1936,19 @@ namespace ACESinspector
                         if (PartsInGroup.Count() > 1) { returnValue = 4; break; }
 
                         // Part - (VCdb|Qdb|Note)  - Literal CNC (blank qualifid and non-blank qualified)
-                        if ((VCdbSystemsInGroup.Count() + QdbQualifiersInGroup.Count() + NotesInGroup.Count()) > 0 && PartsInGroup.Count() > 0) { returnValue = 3; break; }
+                        if ((VCdbSystemsInGroup.Count() + QdbQualifiersInGroup.Count() + NotesInGroup.Count()) > 0 && PartsInGroup.Count() > 0) 
+                        {
+                            returnValue = 3; break; 
+                        }
 
                         // Note - Part branches
                         if (VCdbSystemsInGroup.Count() == 0 && QdbQualifiersInGroup.Count() == 0 && NotesInGroup.Count() > 0 && PartsInGroup.Count() > 0) { returnValue = 3; break; }
 
                         // Qdb - Part branches
-                        if (VCdbSystemsInGroup.Count() == 0 && QdbQualifiersInGroup.Count() > 0 && NotesInGroup.Count() == 0 && PartsInGroup.Count() > 0) { returnValue = 3; break; }
+                        if (VCdbSystemsInGroup.Count() == 0 && QdbQualifiersInGroup.Count() > 0 && NotesInGroup.Count() == 0 && PartsInGroup.Count() > 0)
+                        { 
+                            returnValue = 3; break; 
+                        }
 
                         // VCdb - Part branches
                         if (VCdbSystemsInGroup.Count() > 0 && QdbQualifiersInGroup.Count() == 0 && NotesInGroup.Count() == 0 && PartsInGroup.Count() > 0) { returnValue = 3; break; }
@@ -6309,11 +6324,13 @@ default: return 0;
         public bool importSuccess = false;
         public string importExceptionMessage = "";
         public Dictionary<int, String> qualifiers = new Dictionary<int, string>();
+        public Dictionary<int, int> qualifiersTypes = new Dictionary<int, int>();
 
 
         public string importOLEdb()
         {
-            importSuccess = false; int i;
+            importSuccess = false; 
+            int qualifierid; int qualifiertypeid;
             try
             {
                 OleDbCommand command = new OleDbCommand("select versiondate from Version");
@@ -6326,8 +6343,14 @@ default: return 0;
                 DateTime dt = new DateTime(); if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
 
                 //prebake all the parttype/name relationships into a hashtable ("Dictionary")
-                command.CommandText = "select qualifierid,qualifiertext from Qualifier"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); qualifiers.Add(i, reader.GetValue(1).ToString()); }
+                command.CommandText = "select qualifierid,qualifiertext,qualifiertypeid from Qualifier"; reader = command.ExecuteReader();
+                while (reader.Read()) 
+                { 
+                    qualifierid = Convert.ToInt32(reader.GetValue(0).ToString());
+                    qualifiers.Add(qualifierid, reader.GetValue(1).ToString());
+                    qualifiertypeid = Convert.ToInt32(reader.GetValue(2).ToString());
+                    qualifiersTypes.Add(qualifierid, qualifiertypeid);
+                }
                 reader.Close();
                 importSuccess = true;
             }
@@ -6344,7 +6367,7 @@ default: return 0;
 
         public string importMySQLdata()
         {
-            importSuccess = false; int i;
+            importSuccess = false; int qualifierid; int qualifiertypeid;
             try
             {
                 MySqlCommand command = new MySqlCommand("select VersionDate from Version");
@@ -6357,8 +6380,14 @@ default: return 0;
                 DateTime dt = new DateTime(); if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
 
                 //prebake all the parttype/name relationships into a hashtable ("Dictionary")
-                command.CommandText = "select qualifierid,qualifiertext from Qualifier"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); qualifiers.Add(i, reader.GetValue(1).ToString()); }
+                command.CommandText = "select qualifierid,qualifiertext,qualifiertypeid from Qualifier"; reader = command.ExecuteReader();
+                while (reader.Read()) 
+                {
+                    qualifierid = Convert.ToInt32(reader.GetValue(0).ToString()); 
+                    qualifiers.Add(qualifierid, reader.GetValue(1).ToString());
+                    qualifiertypeid = Convert.ToInt32(reader.GetValue(2).ToString());
+                    qualifiersTypes.Add(qualifierid, qualifiertypeid);
+                }
                 reader.Close();
                 importSuccess = true;
             }

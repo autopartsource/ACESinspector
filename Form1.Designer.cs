@@ -71,6 +71,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.tabPageSettings = new System.Windows.Forms.TabPage();
+            this.checkBoxVerboseLogging = new System.Windows.Forms.CheckBox();
             this.checkBoxImportDeletes = new System.Windows.Forms.CheckBox();
             this.groupBoxAutomatedOpperation = new System.Windows.Forms.GroupBox();
             this.labelAutomatedPath = new System.Windows.Forms.Label();
@@ -307,7 +308,7 @@
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
             this.btnSelectAssetNameInterchange = new System.Windows.Forms.Button();
             this.lblAssetNameInterchangefilePath = new System.Windows.Forms.Label();
-            this.checkBoxVerboseLogging = new System.Windows.Forms.CheckBox();
+            this.checkBoxRespectQdbType = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -813,6 +814,16 @@
             this.tabPageSettings.TabIndex = 17;
             this.tabPageSettings.Text = "Settings";
             this.tabPageSettings.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxVerboseLogging
+            // 
+            this.checkBoxVerboseLogging.AutoSize = true;
+            this.checkBoxVerboseLogging.Location = new System.Drawing.Point(254, 336);
+            this.checkBoxVerboseLogging.Name = "checkBoxVerboseLogging";
+            this.checkBoxVerboseLogging.Size = new System.Drawing.Size(106, 17);
+            this.checkBoxVerboseLogging.TabIndex = 26;
+            this.checkBoxVerboseLogging.Text = "Verbose Logging";
+            this.checkBoxVerboseLogging.UseVisualStyleBackColor = true;
             // 
             // checkBoxImportDeletes
             // 
@@ -1402,6 +1413,7 @@
             // 
             // groupBoxFitmentLogicSettings
             // 
+            this.groupBoxFitmentLogicSettings.Controls.Add(this.checkBoxRespectQdbType);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.checkBoxReportAllAppsInProblemGroup);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.checkBoxConcernForDisparate);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.label24);
@@ -1438,7 +1450,7 @@
             // label24
             // 
             this.label24.AutoSize = true;
-            this.label24.Location = new System.Drawing.Point(3, 74);
+            this.label24.Location = new System.Drawing.Point(3, 93);
             this.label24.Name = "label24";
             this.label24.Size = new System.Drawing.Size(175, 13);
             this.label24.TabIndex = 2;
@@ -1451,7 +1463,7 @@
             0,
             0,
             0});
-            this.numericUpDownTreeConfigLimit.Location = new System.Drawing.Point(183, 72);
+            this.numericUpDownTreeConfigLimit.Location = new System.Drawing.Point(183, 91);
             this.numericUpDownTreeConfigLimit.Maximum = new decimal(new int[] {
             1000000,
             0,
@@ -3200,15 +3212,15 @@
             this.lblAssetNameInterchangefilePath.TabIndex = 55;
             this.lblAssetNameInterchangefilePath.Text = "label1";
             // 
-            // checkBoxVerboseLogging
+            // checkBoxRespectQdbType
             // 
-            this.checkBoxVerboseLogging.AutoSize = true;
-            this.checkBoxVerboseLogging.Location = new System.Drawing.Point(254, 336);
-            this.checkBoxVerboseLogging.Name = "checkBoxVerboseLogging";
-            this.checkBoxVerboseLogging.Size = new System.Drawing.Size(106, 17);
-            this.checkBoxVerboseLogging.TabIndex = 26;
-            this.checkBoxVerboseLogging.Text = "Verbose Logging";
-            this.checkBoxVerboseLogging.UseVisualStyleBackColor = true;
+            this.checkBoxRespectQdbType.AutoSize = true;
+            this.checkBoxRespectQdbType.Location = new System.Drawing.Point(6, 68);
+            this.checkBoxRespectQdbType.Name = "checkBoxRespectQdbType";
+            this.checkBoxRespectQdbType.Size = new System.Drawing.Size(213, 17);
+            this.checkBoxRespectQdbType.TabIndex = 10;
+            this.checkBoxRespectQdbType.Text = "Respect Qdb types in overlap detection";
+            this.checkBoxRespectQdbType.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -3605,6 +3617,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dgVCdbCodesNotes;
         private System.Windows.Forms.CheckBox checkBoxImportDeletes;
         private System.Windows.Forms.CheckBox checkBoxVerboseLogging;
+        private System.Windows.Forms.CheckBox checkBoxRespectQdbType;
     }
 }
 

@@ -7,11 +7,12 @@ autopartsource.com/ACESinspector
 
 # Changelog
 
-1.2.0.40 (not yet released)
+1.2.0.42 (not yet released)
  - Added "Asset Item Order" to flattened export (at the request of Ben B. at Dr1v)
  - Added the imporation of Action="Deleted" apps (at the request of Ben B. at Dr1v) so that they could be exported to the flattened output
  - Added missing Qdb qualifiers in Net-Change export
  - Added XSD schema 4.2 (RC2) to the list
+ - Added a feature to ignore non-fitment type Qdbs when evaluating CNC overlaps (at the request of Ben B. at Dr1v). Avoid looking at a "replaced by" or "use until" qualifiers in such a way that a CNC is generated
 
 
 1.2.0.35 (released 10/21/2020)

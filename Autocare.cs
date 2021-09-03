@@ -3782,6 +3782,7 @@ default: return 0;
 
                                 sw.WriteLine(app.id.ToString() + delimiter + app.reference + delimiter + app.basevehilceid.ToString() + delimiter + vcdb.niceMakeOfBasevid(app.basevehilceid) + delimiter + vcdb.niceModelOfBasevid(app.basevehilceid) + delimiter + vcdb.niceYearOfBasevid(app.basevehilceid) + delimiter + app.part + delimiter + pcdb.niceParttype(app.parttypeid) + delimiter + pcdb.nicePosition(app.positionid) + delimiter + app.quantity.ToString() + delimiter + app.niceQdbQualifierString(qdb) + delimiter + string.Join(";", app.notes) + delimiter + app.mfrlabel + delimiter + app.asset + delimiter + string.Join(delimiter, VCdbAttributeFields.ToList()));
                                 if (progress != null) { percentProgress = Convert.ToInt32(((double)i / (double)apps.Count()) * 100); if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); } }
+                                i++;
                             }
                             break;
 
@@ -3792,6 +3793,7 @@ default: return 0;
                                 if (app.action == "D") { continue; } // don't export deleted apps
                                 sw.WriteLine(app.id.ToString() + delimiter + app.reference + delimiter + app.basevehilceid.ToString() + delimiter + vcdb.niceMakeOfBasevid(app.basevehilceid) + delimiter + vcdb.niceModelOfBasevid(app.basevehilceid) + delimiter + vcdb.niceYearOfBasevid(app.basevehilceid) + delimiter + app.part + delimiter + pcdb.niceParttype(app.parttypeid) + delimiter + pcdb.nicePosition(app.positionid) + delimiter + app.quantity.ToString() + delimiter + app.niceAttributesString(vcdb, false) + delimiter + app.niceQdbQualifierString(qdb) + delimiter + string.Join(";", app.notes) + delimiter + app.mfrlabel + delimiter + app.asset + delimiter + app.assetitemorder);
                                 if (progress != null) { percentProgress = Convert.ToInt32(((double)i / (double)apps.Count()) * 100); if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); } }
+                                i++;
                             }
                             break;
 
@@ -3801,6 +3803,7 @@ default: return 0;
                             {
                                 sw.WriteLine(app.action.ToString() + delimiter + app.id.ToString() + delimiter + app.reference + delimiter + app.basevehilceid.ToString() + delimiter + vcdb.niceMakeOfBasevid(app.basevehilceid) + delimiter + vcdb.niceModelOfBasevid(app.basevehilceid) + delimiter + vcdb.niceYearOfBasevid(app.basevehilceid) + delimiter + app.part + delimiter + pcdb.niceParttype(app.parttypeid) + delimiter + pcdb.nicePosition(app.positionid) + delimiter + app.quantity.ToString() + delimiter + app.niceAttributesString(vcdb, false) + delimiter + app.niceQdbQualifierString(qdb) + delimiter + string.Join(";", app.notes) + delimiter + app.mfrlabel + delimiter + app.asset + delimiter + app.assetitemorder);
                                 if (progress != null) { percentProgress = Convert.ToInt32(((double)i / (double)apps.Count()) * 100); if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); } }
+                                i++;
                             }
                             break;
 
@@ -3812,17 +3815,12 @@ default: return 0;
                                 if (app.action == "D") { continue; } // don't export deleted apps
                                 sw.WriteLine(app.id.ToString() + delimiter + app.reference + delimiter + app.basevehilceid.ToString() + delimiter + app.part + delimiter + app.parttypeid.ToString() + delimiter + app.positionid.ToString() + delimiter + app.quantity.ToString() + delimiter + app.namevalpairString(false) + delimiter + app.rawQdbDataString() + delimiter + string.Join(";", app.notes) + delimiter + app.mfrlabel + delimiter + app.asset + delimiter + app.assetitemorder);
                                 if (progress != null){percentProgress = Convert.ToInt32(((double)i / (double)apps.Count()) * 100); if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); }}
+                                i++;
                             }
                             break;
 
-
-
-
                         default: break;
                     }   
-
-
-
                 }
                 return  apps.Count().ToString() + " flat applications exported to " + _filePath;
             }
@@ -3830,15 +3828,6 @@ default: return 0;
             {
                 return ex.ToString();
             }
-
-
-
-
-
-
-
-
-
         }
 
 
@@ -6462,6 +6451,7 @@ default: return 0;
             filePath = "";
             version = "";
             qualifiers.Clear();
+            qualifiersTypes.Clear();
         }
 
 

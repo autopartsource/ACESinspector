@@ -168,6 +168,7 @@ namespace ACESinspector
             btnAppExportSave.Enabled = false;
             btnBgExportSave.Enabled = false;
             progBarExportBuyersGuide.Visible = false;
+            progBarExportRelatedParts.Visible = false;
             btnNetChangeExportSave.Enabled = false;
             btnHolesExportSave.Enabled = false;
             btnExportRelatedParts.Enabled = false;
@@ -435,7 +436,10 @@ namespace ACESinspector
                     }
                     else
                     {
-                        aces.logHistoryEvent("", "0\tAnalyze not enabled. aces.successfulImport=" + aces.successfulImport.ToString());
+                        if (checkBoxVerboseLogging.Checked)
+                        {
+                            aces.logHistoryEvent("", "0\tAnalyze not enabled. aces.successfulImport=" + aces.successfulImport.ToString());
+                        }
                     }
                 }
             }
@@ -516,7 +520,7 @@ namespace ACESinspector
         void ReportExportFlatAppsProgress(int value)
         {
             if (value > 100) { value = 100; }
-            progBarExportBuyersGuide.Value = value;
+            progBarExportFlatApps.Value = value;
         }
 
         void ReportExportrelatedPartsProgress(int value)
@@ -1426,15 +1430,18 @@ namespace ACESinspector
             taskList.Add(individialAppAnalysisTask);
             individialAppAnalysisTask.Start();
 
-            //run a single, sequential thread looking for outlier-ness in the while apps list (qty outliers and part-type/position disagreement)
+            //run a single, sequential thread looking for outlier-ness in the apps list 
             // this can be run concurently with the other analysis threads, it just can't be broken into its own concurent chunks
-            aces.outlierAnanlysisChunksList.Add(new analysisChunk());
-            aces.outlierAnanlysisChunksList.Last().cachefile = lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash;
-            aces.outlierAnanlysisChunksList.Last().appsList = aces.apps;
-            cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_qtyOutliers.txt");
-            var outlierAppAnalysisTask = new Task(() => { aces.findIndividualAppOutliers(aces.outlierAnanlysisChunksList.Last(), vcdb, pcdb, qdb); });
-            taskList.Add(outlierAppAnalysisTask);
-            outlierAppAnalysisTask.Start();
+            if (checkBoxQtyOutliers.Checked)
+            {
+                aces.outlierAnanlysisChunksList.Add(new analysisChunk());
+                aces.outlierAnanlysisChunksList.Last().cachefile = lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash;
+                aces.outlierAnanlysisChunksList.Last().appsList = aces.apps;
+                cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_qtyOutliers.txt");
+                var outlierAppAnalysisTask = new Task(() => { aces.findIndividualAppOutliers(aces.outlierAnanlysisChunksList.Last(), vcdb, pcdb, qdb); });
+                taskList.Add(outlierAppAnalysisTask);
+                outlierAppAnalysisTask.Start();
+            }
 
             cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_parttypeDisagreements.txt");
             cacheFilesToDeleteOnExit.Add(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_assetProblems.txt");
@@ -2680,6 +2687,9 @@ namespace ACESinspector
         {
             string result = ""; string delimiter = "";
             var progressIndicator = new Progress<int>(ReportExportFlatAppsProgress);
+            bool previousAnalyzeBtnEnabled = btnAnalyze.Enabled;
+            btnAnalyze.Enabled = false; btnAppExportSave.Enabled = false;
+            progBarExportFlatApps.Visible = true; progBarExportFlatApps.Value = 0;
 
             if (comboBoxExportDelimiter.SelectedIndex == 0) { delimiter = "\t"; }
             if (comboBoxExportDelimiter.SelectedIndex == 1) { delimiter = "|"; }
@@ -2700,13 +2710,15 @@ namespace ACESinspector
                     MessageBox.Show(result);
                 }
             }
-
+            btnAnalyze.Enabled = previousAnalyzeBtnEnabled; btnAppExportSave.Enabled = true;
+            progBarExportFlatApps.Visible = false; progBarExportFlatApps.Value = 0;
         }
 
         private async void btnBGExportSave_Click(object sender, EventArgs e)
         {
             string result = "";
             var progressIndicator = new Progress<int>(ReportBuyersGuideExportProgress);
+            bool previousAnalyzeBtnEnabled = btnAnalyze.Enabled;
             btnAnalyze.Enabled = false; btnBgExportSave.Enabled = false; btnExportRelatedParts.Enabled = false; btnAppExportSave.Enabled = false;
 
             using (var fbd = new FolderBrowserDialog())
@@ -2724,7 +2736,7 @@ namespace ACESinspector
                     MessageBox.Show(result);
                 }
             }
-            btnAnalyze.Enabled = true; btnBgExportSave.Enabled = true; btnExportRelatedParts.Enabled = true; btnAppExportSave.Enabled = true;
+            btnAnalyze.Enabled = previousAnalyzeBtnEnabled; btnBgExportSave.Enabled = true; btnExportRelatedParts.Enabled = true; btnAppExportSave.Enabled = true;
         }
 
         private void btnNetChangeExportSave_Click(object sender, EventArgs e)
@@ -2956,6 +2968,8 @@ namespace ACESinspector
             bool usePosition = checkBoxRelatedPartsUsePosition.Checked; bool useAttributes = checkBoxRelatedPartsUseAttributes.Checked; bool useNotes = checkBoxRelatedPartsUseNotes.Checked;
             string leftType = comboBoxRelatedTypesLeft.Items[comboBoxRelatedTypesLeft.SelectedIndex].ToString(); string rightType = comboBoxRelatedTypesRight.Items[comboBoxRelatedTypesRight.SelectedIndex].ToString();
             var progressIndicator = new Progress<int>(ReportExportrelatedPartsProgress);
+            progBarExportRelatedParts.Visible = true; progBarExportRelatedParts.Value = 0;
+            btnExportRelatedParts.Enabled = false;
 
             if (comboBoxRelatedTypesLeft.SelectedIndex == comboBoxRelatedTypesRight.SelectedIndex)
             {
@@ -2980,6 +2994,8 @@ namespace ACESinspector
                     }
                 }
             }
+            progBarExportRelatedParts.Visible = false; progBarExportRelatedParts.Value = 0;
+            btnExportRelatedParts.Enabled = true;
         }
 
         private void btnExportPrimaryACES_Click(object sender, EventArgs e)

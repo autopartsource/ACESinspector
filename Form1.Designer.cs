@@ -124,6 +124,7 @@
             this.checkBoxAssetsAsFitment = new System.Windows.Forms.CheckBox();
             this.checkBoxExplodeNotes = new System.Windows.Forms.CheckBox();
             this.groupBoxFitmentLogicSettings = new System.Windows.Forms.GroupBox();
+            this.checkBoxRespectQdbType = new System.Windows.Forms.CheckBox();
             this.checkBoxReportAllAppsInProblemGroup = new System.Windows.Forms.CheckBox();
             this.checkBoxConcernForDisparate = new System.Windows.Forms.CheckBox();
             this.label24 = new System.Windows.Forms.Label();
@@ -308,7 +309,8 @@
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
             this.btnSelectAssetNameInterchange = new System.Windows.Forms.Button();
             this.lblAssetNameInterchangefilePath = new System.Windows.Forms.Label();
-            this.checkBoxRespectQdbType = new System.Windows.Forms.CheckBox();
+            this.timerAutomation = new System.Windows.Forms.Timer(this.components);
+            this.labelAutomationStatus = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -837,19 +839,19 @@
             // 
             // groupBoxAutomatedOpperation
             // 
+            this.groupBoxAutomatedOpperation.Controls.Add(this.labelAutomationStatus);
             this.groupBoxAutomatedOpperation.Controls.Add(this.labelAutomatedPath);
             this.groupBoxAutomatedOpperation.Controls.Add(this.buttonAutomatedInput);
             this.groupBoxAutomatedOpperation.Controls.Add(this.label18);
             this.groupBoxAutomatedOpperation.Controls.Add(this.numericUpDownAutomatedMinute);
             this.groupBoxAutomatedOpperation.Controls.Add(this.numericUpDownAutomatedHour);
             this.groupBoxAutomatedOpperation.Controls.Add(this.checkBoxAutomatedOpperation);
-            this.groupBoxAutomatedOpperation.Location = new System.Drawing.Point(751, 150);
+            this.groupBoxAutomatedOpperation.Location = new System.Drawing.Point(555, 150);
             this.groupBoxAutomatedOpperation.Name = "groupBoxAutomatedOpperation";
-            this.groupBoxAutomatedOpperation.Size = new System.Drawing.Size(333, 118);
+            this.groupBoxAutomatedOpperation.Size = new System.Drawing.Size(632, 118);
             this.groupBoxAutomatedOpperation.TabIndex = 24;
             this.groupBoxAutomatedOpperation.TabStop = false;
             this.groupBoxAutomatedOpperation.Text = "Automated Opperation";
-            this.groupBoxAutomatedOpperation.Visible = false;
             // 
             // labelAutomatedPath
             // 
@@ -862,7 +864,7 @@
             // 
             // buttonAutomatedInput
             // 
-            this.buttonAutomatedInput.Location = new System.Drawing.Point(77, 20);
+            this.buttonAutomatedInput.Location = new System.Drawing.Point(9, 19);
             this.buttonAutomatedInput.Name = "buttonAutomatedInput";
             this.buttonAutomatedInput.Size = new System.Drawing.Size(85, 23);
             this.buttonAutomatedInput.TabIndex = 4;
@@ -878,6 +880,7 @@
             this.label18.Size = new System.Drawing.Size(30, 13);
             this.label18.TabIndex = 3;
             this.label18.Text = "Time";
+            this.label18.Visible = false;
             // 
             // numericUpDownAutomatedMinute
             // 
@@ -891,6 +894,7 @@
             this.numericUpDownAutomatedMinute.Size = new System.Drawing.Size(43, 20);
             this.numericUpDownAutomatedMinute.TabIndex = 2;
             this.numericUpDownAutomatedMinute.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numericUpDownAutomatedMinute.Visible = false;
             this.numericUpDownAutomatedMinute.ValueChanged += new System.EventHandler(this.numericUpDownAutomatedMinute_ValueChanged);
             // 
             // numericUpDownAutomatedHour
@@ -905,12 +909,13 @@
             this.numericUpDownAutomatedHour.Size = new System.Drawing.Size(43, 20);
             this.numericUpDownAutomatedHour.TabIndex = 1;
             this.numericUpDownAutomatedHour.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numericUpDownAutomatedHour.Visible = false;
             this.numericUpDownAutomatedHour.ValueChanged += new System.EventHandler(this.numericUpDownAutomatedHour_ValueChanged);
             // 
             // checkBoxAutomatedOpperation
             // 
             this.checkBoxAutomatedOpperation.AutoSize = true;
-            this.checkBoxAutomatedOpperation.Location = new System.Drawing.Point(6, 24);
+            this.checkBoxAutomatedOpperation.Location = new System.Drawing.Point(100, 23);
             this.checkBoxAutomatedOpperation.Name = "checkBoxAutomatedOpperation";
             this.checkBoxAutomatedOpperation.Size = new System.Drawing.Size(65, 17);
             this.checkBoxAutomatedOpperation.TabIndex = 0;
@@ -930,9 +935,9 @@
             this.groupBoxAssessmentFile.Controls.Add(this.checkBoxFTPassessment);
             this.groupBoxAssessmentFile.Controls.Add(this.comboBoxAssessmentFormat);
             this.groupBoxAssessmentFile.Controls.Add(this.label17);
-            this.groupBoxAssessmentFile.Location = new System.Drawing.Point(262, 150);
+            this.groupBoxAssessmentFile.Location = new System.Drawing.Point(8, 150);
             this.groupBoxAssessmentFile.Name = "groupBoxAssessmentFile";
-            this.groupBoxAssessmentFile.Size = new System.Drawing.Size(483, 118);
+            this.groupBoxAssessmentFile.Size = new System.Drawing.Size(541, 118);
             this.groupBoxAssessmentFile.TabIndex = 23;
             this.groupBoxAssessmentFile.TabStop = false;
             this.groupBoxAssessmentFile.Text = "Assessment File";
@@ -1418,12 +1423,22 @@
             this.groupBoxFitmentLogicSettings.Controls.Add(this.checkBoxConcernForDisparate);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.label24);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.numericUpDownTreeConfigLimit);
-            this.groupBoxFitmentLogicSettings.Location = new System.Drawing.Point(9, 150);
+            this.groupBoxFitmentLogicSettings.Location = new System.Drawing.Point(940, 26);
             this.groupBoxFitmentLogicSettings.Name = "groupBoxFitmentLogicSettings";
             this.groupBoxFitmentLogicSettings.Size = new System.Drawing.Size(247, 118);
             this.groupBoxFitmentLogicSettings.TabIndex = 4;
             this.groupBoxFitmentLogicSettings.TabStop = false;
             this.groupBoxFitmentLogicSettings.Text = "App grouping analysis";
+            // 
+            // checkBoxRespectQdbType
+            // 
+            this.checkBoxRespectQdbType.AutoSize = true;
+            this.checkBoxRespectQdbType.Location = new System.Drawing.Point(6, 68);
+            this.checkBoxRespectQdbType.Name = "checkBoxRespectQdbType";
+            this.checkBoxRespectQdbType.Size = new System.Drawing.Size(213, 17);
+            this.checkBoxRespectQdbType.TabIndex = 10;
+            this.checkBoxRespectQdbType.Text = "Respect Qdb types in overlap detection";
+            this.checkBoxRespectQdbType.UseVisualStyleBackColor = true;
             // 
             // checkBoxReportAllAppsInProblemGroup
             // 
@@ -3212,15 +3227,20 @@
             this.lblAssetNameInterchangefilePath.TabIndex = 55;
             this.lblAssetNameInterchangefilePath.Text = "label1";
             // 
-            // checkBoxRespectQdbType
+            // timerAutomation
             // 
-            this.checkBoxRespectQdbType.AutoSize = true;
-            this.checkBoxRespectQdbType.Location = new System.Drawing.Point(6, 68);
-            this.checkBoxRespectQdbType.Name = "checkBoxRespectQdbType";
-            this.checkBoxRespectQdbType.Size = new System.Drawing.Size(213, 17);
-            this.checkBoxRespectQdbType.TabIndex = 10;
-            this.checkBoxRespectQdbType.Text = "Respect Qdb types in overlap detection";
-            this.checkBoxRespectQdbType.UseVisualStyleBackColor = true;
+            this.timerAutomation.Enabled = true;
+            this.timerAutomation.Interval = 1000;
+            this.timerAutomation.Tick += new System.EventHandler(this.timerAutomation_Tick);
+            // 
+            // labelAutomationStatus
+            // 
+            this.labelAutomationStatus.AutoSize = true;
+            this.labelAutomationStatus.Location = new System.Drawing.Point(193, 24);
+            this.labelAutomationStatus.Name = "labelAutomationStatus";
+            this.labelAutomationStatus.Size = new System.Drawing.Size(16, 13);
+            this.labelAutomationStatus.TabIndex = 6;
+            this.labelAutomationStatus.Text = "---";
             // 
             // Form1
             // 
@@ -3618,6 +3638,8 @@
         private System.Windows.Forms.CheckBox checkBoxImportDeletes;
         private System.Windows.Forms.CheckBox checkBoxVerboseLogging;
         private System.Windows.Forms.CheckBox checkBoxRespectQdbType;
+        private System.Windows.Forms.Timer timerAutomation;
+        private System.Windows.Forms.Label labelAutomationStatus;
     }
 }
 

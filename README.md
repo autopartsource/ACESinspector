@@ -7,6 +7,13 @@ autopartsource.com/ACESinspector
 
 # Changelog
 
+1.2.0.44 (10/12/2022)
+ - Fixed version number in AssemblyInfo.cs to 1.2.0.44
+
+1.2.0.43 (10/1/2022)
+ - Began groundwork for automated operation
+ - Added EngineBlockID support
+
 1.2.0.42 (9/3/2021)
  - Added "Asset Item Order" to flattened export (at the request of Ben B. at Dr1v)
  - Added the imporation of Action="Deleted" apps (at the request of Ben B. at Dr1v) so that they could be exported to the flattened output

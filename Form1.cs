@@ -11,6 +11,9 @@ using System.Security.Cryptography;
 using MySql.Data.MySqlClient;
 using System.Net;
 
+// TO-DO list
+// EngineBlock support when using MySQL VCdb
+// Auto-process files from a folder
 // ability to include/exclude the MFRlabel in overlap detection (checkbox in settings. Default is include)
 
 
@@ -70,6 +73,15 @@ namespace ACESinspector
         private string newestVersionsAvail;
 
         private List<string> endoresments = new List<string>(); // save secret-handshake stuff here for controlling friends-and-family special features that are not exactly public. If you are reading this, you are in that club.
+
+        
+        private int automationState=0; // 0 = no automation, 1=waiting for a file to show up in the drop folder, 2=processing found file
+        private List<string> automationProcessedFiles = new List<string>(); // files that we do not want to process because they caused a problem (not persistant)
+        private string fileBeingProcessed;
+        private int automationSuccessCount = 0;
+        private int automationFailureCount = 0;
+
+
 
 
         public Form1()
@@ -879,6 +891,7 @@ namespace ACESinspector
             }
 
         }
+
 
         private async void btnSelectVCdbFile_Click(object sender, EventArgs e)
         {
@@ -4661,6 +4674,123 @@ namespace ACESinspector
             RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true); key.CreateSubKey("ACESinspector"); key = key.OpenSubKey("ACESinspector", true);
             if (checkBoxAssetsAsFitment.Checked) { key.SetValue("assetsAsFitment", "1"); } else { key.SetValue("assetsAsFitment", "0"); }
         }
+
+        private void timerAutomation_Tick(object sender, EventArgs e)
+        {
+            //ccc
+            // files are consumed (deleted) when 
+
+            switch (automationState)
+            {
+                case 0:
+                    // 0 = no automation
+                    if (checkBoxAutomatedOpperation.Checked)
+                    {
+                        if (Directory.Exists(labelAutomatedPath.Text))
+                        {
+                            automationState = 1;
+                            labelAutomationStatus.Text = "Waiting for files to process";
+                        }
+                        else
+                        {// specified directory does not exist - knock down the check and add a history message
+                            aces.logHistoryEvent("", "0\tAutomation can not start because specified directory (" + labelAutomatedPath.Text + ") does not exist");
+                            checkBoxAutomatedOpperation.Checked = false;
+                        }
+                    }
+
+                    break;
+                
+                case 1:
+                    // 1 = waiting for a file to show up in the drop folder
+
+                    // check directory for xml files and read their first few lines to see if it smells like and ACES file
+
+                    try
+                    {
+                        foreach (string filename in Directory.GetFiles(labelAutomatedPath.Text, "*.xml"))
+                        {
+                            if (automationProcessedFiles.Contains(filename)) { continue; } // ignore files already processed
+                            aces.logHistoryEvent("", "0\tAutomation found xml file " + filename);
+                            fileBeingProcessed = filename;
+                            automationProcessedFiles.Add(filename);
+                            automationState = 2;
+                            break; // only process one (first) file found
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        aces.logHistoryEvent("", "0\tAutomation failed to get list of xml files from  " + labelAutomatedPath.Text + " ---  Exception message: " + ex.Message);
+                    }
+
+                    if (!checkBoxAutomatedOpperation.Checked)
+                    {
+                        automationState = 0;
+                        labelAutomationStatus.Text = "";
+                        // deal with any spin-down and cleanup here
+                        fileBeingProcessed = "";
+                    }
+
+                    break;
+
+
+                case 2:
+                    // 2=waiting for conditions to launch file (ref databases loaded)
+                    // this state is advanced to 3 by the regular (interactive) logic elsewhere
+
+                    if (btnAnalyze.Enabled)
+                    {
+                        automationState = 3;
+                        labelAutomationStatus.Text = "Analyzing " + fileBeingProcessed;
+                    }
+                    else
+                    {
+                        labelAutomationStatus.Text = "Waiting to analyze " + fileBeingProcessed;
+                    }
+
+                    break;
+
+                case 3:
+                    // 3=processing found file
+                    // this state is advanced to 3 by the regular (interactive) logic elsewhere
+
+                    automationState = 4;
+                    automationSuccessCount++;
+                    labelAutomationStatus.Text = "Cleanup after analyzing " + fileBeingProcessed;
+                    break;
+
+                case 4:
+                    // 4=post-processing cleanup
+                    // delete the input file
+
+                    try 
+                    { 
+                        File.Delete(fileBeingProcessed);
+                        aces.logHistoryEvent("", "0\tAutomation deleted " + fileBeingProcessed);
+                    }
+                    catch (Exception ex) 
+                    {
+                        aces.logHistoryEvent("", "0\tAutomation failed to delete " + fileBeingProcessed + " ---  Exception message: " + ex.Message);
+                    }
+
+                    fileBeingProcessed = "";
+                    labelAutomationStatus.Text = "Waiting for files. Processed "+ automationSuccessCount.ToString();
+                    automationState = 1;
+                    break;
+
+                default: automationState = 0;  break;
+            }
+
+        }
+
+
+
+
+
+
+
+
+
+
 
         private string escapeXMLspecialChars(string inputString)
         {

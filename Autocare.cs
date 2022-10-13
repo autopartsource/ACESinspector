@@ -675,6 +675,8 @@ namespace ACESinspector
         public int EngineMfrID;
         public int EngineVersionID;
         public int PowerOutputID;
+        public int EngineBlockID;
+        public int EngineBoreStrokeID;
     }
 
 
@@ -3831,7 +3833,48 @@ default: return 0;
         }
 
 
+        public string exportAppGuide(string _filePath, VCdb vcdb, PCdb pcdb, Qdb qdb, string delimiter, string format, IProgress<int> progress)
+        {
+            BaseVehicle basevehicle = new BaseVehicle();
+            int percentProgress = 0;
+            int i = 0;
+            try
+            {
+                using (StreamWriter sw = new StreamWriter(_filePath))
+                {
 
+                    switch (format)
+                    {
+                        // 
+
+
+
+
+
+
+
+                        case "single column":
+                            sw.WriteLine("Application id" + delimiter + "Reference" + delimiter + "Base Vehicle id" + delimiter + "Make" + delimiter + "Model" + delimiter + "Year" + delimiter + "Part" + delimiter + "Part Type" + delimiter + "Position" + delimiter + "Quantity" + delimiter + "VCdb-coded Attributes" + delimiter + "Qdb-coded Qualifiers" + delimiter + "Notes" + delimiter + "Mfr Label" + delimiter + "Asset" + delimiter + "Asset Item Order");
+                            foreach (App app in apps)
+                            {
+                                if (app.action == "D") { continue; } // don't export deleted apps
+                                sw.WriteLine(app.id.ToString() + delimiter + app.reference + delimiter + app.basevehilceid.ToString() + delimiter + vcdb.niceMakeOfBasevid(app.basevehilceid) + delimiter + vcdb.niceModelOfBasevid(app.basevehilceid) + delimiter + vcdb.niceYearOfBasevid(app.basevehilceid) + delimiter + app.part + delimiter + pcdb.niceParttype(app.parttypeid) + delimiter + pcdb.nicePosition(app.positionid) + delimiter + app.quantity.ToString() + delimiter + app.niceAttributesString(vcdb, false) + delimiter + app.niceQdbQualifierString(qdb) + delimiter + string.Join(";", app.notes) + delimiter + app.mfrlabel + delimiter + app.asset + delimiter + app.assetitemorder);
+                                if (progress != null) { percentProgress = Convert.ToInt32(((double)i / (double)apps.Count()) * 100); if ((double)percentProgress % (double)1 == 0) { progress.Report(percentProgress); } }
+                                i++;
+                            }
+                            break;
+
+
+                        default: break;
+                    }
+                }
+                return apps.Count().ToString() + " application guide exported to " + _filePath;
+            }
+            catch (Exception ex)
+            {
+                return ex.ToString();
+            }
+        }
 
         public string exportBuyersGuide(string _filePath, VCdb vcdb, IProgress<int> progress)
         {
@@ -4639,6 +4682,14 @@ default: return 0;
                     }
                     break;
 
+                //2022-10-08 Enginebase2 work ccc
+                case "EngineBlock":
+                    foreach (KeyValuePair<int, vcdbVehilce> vehicleEntry in vcdbBasevhicleDict[app.basevehilceid].vcdbVehicleDict)
+                    {
+                        foreach (vcdbEngineConfig engineConfig in vehicleEntry.Value.EngineConfigList) { if (engineConfig.EngineBlockID == app.VCdbAttributes[i].value) { result.Add(vehicleEntry.Key); } }
+                    }
+                    break;
+
                 case "SubModel":
                     foreach (KeyValuePair<int, vcdbVehilce> vehicleEntry in vcdbBasevhicleDict[app.basevehilceid].vcdbVehicleDict)
                     {
@@ -5391,13 +5442,18 @@ default: return 0;
                 }
                 reader.Close();
 
-
+                int LPS20221004 = 0;
                 // if you wanted to limit the vcdb to type2 (pass car and light truck) vehicles:
                 //command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, EngineConfig.EngineBaseID, EngineDesignationID, EngineVINID, ValvesID, AspirationID, CylinderHeadTypeID, FuelTypeID, IgnitionSystemTypeID, EngineMfrID, EngineVersionID, PowerOutputID, FuelDeliveryTypeID, FuelDeliverySubTypeID, FuelSystemControlTypeID, FuelSystemDesignID from BaseVehicle, Model, VehicleType, Vehicle, VehicleToEngineConfig, EngineConfig, EngineBase, FuelDeliveryConfig where Vehicle.BaseVehicleID=BaseVehicle.BaseVehicleID and BaseVehicle.ModelID=Model.ModelID and Model.VehicleTypeID=VehicleType.VehicleTypeID and Vehicle.VehicleID = VehicleToEngineConfig.VehicleID and VehicleToEngineConfig.EngineConfigID = EngineConfig.EngineConfigID and EngineConfig.EngineBaseID = EngineBase.EngineBaseID and EngineConfig.FuelDeliveryConfigID=FuelDeliveryConfig.FuelDeliveryConfigID and VehicleType.VehicleTypeGroupID=2";
-                command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, EngineConfig.EngineBaseID, EngineDesignationID, EngineVINID, ValvesID, AspirationID, CylinderHeadTypeID, FuelTypeID, IgnitionSystemTypeID, EngineMfrID, EngineVersionID, PowerOutputID, FuelDeliveryTypeID, FuelDeliverySubTypeID, FuelSystemControlTypeID, FuelSystemDesignID from Vehicle, VehicleToEngineConfig, EngineConfig, EngineBase, FuelDeliveryConfig where Vehicle.VehicleID = VehicleToEngineConfig.VehicleID and VehicleToEngineConfig.EngineConfigID = EngineConfig.EngineConfigID and EngineConfig.EngineBaseID = EngineBase.EngineBaseID and EngineConfig.FuelDeliveryConfigID=FuelDeliveryConfig.FuelDeliveryConfigID"; reader = command.ExecuteReader();
+
+
+
+                // classic (before engineBlock was a thing) command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, EngineConfig.EngineBaseID, EngineDesignationID, EngineVINID, ValvesID, AspirationID, CylinderHeadTypeID, FuelTypeID, IgnitionSystemTypeID, EngineMfrID, EngineVersionID, PowerOutputID, FuelDeliveryTypeID, FuelDeliverySubTypeID, FuelSystemControlTypeID, FuelSystemDesignID from Vehicle, VehicleToEngineConfig, EngineConfig, EngineBase, FuelDeliveryConfig where Vehicle.VehicleID = VehicleToEngineConfig.VehicleID and VehicleToEngineConfig.EngineConfigID = EngineConfig.EngineConfigID and EngineConfig.EngineBaseID = EngineBase.EngineBaseID and EngineConfig.FuelDeliveryConfigID=FuelDeliveryConfig.FuelDeliveryConfigID"; reader = command.ExecuteReader();
+                command.CommandText = "SELECT Vehicle.BaseVehicleID, Vehicle.VehicleID, EngineConfig2.EngineBaseID, EngineConfig2.EngineDesignationID, EngineConfig2.EngineVINID, EngineConfig2.ValvesID, EngineConfig2.AspirationID, EngineConfig2.CylinderHeadTypeID, EngineConfig2.FuelTypeID, EngineConfig2.IgnitionSystemTypeID, EngineConfig2.EngineMfrID, EngineConfig2.EngineVersionID, EngineConfig2.PowerOutputID, FuelDeliveryConfig.FuelDeliveryTypeID, FuelDeliveryConfig.FuelDeliverySubTypeID, FuelDeliveryConfig.FuelSystemControlTypeID, FuelDeliveryConfig.FuelSystemDesignID, EngineBlock.EngineBlockID FROM Vehicle INNER JOIN (FuelDeliveryConfig INNER JOIN ((EngineBlock INNER JOIN (EngineBase2 INNER JOIN (EngineBase INNER JOIN EngineConfig2 ON EngineBase.EngineBaseID = EngineConfig2.EngineBaseID) ON EngineBase2.EngineBaseID = EngineConfig2.EngineBaseID) ON EngineBlock.EngineBlockID = EngineBase2.EngineBlockID) INNER JOIN VehicleToEngineConfig ON EngineConfig2.EngineConfigID = VehicleToEngineConfig.EngineConfigID) ON FuelDeliveryConfig.FuelDeliveryConfigID = EngineConfig2.FuelDeliveryConfigID) ON Vehicle.VehicleID = VehicleToEngineConfig.VehicleID WHERE (((Vehicle.VehicleID)=[VehicleToEngineConfig].[VehicleID]) AND ((VehicleToEngineConfig.EngineConfigID)=[EngineConfig2].[EngineConfigID]) AND ((EngineConfig2.EngineBaseID)=[EngineBase].[EngineBaseID]) AND ((EngineConfig2.FuelDeliveryConfigID)=[FuelDeliveryConfig].[FuelDeliveryConfigID]));"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
+                    LPS20221004++;
+                       basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
                     vehicleidTemp = Convert.ToInt32(reader.GetValue(1).ToString());
                     if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
                     {
@@ -5417,6 +5473,7 @@ default: return 0;
                         vcdbEngineConfigTemp.FuelDeliverySubTypeID = Convert.ToInt32(reader.GetValue(14).ToString());
                         vcdbEngineConfigTemp.FuelSystemControlTypeID = Convert.ToInt32(reader.GetValue(15).ToString());
                         vcdbEngineConfigTemp.FuelSystemDesignID = Convert.ToInt32(reader.GetValue(16).ToString());
+                        vcdbEngineConfigTemp.EngineBlockID = Convert.ToInt32(reader.GetValue(17).ToString());
                         vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].EngineConfigList.Add(vcdbEngineConfigTemp);
                     }
                 }
@@ -5456,8 +5513,13 @@ default: return 0;
                 reader.Close(); 
 
                 command.CommandText = "SELECT enginebaseid,liter,cc,cid,cylinders,blocktype from enginebase;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); enginebaseDict.Add(i, reader.GetValue(5).ToString().Trim() + reader.GetValue(4).ToString().Trim() + " " + reader.GetValue(1).ToString().Trim() + "L"); }
-                reader.Close(); 
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); enginebaseDict.Add(i, reader.GetValue(5).ToString().Trim() + reader.GetValue(4).ToString().Trim() + " " + reader.GetValue(1).ToString().Trim() + "L (EngineBase)"); }
+                reader.Close();
+
+                // 2022-10-04 enginebase2 work ccc
+                command.CommandText = "SELECT engineblockid,liter,cc,cid,cylinders,blocktype from engineblock;"; reader = command.ExecuteReader();
+                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); engineblockDict.Add(i, reader.GetValue(5).ToString().Trim() + reader.GetValue(4).ToString().Trim() + " " + reader.GetValue(1).ToString().Trim() + "L (EngineBlock)"); }
+                reader.Close();
 
                 command.CommandText = "SELECT submodelid,submodelname from submodel"; reader = command.ExecuteReader();
                 while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); submodelDict.Add(i, reader.GetValue(1).ToString()); }

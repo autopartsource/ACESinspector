@@ -9,6 +9,7 @@ autopartsource.com/ACESinspector
 
 1.2.0.45 (2/17/2023)
  - Updated my IDE to VS2022 and reconnected to github
+ - removed junk files from project
 
 1.2.0.45 (10/31/2022)
  - Added error catching on Qdb import to allow a null in the QdbTypeId field (ACA added a "0" record for referencial reasons with a null typeid in the 10/2022 version)

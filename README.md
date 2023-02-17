@@ -6,6 +6,8 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.45 (10/31/2022)
+ - Added error catching on Qdb import to allow a null in the QdbTypeId field (ACA added a "0" record for referencial reasons with a null typeid in the 10/2022 version)
 
 1.2.0.44 (10/12/2022)
  - Fixed version number in AssemblyInfo.cs to 1.2.0.44

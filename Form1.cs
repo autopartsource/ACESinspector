@@ -986,7 +986,7 @@ namespace ACESinspector
                     }
                     else
                     {
-                        MessageBox.Show("Error importing local PCdb (" + result + ")"); aces.logHistoryEvent("", "0\tError importing local PCdb (" + result + ")");
+                        MessageBox.Show("Error importing local PCdb (" + result + ") Debug keyword:UQQXYHX7X7"); aces.logHistoryEvent("", "0\tError importing local PCdb (" + result + ")");
                     }
                 }
             }
@@ -1034,7 +1034,7 @@ namespace ACESinspector
                     }
                     else
                     {
-                        MessageBox.Show("Error importing Qdb (" + result + ")"); aces.logHistoryEvent("", "0\tError importing Qdb (" + result + ")");
+                        MessageBox.Show("Error importing Qdb (" + result + ") Debug keyword:fbZnhB9myz"); aces.logHistoryEvent("", "0\tError importing Qdb (" + result + ")");
                     }
                 }
             }
@@ -1302,7 +1302,7 @@ namespace ACESinspector
 
 
 
-            aces.logHistoryEvent("", "5\tAnalysis started");
+            aces.logHistoryEvent("", "5\tAnalysis started by interactive button click");
 
             btnAnalyze.Enabled = false;
             btnSelectACESfile.Enabled = false;
@@ -4675,10 +4675,20 @@ namespace ACESinspector
             if (checkBoxAssetsAsFitment.Checked) { key.SetValue("assetsAsFitment", "1"); } else { key.SetValue("assetsAsFitment", "0"); }
         }
 
-        private void timerAutomation_Tick(object sender, EventArgs e)
+        private async void timerAutomation_Tick(object sender, EventArgs e)
         {
             //ccc
             // files are consumed (deleted) when 
+
+            /*
+             * 0=no automation
+             * 1=waiting for reference files to be loaded
+             * 2=waiting for files to show up
+             * 3=loading first found file
+             * 
+             */
+
+
 
             switch (automationState)
             {
@@ -4689,7 +4699,7 @@ namespace ACESinspector
                         if (Directory.Exists(labelAutomatedPath.Text))
                         {
                             automationState = 1;
-                            labelAutomationStatus.Text = "Waiting for files to process";
+                            labelAutomationStatus.Text = "Waiting for reference databases to be loadded";
                         }
                         else
                         {// specified directory does not exist - knock down the check and add a history message
@@ -4701,19 +4711,50 @@ namespace ACESinspector
                     break;
                 
                 case 1:
-                    // 1 = waiting for a file to show up in the drop folder
+                    // 1=waiting for conditions to launch file (ref databases loaded)
+                    // this state is advanced to 3 by the regular (interactive) logic elsewhere
 
-                    // check directory for xml files and read their first few lines to see if it smells like and ACES file
+                    if (vcdb.importSuccess && pcdb.importSuccess && qdb.importSuccess)
+                    {
+                        automationState = 2;
+                        labelAutomationStatus.Text = "Waiting for ACES files to arrive in input directory ";
+                    }
+                    break;
+
+
+                case 2:
+                    // 2 = waiting for a file to show up in the drop folder
 
                     try
-                    {
+                    {// check directory for xml files and read their first few lines to see if it smells like and ACES file
+
                         foreach (string filename in Directory.GetFiles(labelAutomatedPath.Text, "*.xml"))
                         {
                             if (automationProcessedFiles.Contains(filename)) { continue; } // ignore files already processed
                             aces.logHistoryEvent("", "0\tAutomation found xml file " + filename);
                             fileBeingProcessed = filename;
                             automationProcessedFiles.Add(filename);
-                            automationState = 2;
+                            labelAutomationStatus.Text = "Found usable ACES file in input directory - loading it";
+
+                            progBarPrimeACESload.Visible = true;
+                            var progressIndicator = new Progress<int>(ReportPrimeACESImportProgress);
+                            //eee
+                            // calculate an md5 hash of the ACES file for later storage in the registry
+                            using (var md5 = MD5.Create())
+                            {
+                                using (var stream = File.OpenRead(fileBeingProcessed))
+                                {
+                                    aces.fileMD5hash = BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty);
+                                    aces.logHistoryEvent("", "10\tAutomation - calculating md5 hash of selected ACES file (" + fileBeingProcessed + "): " + aces.fileMD5hash);
+                                }
+                            }
+
+                            aces.logHistoryEvent("", "10\tAutomation - starting import of ACES file");
+                            var result = await Task.Run(() => aces.importXML(fileBeingProcessed, "", checkBoxRespectValidateTag.Checked, checkBoxImportDeletes.Checked, noteTranslationDictionary, noteToQdbTransformDictionary, vcdb, progressIndicator));
+                            aces.logHistoryEvent("", "10\tAutomation - completed import of ACES file. " + result.ToString() + " apps imported.");
+                            if (aces.discardedDeletsOnImport > 0) { MessageBox.Show(fileBeingProcessed + " contains \"D\" (delete) applications. These were excluded from the import. Only the \"A\" (add) application are used."); aces.logHistoryEvent("", "10\tAutomation - found some deleted apps in import"); }
+                            automationState = 3;
+
                             break; // only process one (first) file found
                         }
                     }
@@ -4722,38 +4763,12 @@ namespace ACESinspector
                         aces.logHistoryEvent("", "0\tAutomation failed to get list of xml files from  " + labelAutomatedPath.Text + " ---  Exception message: " + ex.Message);
                     }
 
-                    if (!checkBoxAutomatedOpperation.Checked)
-                    {
-                        automationState = 0;
-                        labelAutomationStatus.Text = "";
-                        // deal with any spin-down and cleanup here
-                        fileBeingProcessed = "";
-                    }
-
-                    break;
-
-
-                case 2:
-                    // 2=waiting for conditions to launch file (ref databases loaded)
-                    // this state is advanced to 3 by the regular (interactive) logic elsewhere
-
-                    if (btnAnalyze.Enabled)
-                    {
-                        automationState = 3;
-                        labelAutomationStatus.Text = "Analyzing " + fileBeingProcessed;
-                    }
-                    else
-                    {
-                        labelAutomationStatus.Text = "Waiting to analyze " + fileBeingProcessed;
-                    }
 
                     break;
 
                 case 3:
-                    // 3=processing found file
-                    // this state is advanced to 3 by the regular (interactive) logic elsewhere
+                    // 3=importing the found file
 
-                    automationState = 4;
                     automationSuccessCount++;
                     labelAutomationStatus.Text = "Cleanup after analyzing " + fileBeingProcessed;
                     break;

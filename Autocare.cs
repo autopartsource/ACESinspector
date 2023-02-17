@@ -6394,12 +6394,12 @@ default: return 0;
                 DateTime dt = new DateTime(); if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
 
                 //prebake all the parttype/name relationships into a hashtable ("Dictionary")
-                command.CommandText = "select qualifierid,qualifiertext,qualifiertypeid from Qualifier"; reader = command.ExecuteReader();
+                command.CommandText = "select qualifierid,qualifiertext,qualifiertypeid from Qualifier order by qualifierid"; reader = command.ExecuteReader();
                 while (reader.Read()) 
-                { 
+                {
                     qualifierid = Convert.ToInt32(reader.GetValue(0).ToString());
                     qualifiers.Add(qualifierid, reader.GetValue(1).ToString());
-                    qualifiertypeid = Convert.ToInt32(reader.GetValue(2).ToString());
+                    qualifiertypeid = 0; try { qualifiertypeid = Convert.ToInt32(reader.GetValue(2).ToString()); } catch { } // silently fail - typeid wil default to 0
                     qualifiersTypes.Add(qualifierid, qualifiertypeid);
                 }
                 reader.Close();

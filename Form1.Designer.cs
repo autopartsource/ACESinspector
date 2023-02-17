@@ -74,6 +74,7 @@
             this.checkBoxVerboseLogging = new System.Windows.Forms.CheckBox();
             this.checkBoxImportDeletes = new System.Windows.Forms.CheckBox();
             this.groupBoxAutomatedOpperation = new System.Windows.Forms.GroupBox();
+            this.labelAutomationStatus = new System.Windows.Forms.Label();
             this.labelAutomatedPath = new System.Windows.Forms.Label();
             this.buttonAutomatedInput = new System.Windows.Forms.Button();
             this.label18 = new System.Windows.Forms.Label();
@@ -310,7 +311,6 @@
             this.btnSelectAssetNameInterchange = new System.Windows.Forms.Button();
             this.lblAssetNameInterchangefilePath = new System.Windows.Forms.Label();
             this.timerAutomation = new System.Windows.Forms.Timer(this.components);
-            this.labelAutomationStatus = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -853,10 +853,19 @@
             this.groupBoxAutomatedOpperation.TabStop = false;
             this.groupBoxAutomatedOpperation.Text = "Automated Opperation";
             // 
+            // labelAutomationStatus
+            // 
+            this.labelAutomationStatus.AutoSize = true;
+            this.labelAutomationStatus.Location = new System.Drawing.Point(80, 20);
+            this.labelAutomationStatus.Name = "labelAutomationStatus";
+            this.labelAutomationStatus.Size = new System.Drawing.Size(16, 13);
+            this.labelAutomationStatus.TabIndex = 6;
+            this.labelAutomationStatus.Text = "---";
+            // 
             // labelAutomatedPath
             // 
             this.labelAutomatedPath.AutoSize = true;
-            this.labelAutomatedPath.Location = new System.Drawing.Point(6, 49);
+            this.labelAutomatedPath.Location = new System.Drawing.Point(6, 71);
             this.labelAutomatedPath.Name = "labelAutomatedPath";
             this.labelAutomatedPath.Size = new System.Drawing.Size(16, 13);
             this.labelAutomatedPath.TabIndex = 5;
@@ -864,9 +873,9 @@
             // 
             // buttonAutomatedInput
             // 
-            this.buttonAutomatedInput.Location = new System.Drawing.Point(9, 19);
+            this.buttonAutomatedInput.Location = new System.Drawing.Point(9, 44);
             this.buttonAutomatedInput.Name = "buttonAutomatedInput";
-            this.buttonAutomatedInput.Size = new System.Drawing.Size(85, 23);
+            this.buttonAutomatedInput.Size = new System.Drawing.Size(73, 23);
             this.buttonAutomatedInput.TabIndex = 4;
             this.buttonAutomatedInput.Text = "Input Folder";
             this.buttonAutomatedInput.UseVisualStyleBackColor = true;
@@ -875,7 +884,7 @@
             // label18
             // 
             this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(3, 74);
+            this.label18.Location = new System.Drawing.Point(8, 96);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(30, 13);
             this.label18.TabIndex = 3;
@@ -884,7 +893,7 @@
             // 
             // numericUpDownAutomatedMinute
             // 
-            this.numericUpDownAutomatedMinute.Location = new System.Drawing.Point(88, 72);
+            this.numericUpDownAutomatedMinute.Location = new System.Drawing.Point(93, 94);
             this.numericUpDownAutomatedMinute.Maximum = new decimal(new int[] {
             59,
             0,
@@ -899,7 +908,7 @@
             // 
             // numericUpDownAutomatedHour
             // 
-            this.numericUpDownAutomatedHour.Location = new System.Drawing.Point(39, 72);
+            this.numericUpDownAutomatedHour.Location = new System.Drawing.Point(44, 94);
             this.numericUpDownAutomatedHour.Maximum = new decimal(new int[] {
             23,
             0,
@@ -915,7 +924,7 @@
             // checkBoxAutomatedOpperation
             // 
             this.checkBoxAutomatedOpperation.AutoSize = true;
-            this.checkBoxAutomatedOpperation.Location = new System.Drawing.Point(100, 23);
+            this.checkBoxAutomatedOpperation.Location = new System.Drawing.Point(9, 19);
             this.checkBoxAutomatedOpperation.Name = "checkBoxAutomatedOpperation";
             this.checkBoxAutomatedOpperation.Size = new System.Drawing.Size(65, 17);
             this.checkBoxAutomatedOpperation.TabIndex = 0;
@@ -3232,15 +3241,6 @@
             this.timerAutomation.Enabled = true;
             this.timerAutomation.Interval = 1000;
             this.timerAutomation.Tick += new System.EventHandler(this.timerAutomation_Tick);
-            // 
-            // labelAutomationStatus
-            // 
-            this.labelAutomationStatus.AutoSize = true;
-            this.labelAutomationStatus.Location = new System.Drawing.Point(193, 24);
-            this.labelAutomationStatus.Name = "labelAutomationStatus";
-            this.labelAutomationStatus.Size = new System.Drawing.Size(16, 13);
-            this.labelAutomationStatus.TabIndex = 6;
-            this.labelAutomationStatus.Text = "---";
             // 
             // Form1
             // 

@@ -6,6 +6,8 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.46 (2/24/2023)
+ - compile and publish "release" package 
 
 1.2.0.45 (2/17/2023)
  - Updated my IDE to VS2022 and reconnected to github

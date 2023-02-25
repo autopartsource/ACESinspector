@@ -1283,9 +1283,6 @@ namespace ACESinspector
         {
             progressBarDifferentials.Value = value;
         }
-
-
-
         private async void btnAnalyze_Click(object sender, EventArgs e)
         {
             if (lblCachePath.Text == "")
@@ -1300,9 +1297,16 @@ namespace ACESinspector
                 return;
             }
 
-
-
             aces.logHistoryEvent("", "5\tAnalysis started by interactive button click");
+
+            analyze();
+
+        }
+
+
+        private async void analyze()
+        {
+            aces.analysisRunning = true;
 
             btnAnalyze.Enabled = false;
             btnSelectACESfile.Enabled = false;
@@ -1488,11 +1492,11 @@ namespace ACESinspector
             taskList.Add(macroAppAnalysisTask);
             macroAppAnalysisTask.Start();
 
-            aces.analysisRunning = true;
+            //aces.analysisRunning = true;
 
             await Task.WhenAll(taskList.ToArray());
 
-            aces.analysisRunning = false;
+            //aces.analysisRunning = false;
 
 
 
@@ -2693,9 +2697,11 @@ namespace ACESinspector
             }
 
             aces.recordAnalysisResults(vcdb.version, pcdb.version); // record file hash and results in registry
+
+            aces.analysisRunning = false;
         }
 
-        
+
         private async void btnAppExportSave_Click(object sender, EventArgs e)
         {
             string result = ""; string delimiter = "";
@@ -4684,9 +4690,10 @@ namespace ACESinspector
              * 0=no automation
              * 1=waiting for reference files to be loaded
              * 2=waiting for files to show up
-             * 3=loading first found file
+             * 3=analyzing found file
              * 
              */
+
 
 
 
@@ -4694,6 +4701,8 @@ namespace ACESinspector
             {
                 case 0:
                     // 0 = no automation
+
+                    //check for enabled
                     if (checkBoxAutomatedOpperation.Checked)
                     {
                         if (Directory.Exists(labelAutomatedPath.Text))
@@ -4714,6 +4723,14 @@ namespace ACESinspector
                     // 1=waiting for conditions to launch file (ref databases loaded)
                     // this state is advanced to 3 by the regular (interactive) logic elsewhere
 
+
+                    //check for enabled
+                    if (!checkBoxAutomatedOpperation.Checked)
+                    {// automation has been disabled 
+                        automationState = 0;
+                    }
+
+
                     if (vcdb.importSuccess && pcdb.importSuccess && qdb.importSuccess)
                     {
                         automationState = 2;
@@ -4725,12 +4742,22 @@ namespace ACESinspector
                 case 2:
                     // 2 = waiting for a file to show up in the drop folder
 
+                    //check for enabled
+                    if (!checkBoxAutomatedOpperation.Checked)
+                    {// automation has been disabled 
+                        fileBeingProcessed = "";
+                        labelAutomationStatus.Text = "";
+                        automationState = 0;
+                    }
+
+
+
                     try
                     {// check directory for xml files and read their first few lines to see if it smells like and ACES file
+                        List<string> availableACESfiles = aces.listValidACESfiles(labelAutomatedPath.Text, automationProcessedFiles);
 
-                        foreach (string filename in Directory.GetFiles(labelAutomatedPath.Text, "*.xml"))
+                        foreach (string filename in availableACESfiles)
                         {
-                            if (automationProcessedFiles.Contains(filename)) { continue; } // ignore files already processed
                             aces.logHistoryEvent("", "0\tAutomation found xml file " + filename);
                             fileBeingProcessed = filename;
                             automationProcessedFiles.Add(filename);
@@ -4767,17 +4794,47 @@ namespace ACESinspector
                     break;
 
                 case 3:
-                    // 3=importing the found file
+                    // 3=analyzing found file
 
-                    automationSuccessCount++;
-                    labelAutomationStatus.Text = "Cleanup after analyzing " + fileBeingProcessed;
+                    aces.logHistoryEvent("", "0\tAutomation - starting analyze");
+                    //timerAutomation.Enabled = false;
+
+                    analyze();
+
+                    automationState = 4;
+
+                    //timerAutomation.Enabled = true;
+
+
+
+
                     break;
 
+
                 case 4:
-                    // 4=post-processing cleanup
+                    // waiting for analysis
+
+                    if (aces.analysisRunning)
+                    {
+                        labelAutomationStatus.Text = "analyzing...";
+                    }
+                    else
+                    {
+                        automationSuccessCount++;
+                        automationState = 5;
+                        aces.logHistoryEvent("", "0\tAutomation - finished analyze");
+                    }
+
+                    break;
+
+
+
+
+                case 5:
+                    // 5=post-processing cleanup
                     // delete the input file
 
-                    try 
+                    try
                     { 
                         File.Delete(fileBeingProcessed);
                         aces.logHistoryEvent("", "0\tAutomation deleted " + fileBeingProcessed);
@@ -4789,7 +4846,7 @@ namespace ACESinspector
 
                     fileBeingProcessed = "";
                     labelAutomationStatus.Text = "Waiting for files. Processed "+ automationSuccessCount.ToString();
-                    automationState = 1;
+                    automationState = 2;
                     break;
 
                 default: automationState = 0;  break;

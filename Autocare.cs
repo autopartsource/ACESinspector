@@ -3002,9 +3002,9 @@ default: return 0;
             }
         }
 
-        static IEnumerable<XElement> StreamAppElement(string _filePath,string name)
+        static IEnumerable<XElement> StreamAppElement(Stream inputSteam,string name)
         {
-            using (XmlReader reader = XmlReader.Create(_filePath))
+            using (XmlReader reader = XmlReader.Create(inputSteam))
             {
                 reader.MoveToContent();
                 while (reader.Read())
@@ -3023,6 +3023,48 @@ default: return 0;
                 }
             }
         }
+
+
+        public List<string> listValidACESfiles(string path,List<string> excludedFiles)
+        {
+            List<string> returnVal = new List<string>();
+
+            try
+            {// check directory for xml files and read their first few lines to see if it smells like and ACES file
+
+                foreach (string filename in Directory.GetFiles(path, "*.xml"))
+                {
+                    if (excludedFiles.Contains(filename)) { continue; } // ignore files already processed
+
+                    string filesample = "";
+
+                    byte[] test = new byte[5000];
+                    using (BinaryReader reader = new BinaryReader(new FileStream(filename, FileMode.Open)))
+                    {
+                        reader.Read(test, 0, 5000).ToString();
+                        filesample = System.Text.Encoding.UTF8.GetString(test);
+                        if (filesample.Contains("<ACES") && filesample.Contains("<Header") && filesample.Contains("<App"))
+                        {
+                            returnVal.Add(filename);
+                            logHistoryEvent("", "10\tAutomation - listValidACESfiles() found file: "+ filename);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                this.logHistoryEvent("", "0\tAutomation - Exception during listValidACESfiles:"+ex.Message);
+
+            }
+
+
+
+
+
+            return returnVal;
+        
+        }
+
 
 
 
@@ -3044,33 +3086,46 @@ default: return 0;
 
             if (_schemaString == "")
             {// no schema string was passed in - extract ACES version from XML
-                try
+
+
+                using (Stream s = File.OpenRead(filePath))
                 {
-                    xmlDoc = XDocument.Load(filePath);
-                    version = (string)xmlDoc.Element("ACES").Attribute("version");
-                    if(ACESschemas.TryGetValue(version, out schemaString))
-                    {// ACES version claimed by XML file was found in the dictionary of schemas
-                        logHistoryEvent("", "1\tKnown schema version:" + version);
-                        schemas.Add("", XmlReader.Create(new StringReader(schemaString)));
+
+                    try
+                    {
+                        //xmlDoc = XDocument.Load(filePath);
+                        xmlDoc = XDocument.Load(s);
+                        version = (string)xmlDoc.Element("ACES").Attribute("version");
+                        if (ACESschemas.TryGetValue(version, out schemaString))
+                        {// ACES version claimed by XML file was found in the dictionary of schemas
+                            logHistoryEvent("", "1\tKnown schema version:" + version);
+                            schemas.Add("", XmlReader.Create(new StringReader(schemaString)));
+                        }
+                        else
+                        {// ACES version claimed by XML file was NOT found in the dictionary of schemas
+                            xmlValidationErrors.Add("Your XML file contains an unsupported version (" + version + ") of ACES");
+                            logHistoryEvent("", "0\tunsupported version (" + version + ")");
+                            return 0;
+                        }
                     }
-                    else
-                    {// ACES version claimed by XML file was NOT found in the dictionary of schemas
-                        xmlValidationErrors.Add("Your XML file contains an unsupported version (" + version + ") of ACES");
-                        logHistoryEvent("", "0\tunsupported version (" + version + ")" );
+                    catch (Exception ex)
+                    {
+                        xmlValidationErrors.Add(ex.Message);
+                        logHistoryEvent("", "0\t" + ex.Message);
                         return 0;
                     }
                 }
-                catch (Exception ex)
-                {
-                    xmlValidationErrors.Add(ex.Message);
-                    logHistoryEvent("", "0\t"+ex.Message);
-                    return 0;
-                }
+
+
             }
             else
             {
                 schemas.Add("", XmlReader.Create(new StringReader(_schemaString)));
             }
+
+
+            FileStream xmlFileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
 
 
             try
@@ -3079,18 +3134,28 @@ default: return 0;
                 settings.ValidationType = ValidationType.Schema;
                 settings.ValidationEventHandler += (o, args) => {xmlValidationErrors.Add(args.Message);};
                 settings.Schemas.Add(schemas);
-                XmlReader reader = XmlReader.Create(new StreamReader(filePath), settings);
+
+                //XmlReader reader = XmlReader.Create(new StreamReader(filePath), settings);
+                XmlReader reader = XmlReader.Create(xmlFileStream, settings);
+
+
                 while (reader.Read()) ;
             }
             catch (Exception ex){xmlValidationErrors.Add(ex.Message);}
-            
 
-            foreach(XElement FooterElement in StreamAppElement(filePath, "Footer"))
+
+            //foreach(XElement FooterElement in StreamAppElement(filePath, "Footer"))
+            xmlFileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            foreach (XElement FooterElement in StreamAppElement(xmlFileStream, "Footer"))
             {
                 FooterRecordCount = Convert.ToInt32((string)FooterElement.Element("RecordCount"));
             }
 
-            foreach (XElement HeaderElement in StreamAppElement(filePath, "Header"))
+
+
+            //foreach (XElement HeaderElement in StreamAppElement(filePath, "Header"))
+            xmlFileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            foreach (XElement HeaderElement in StreamAppElement(xmlFileStream, "Header"))
             {
                 Company = (string)HeaderElement.Element("Company");
                 SenderName = (string)HeaderElement.Element("SenderName");
@@ -3105,9 +3170,11 @@ default: return 0;
                 DocumentTitle = (string)HeaderElement.Element("DocumentTitle");
             }
 
- //-- Stand-alone Assets (not the ones in the App) --------------------------------------------------------------------------------------------
-            foreach (XElement assetElement in StreamAppElement(filePath, "Asset"))
-            {
+            //-- Stand-alone Assets (not the ones in the App) --------------------------------------------------------------------------------------------
+         //            foreach (XElement assetElement in StreamAppElement(filePath, "Asset"))
+            xmlFileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            foreach (XElement assetElement in StreamAppElement(xmlFileStream, "Asset"))
+           {
                 Asset assetTemp = new Asset();
                 assetTemp.action = (string)assetElement.Attribute("action").Value;
                 if (assetTemp.action == "D" && !importDeletes) { discardedDeletsOnImport++; continue; }// skip deleted assets
@@ -3257,8 +3324,10 @@ default: return 0;
 
 
             int percentProgress = 0;
-            
-            foreach(XElement appElement in StreamAppElement(filePath,"App"))
+
+            //          foreach (XElement appElement in StreamAppElement(filePath, "App"))
+            xmlFileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            foreach (XElement appElement in StreamAppElement(xmlFileStream, "App"))
             {
                 App appTemp = new App();
                 appTemp.action = (string)appElement.Attribute("action").Value;

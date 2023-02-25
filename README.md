@@ -6,6 +6,10 @@ autopartsource.com/ACESinspector
 
 
 # Changelog
+1.2.0.47 (2/25/2023)
+ - moved analysis actions from button event into "analyze" function so it can be called through automation
+ - changed importXML .load() to uese read-only streamreader (set as read-only) instead direct reading of the file. ACES file was remaining locked which was a problem for automation's ability to delete the consumed file
+
 1.2.0.46 (2/24/2023)
  - compile and publish "release" package 
 

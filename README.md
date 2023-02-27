@@ -1,11 +1,15 @@
 ﻿# ACESinspector
-C# Windows Forms app for validating automotive catalog ACES xml file content
+C# Windows Forms app for validating automotive catalog ACES xml file content. It will tell you that your ACES Content is not as clean as you thought - guaranteed.
 
 You can download the latest stable compiled version at
-autopartsource.com/ACESinspector
+autopartsource.com/ACESinspector or on github as a "release"
 
 
 # Changelog
+1.2.0.48 (2/27/2023)
+ - Completely back-tracked on the automation endevor - it was a fool's erand. The multi-threaded nature of the existing was pushing me down a road of hacks and compromises that were just too far.
+ - Began dev on a simpler (non-GUI) version called ACESinspectorCLI
+
 1.2.0.47 (2/25/2023)
  - moved analysis actions from button event into "analyze" function so it can be called through automation
  - changed importXML .load() to uese read-only streamreader (set as read-only) instead direct reading of the file. ACES file was remaining locked which was a problem for automation's ability to delete the consumed file

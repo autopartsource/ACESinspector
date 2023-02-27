@@ -73,14 +73,6 @@
             this.tabPageSettings = new System.Windows.Forms.TabPage();
             this.checkBoxVerboseLogging = new System.Windows.Forms.CheckBox();
             this.checkBoxImportDeletes = new System.Windows.Forms.CheckBox();
-            this.groupBoxAutomatedOpperation = new System.Windows.Forms.GroupBox();
-            this.labelAutomationStatus = new System.Windows.Forms.Label();
-            this.labelAutomatedPath = new System.Windows.Forms.Label();
-            this.buttonAutomatedInput = new System.Windows.Forms.Button();
-            this.label18 = new System.Windows.Forms.Label();
-            this.numericUpDownAutomatedMinute = new System.Windows.Forms.NumericUpDown();
-            this.numericUpDownAutomatedHour = new System.Windows.Forms.NumericUpDown();
-            this.checkBoxAutomatedOpperation = new System.Windows.Forms.CheckBox();
             this.groupBoxAssessmentFile = new System.Windows.Forms.GroupBox();
             this.textBoxFTPpass = new System.Windows.Forms.TextBox();
             this.textBoxFTPuser = new System.Windows.Forms.TextBox();
@@ -310,16 +302,12 @@
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
             this.btnSelectAssetNameInterchange = new System.Windows.Forms.Button();
             this.lblAssetNameInterchangefilePath = new System.Windows.Forms.Label();
-            this.timerAutomation = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxCommonErrors)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLogicProblems)).BeginInit();
             this.tabPageSettings.SuspendLayout();
-            this.groupBoxAutomatedOpperation.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownAutomatedMinute)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownAutomatedHour)).BeginInit();
             this.groupBoxAssessmentFile.SuspendLayout();
             this.groupBoxRemoteVCdb.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownThreads)).BeginInit();
@@ -374,7 +362,7 @@
             this.lblACESfilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblACESfilePath.Location = new System.Drawing.Point(352, 15);
             this.lblACESfilePath.Name = "lblACESfilePath";
-            this.lblACESfilePath.Size = new System.Drawing.Size(45, 16);
+            this.lblACESfilePath.Size = new System.Drawing.Size(44, 16);
             this.lblACESfilePath.TabIndex = 3;
             this.lblACESfilePath.Text = "label1";
             // 
@@ -394,7 +382,7 @@
             this.lblVCdbFilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblVCdbFilePath.Location = new System.Drawing.Point(152, 145);
             this.lblVCdbFilePath.Name = "lblVCdbFilePath";
-            this.lblVCdbFilePath.Size = new System.Drawing.Size(45, 16);
+            this.lblVCdbFilePath.Size = new System.Drawing.Size(44, 16);
             this.lblVCdbFilePath.TabIndex = 5;
             this.lblVCdbFilePath.Text = "label1";
             // 
@@ -414,7 +402,7 @@
             this.lblPCdbFilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblPCdbFilePath.Location = new System.Drawing.Point(152, 168);
             this.lblPCdbFilePath.Name = "lblPCdbFilePath";
-            this.lblPCdbFilePath.Size = new System.Drawing.Size(45, 16);
+            this.lblPCdbFilePath.Size = new System.Drawing.Size(44, 16);
             this.lblPCdbFilePath.TabIndex = 7;
             this.lblPCdbFilePath.Text = "label1";
             // 
@@ -455,7 +443,7 @@
             this.dgPartsAppCount.HeaderText = "Application Count";
             this.dgPartsAppCount.Name = "dgPartsAppCount";
             this.dgPartsAppCount.ReadOnly = true;
-            this.dgPartsAppCount.Width = 105;
+            this.dgPartsAppCount.Width = 106;
             // 
             // dgPartsParttypes
             // 
@@ -579,7 +567,7 @@
             this.lblIndividualErrors.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblIndividualErrors.Location = new System.Drawing.Point(117, 184);
             this.lblIndividualErrors.Name = "lblIndividualErrors";
-            this.lblIndividualErrors.Size = new System.Drawing.Size(38, 16);
+            this.lblIndividualErrors.Size = new System.Drawing.Size(37, 16);
             this.lblIndividualErrors.TabIndex = 59;
             this.lblIndividualErrors.Text = "label";
             // 
@@ -589,7 +577,7 @@
             this.lblIndividualErrorsTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblIndividualErrorsTitle.Location = new System.Drawing.Point(9, 184);
             this.lblIndividualErrorsTitle.Name = "lblIndividualErrorsTitle";
-            this.lblIndividualErrorsTitle.Size = new System.Drawing.Size(102, 16);
+            this.lblIndividualErrorsTitle.Size = new System.Drawing.Size(101, 16);
             this.lblIndividualErrorsTitle.TabIndex = 58;
             this.lblIndividualErrorsTitle.Text = "Individual apps:";
             // 
@@ -646,7 +634,7 @@
             this.lblMacroProblemsTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblMacroProblemsTitle.Location = new System.Drawing.Point(7, 285);
             this.lblMacroProblemsTitle.Name = "lblMacroProblemsTitle";
-            this.lblMacroProblemsTitle.Size = new System.Drawing.Size(102, 16);
+            this.lblMacroProblemsTitle.Size = new System.Drawing.Size(101, 16);
             this.lblMacroProblemsTitle.TabIndex = 22;
             this.lblMacroProblemsTitle.Text = "Group Analysis:";
             // 
@@ -794,7 +782,6 @@
             // 
             this.tabPageSettings.Controls.Add(this.checkBoxVerboseLogging);
             this.tabPageSettings.Controls.Add(this.checkBoxImportDeletes);
-            this.tabPageSettings.Controls.Add(this.groupBoxAutomatedOpperation);
             this.tabPageSettings.Controls.Add(this.groupBoxAssessmentFile);
             this.tabPageSettings.Controls.Add(this.checkBoxIgnoreNAitems);
             this.tabPageSettings.Controls.Add(this.groupBoxRemoteVCdb);
@@ -836,101 +823,6 @@
             this.checkBoxImportDeletes.TabIndex = 25;
             this.checkBoxImportDeletes.Text = "Import Action=\"D\" apps";
             this.checkBoxImportDeletes.UseVisualStyleBackColor = true;
-            // 
-            // groupBoxAutomatedOpperation
-            // 
-            this.groupBoxAutomatedOpperation.Controls.Add(this.labelAutomationStatus);
-            this.groupBoxAutomatedOpperation.Controls.Add(this.labelAutomatedPath);
-            this.groupBoxAutomatedOpperation.Controls.Add(this.buttonAutomatedInput);
-            this.groupBoxAutomatedOpperation.Controls.Add(this.label18);
-            this.groupBoxAutomatedOpperation.Controls.Add(this.numericUpDownAutomatedMinute);
-            this.groupBoxAutomatedOpperation.Controls.Add(this.numericUpDownAutomatedHour);
-            this.groupBoxAutomatedOpperation.Controls.Add(this.checkBoxAutomatedOpperation);
-            this.groupBoxAutomatedOpperation.Location = new System.Drawing.Point(555, 150);
-            this.groupBoxAutomatedOpperation.Name = "groupBoxAutomatedOpperation";
-            this.groupBoxAutomatedOpperation.Size = new System.Drawing.Size(632, 118);
-            this.groupBoxAutomatedOpperation.TabIndex = 24;
-            this.groupBoxAutomatedOpperation.TabStop = false;
-            this.groupBoxAutomatedOpperation.Text = "Automated Opperation";
-            // 
-            // labelAutomationStatus
-            // 
-            this.labelAutomationStatus.AutoSize = true;
-            this.labelAutomationStatus.Location = new System.Drawing.Point(80, 20);
-            this.labelAutomationStatus.Name = "labelAutomationStatus";
-            this.labelAutomationStatus.Size = new System.Drawing.Size(16, 13);
-            this.labelAutomationStatus.TabIndex = 6;
-            this.labelAutomationStatus.Text = "---";
-            // 
-            // labelAutomatedPath
-            // 
-            this.labelAutomatedPath.AutoSize = true;
-            this.labelAutomatedPath.Location = new System.Drawing.Point(6, 71);
-            this.labelAutomatedPath.Name = "labelAutomatedPath";
-            this.labelAutomatedPath.Size = new System.Drawing.Size(16, 13);
-            this.labelAutomatedPath.TabIndex = 5;
-            this.labelAutomatedPath.Text = "---";
-            // 
-            // buttonAutomatedInput
-            // 
-            this.buttonAutomatedInput.Location = new System.Drawing.Point(9, 44);
-            this.buttonAutomatedInput.Name = "buttonAutomatedInput";
-            this.buttonAutomatedInput.Size = new System.Drawing.Size(73, 23);
-            this.buttonAutomatedInput.TabIndex = 4;
-            this.buttonAutomatedInput.Text = "Input Folder";
-            this.buttonAutomatedInput.UseVisualStyleBackColor = true;
-            this.buttonAutomatedInput.Click += new System.EventHandler(this.buttonAutomatedInput_Click);
-            // 
-            // label18
-            // 
-            this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(8, 96);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(30, 13);
-            this.label18.TabIndex = 3;
-            this.label18.Text = "Time";
-            this.label18.Visible = false;
-            // 
-            // numericUpDownAutomatedMinute
-            // 
-            this.numericUpDownAutomatedMinute.Location = new System.Drawing.Point(93, 94);
-            this.numericUpDownAutomatedMinute.Maximum = new decimal(new int[] {
-            59,
-            0,
-            0,
-            0});
-            this.numericUpDownAutomatedMinute.Name = "numericUpDownAutomatedMinute";
-            this.numericUpDownAutomatedMinute.Size = new System.Drawing.Size(43, 20);
-            this.numericUpDownAutomatedMinute.TabIndex = 2;
-            this.numericUpDownAutomatedMinute.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.numericUpDownAutomatedMinute.Visible = false;
-            this.numericUpDownAutomatedMinute.ValueChanged += new System.EventHandler(this.numericUpDownAutomatedMinute_ValueChanged);
-            // 
-            // numericUpDownAutomatedHour
-            // 
-            this.numericUpDownAutomatedHour.Location = new System.Drawing.Point(44, 94);
-            this.numericUpDownAutomatedHour.Maximum = new decimal(new int[] {
-            23,
-            0,
-            0,
-            0});
-            this.numericUpDownAutomatedHour.Name = "numericUpDownAutomatedHour";
-            this.numericUpDownAutomatedHour.Size = new System.Drawing.Size(43, 20);
-            this.numericUpDownAutomatedHour.TabIndex = 1;
-            this.numericUpDownAutomatedHour.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.numericUpDownAutomatedHour.Visible = false;
-            this.numericUpDownAutomatedHour.ValueChanged += new System.EventHandler(this.numericUpDownAutomatedHour_ValueChanged);
-            // 
-            // checkBoxAutomatedOpperation
-            // 
-            this.checkBoxAutomatedOpperation.AutoSize = true;
-            this.checkBoxAutomatedOpperation.Location = new System.Drawing.Point(9, 19);
-            this.checkBoxAutomatedOpperation.Name = "checkBoxAutomatedOpperation";
-            this.checkBoxAutomatedOpperation.Size = new System.Drawing.Size(65, 17);
-            this.checkBoxAutomatedOpperation.TabIndex = 0;
-            this.checkBoxAutomatedOpperation.Text = "Enabled";
-            this.checkBoxAutomatedOpperation.UseVisualStyleBackColor = true;
-            this.checkBoxAutomatedOpperation.CheckedChanged += new System.EventHandler(this.checkBoxAutomatedOpperation_CheckedChanged);
             // 
             // groupBoxAssessmentFile
             // 
@@ -2031,7 +1923,7 @@
             this.dataGridViewTextBoxBasevehicleid.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
             this.dataGridViewTextBoxBasevehicleid.HeaderText = "Base Vehicle id";
             this.dataGridViewTextBoxBasevehicleid.Name = "dataGridViewTextBoxBasevehicleid";
-            this.dataGridViewTextBoxBasevehicleid.Width = 87;
+            this.dataGridViewTextBoxBasevehicleid.Width = 89;
             // 
             // dataGridViewTextBoxColumn2
             // 
@@ -2158,7 +2050,7 @@
             this.dgBasevidsBasevid.HeaderText = "Base Vehicle id";
             this.dgBasevidsBasevid.Name = "dgBasevidsBasevid";
             this.dgBasevidsBasevid.ReadOnly = true;
-            this.dgBasevidsBasevid.Width = 87;
+            this.dgBasevidsBasevid.Width = 89;
             // 
             // dgBasevidsParttype
             // 
@@ -2266,7 +2158,7 @@
             this.dgVCdbCodesBasevehicleid.HeaderText = "Base Vehicle id";
             this.dgVCdbCodesBasevehicleid.Name = "dgVCdbCodesBasevehicleid";
             this.dgVCdbCodesBasevehicleid.ReadOnly = true;
-            this.dgVCdbCodesBasevehicleid.Width = 87;
+            this.dgVCdbCodesBasevehicleid.Width = 89;
             // 
             // dgVCdbCodesMake
             // 
@@ -2399,7 +2291,7 @@
             this.dgVCdbConfigsBasevehicleid.HeaderText = "Base Vehicle id";
             this.dgVCdbConfigsBasevehicleid.Name = "dgVCdbConfigsBasevehicleid";
             this.dgVCdbConfigsBasevehicleid.ReadOnly = true;
-            this.dgVCdbConfigsBasevehicleid.Width = 87;
+            this.dgVCdbConfigsBasevehicleid.Width = 89;
             // 
             // dgVCdbConfigsMake
             // 
@@ -2892,7 +2784,7 @@
             this.dgLogicProblemsBaseVehicleId.HeaderText = "Base Vehicle id";
             this.dgLogicProblemsBaseVehicleId.Name = "dgLogicProblemsBaseVehicleId";
             this.dgLogicProblemsBaseVehicleId.ReadOnly = true;
-            this.dgLogicProblemsBaseVehicleId.Width = 87;
+            this.dgLogicProblemsBaseVehicleId.Width = 89;
             // 
             // dgLogicProblemsMake
             // 
@@ -3042,7 +2934,7 @@
             this.lblReferenceACESfilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblReferenceACESfilePath.Location = new System.Drawing.Point(352, 39);
             this.lblReferenceACESfilePath.Name = "lblReferenceACESfilePath";
-            this.lblReferenceACESfilePath.Size = new System.Drawing.Size(45, 16);
+            this.lblReferenceACESfilePath.Size = new System.Drawing.Size(44, 16);
             this.lblReferenceACESfilePath.TabIndex = 35;
             this.lblReferenceACESfilePath.Text = "label1";
             // 
@@ -3082,7 +2974,7 @@
             this.lblQdbFilePath.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblQdbFilePath.Location = new System.Drawing.Point(152, 190);
             this.lblQdbFilePath.Name = "lblQdbFilePath";
-            this.lblQdbFilePath.Size = new System.Drawing.Size(45, 16);
+            this.lblQdbFilePath.Size = new System.Drawing.Size(44, 16);
             this.lblQdbFilePath.TabIndex = 39;
             this.lblQdbFilePath.Text = "label1";
             // 
@@ -3236,12 +3128,6 @@
             this.lblAssetNameInterchangefilePath.TabIndex = 55;
             this.lblAssetNameInterchangefilePath.Text = "label1";
             // 
-            // timerAutomation
-            // 
-            this.timerAutomation.Enabled = true;
-            this.timerAutomation.Interval = 1000;
-            this.timerAutomation.Tick += new System.EventHandler(this.timerAutomation_Tick);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3296,10 +3182,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLogicProblems)).EndInit();
             this.tabPageSettings.ResumeLayout(false);
             this.tabPageSettings.PerformLayout();
-            this.groupBoxAutomatedOpperation.ResumeLayout(false);
-            this.groupBoxAutomatedOpperation.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownAutomatedMinute)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownAutomatedHour)).EndInit();
             this.groupBoxAssessmentFile.ResumeLayout(false);
             this.groupBoxAssessmentFile.PerformLayout();
             this.groupBoxRemoteVCdb.ResumeLayout(false);
@@ -3611,13 +3493,6 @@
         private System.Windows.Forms.CheckBox checkBoxFTPassessment;
         private System.Windows.Forms.ComboBox comboBoxAssessmentFormat;
         private System.Windows.Forms.Label label17;
-        private System.Windows.Forms.GroupBox groupBoxAutomatedOpperation;
-        private System.Windows.Forms.Label label18;
-        private System.Windows.Forms.NumericUpDown numericUpDownAutomatedMinute;
-        private System.Windows.Forms.NumericUpDown numericUpDownAutomatedHour;
-        private System.Windows.Forms.CheckBox checkBoxAutomatedOpperation;
-        private System.Windows.Forms.Label labelAutomatedPath;
-        private System.Windows.Forms.Button buttonAutomatedInput;
         private System.Windows.Forms.TextBox textBoxFitmentLogicElements;
         private System.Windows.Forms.Button btnClearFlaggedNodes;
         private System.Windows.Forms.Button btnExportAssets;
@@ -3638,8 +3513,6 @@
         private System.Windows.Forms.CheckBox checkBoxImportDeletes;
         private System.Windows.Forms.CheckBox checkBoxVerboseLogging;
         private System.Windows.Forms.CheckBox checkBoxRespectQdbType;
-        private System.Windows.Forms.Timer timerAutomation;
-        private System.Windows.Forms.Label labelAutomationStatus;
     }
 }
 

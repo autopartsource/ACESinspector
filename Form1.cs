@@ -74,15 +74,6 @@ namespace ACESinspector
 
         private List<string> endoresments = new List<string>(); // save secret-handshake stuff here for controlling friends-and-family special features that are not exactly public. If you are reading this, you are in that club.
 
-        
-        private int automationState=0; // 0 = no automation, 1=waiting for a file to show up in the drop folder, 2=processing found file
-        private List<string> automationProcessedFiles = new List<string>(); // files that we do not want to process because they caused a problem (not persistant)
-        private string fileBeingProcessed;
-        private int automationSuccessCount = 0;
-        private int automationFailureCount = 0;
-
-
-
 
         public Form1()
         {
@@ -306,28 +297,6 @@ namespace ACESinspector
                 }
             }
 
-            if ((string)key.GetValue("automatedOpperation") == "1") { checkBoxAutomatedOpperation.Checked = true; } else { checkBoxAutomatedOpperation.Checked = false; }
-
-            if (key.GetValue("automatedInputDirectoryPath") == null)
-            {
-                if (checkBoxAutomatedOpperation.Checked)
-                {
-                    MessageBox.Show("Please select a folder to poll for input ACES files. This can be done in the Settings tab");
-                }
-            }
-            else
-            {// registry contains a path that was provided in the past - verify it before we use it
-                if (Directory.Exists(key.GetValue("automatedInputDirectoryPath").ToString()))
-                {// valid directory
-                    labelAutomatedPath.Text = key.GetValue("automatedInputDirectoryPath").ToString();
-                }
-                else
-                {// registry-provided input directory does not exist
-                    MessageBox.Show("Please select a folder to poll for input ACES files. The saved value is not valid. This can be done in the Settings tab");
-                }
-            }
-            
-
 
             if (key.GetValue("assessmentDirectoryPath") != null)
             {
@@ -341,8 +310,6 @@ namespace ACESinspector
             if (key.GetValue("qtyOutliersThreshold") != null) { numericUpDownQtyOutliersThreshold.Value = Convert.ToDecimal(key.GetValue("qtyOutliersThreshold")); } else { numericUpDownQtyOutliersThreshold.Value = 1; }
             if (key.GetValue("qtyOutliersSampleSize") != null) { numericUpDownQtyOutliersSample.Value = Convert.ToDecimal(key.GetValue("qtyOutliersSampleSize")); } else { numericUpDownQtyOutliersSample.Value = 500; }
             if (key.GetValue("threadCount") != null) { numericUpDownThreads.Value = Convert.ToDecimal(key.GetValue("threadCount")); } else { numericUpDownThreads.Value = 20; }
-            if (key.GetValue("automatedHour") != null) { numericUpDownAutomatedHour.Value = Convert.ToDecimal(key.GetValue("automatedHour")); } else { numericUpDownAutomatedHour.Value = 23; }
-            if (key.GetValue("automatedMinute") != null) { numericUpDownAutomatedMinute.Value = Convert.ToDecimal(key.GetValue("automatedMinute")); } else { numericUpDownAutomatedMinute.Value = 0; }
             if ((string)key.GetValue("assetsAsFitment") == "1") { checkBoxAssetsAsFitment.Checked = true; } else { checkBoxAssetsAsFitment.Checked = false; }
 
             // look for the "secret" key in the registry that entitles bad-branch detection. If you are reading this, you are in pretty exclusive club and 
@@ -4570,47 +4537,6 @@ namespace ACESinspector
             key.SetValue("assessmentFileFormat", comboBoxAssessmentFormat.SelectedIndex.ToString());
         }
 
-        private void numericUpDownAutomatedHour_ValueChanged(object sender, EventArgs e)
-        {
-            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
-            key.CreateSubKey("ACESinspector");
-            key = key.OpenSubKey("ACESinspector", true);
-            key.SetValue("automatedHour",numericUpDownAutomatedHour.Value);
-        }
-
-        private void buttonAutomatedInput_Click(object sender, EventArgs e)
-        {
-            using (var fbd = new FolderBrowserDialog())
-            {
-                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
-                key.CreateSubKey("ACESinspector");
-                key = key.OpenSubKey("ACESinspector", true);
-                if (key.GetValue("automatedInputDirectoryPath") != null) { fbd.SelectedPath = key.GetValue("automatedInputDirectoryPath").ToString(); }
-                DialogResult dialogResult = fbd.ShowDialog();
-                if (dialogResult == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
-                {
-                    key.SetValue("automatedInputDirectoryPath", fbd.SelectedPath);
-                    labelAutomatedPath.Text = fbd.SelectedPath;
-                    Directory.CreateDirectory(labelAutomatedPath.Text);
-                }
-            }
-        }
-
-        private void checkBoxAutomatedOpperation_CheckedChanged(object sender, EventArgs e)
-        {
-            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
-            key.CreateSubKey("ACESinspector"); key = key.OpenSubKey("ACESinspector", true);
-            if(checkBoxAutomatedOpperation.Checked){key.SetValue("automatedOpperation", "1");}else{key.SetValue("automatedOpperation", "0");}
-        }
-
-        private void numericUpDownAutomatedMinute_ValueChanged(object sender, EventArgs e)
-        {
-            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true);
-            key.CreateSubKey("ACESinspector");
-            key = key.OpenSubKey("ACESinspector", true);
-            key.SetValue("automatedMinute", numericUpDownAutomatedMinute.Value);
-        }
-
         private void pictureBoxFitmentTree_Click(object sender, EventArgs e)
         {
 
@@ -4681,189 +4607,7 @@ namespace ACESinspector
             if (checkBoxAssetsAsFitment.Checked) { key.SetValue("assetsAsFitment", "1"); } else { key.SetValue("assetsAsFitment", "0"); }
         }
 
-        private async void timerAutomation_Tick(object sender, EventArgs e)
-        {
-            //ccc
-            // files are consumed (deleted) when 
-
-            /*
-             * 0=no automation
-             * 1=waiting for reference files to be loaded
-             * 2=waiting for files to show up
-             * 3=analyzing found file
-             * 
-             */
-
-
-
-
-            switch (automationState)
-            {
-                case 0:
-                    // 0 = no automation
-
-                    //check for enabled
-                    if (checkBoxAutomatedOpperation.Checked)
-                    {
-                        if (Directory.Exists(labelAutomatedPath.Text))
-                        {
-                            automationState = 1;
-                            labelAutomationStatus.Text = "Waiting for reference databases to be loadded";
-                        }
-                        else
-                        {// specified directory does not exist - knock down the check and add a history message
-                            aces.logHistoryEvent("", "0\tAutomation can not start because specified directory (" + labelAutomatedPath.Text + ") does not exist");
-                            checkBoxAutomatedOpperation.Checked = false;
-                        }
-                    }
-
-                    break;
-                
-                case 1:
-                    // 1=waiting for conditions to launch file (ref databases loaded)
-                    // this state is advanced to 3 by the regular (interactive) logic elsewhere
-
-
-                    //check for enabled
-                    if (!checkBoxAutomatedOpperation.Checked)
-                    {// automation has been disabled 
-                        automationState = 0;
-                    }
-
-
-                    if (vcdb.importSuccess && pcdb.importSuccess && qdb.importSuccess)
-                    {
-                        automationState = 2;
-                        labelAutomationStatus.Text = "Waiting for ACES files to arrive in input directory ";
-                    }
-                    break;
-
-
-                case 2:
-                    // 2 = waiting for a file to show up in the drop folder
-
-                    //check for enabled
-                    if (!checkBoxAutomatedOpperation.Checked)
-                    {// automation has been disabled 
-                        fileBeingProcessed = "";
-                        labelAutomationStatus.Text = "";
-                        automationState = 0;
-                    }
-
-
-
-                    try
-                    {// check directory for xml files and read their first few lines to see if it smells like and ACES file
-                        List<string> availableACESfiles = aces.listValidACESfiles(labelAutomatedPath.Text, automationProcessedFiles);
-
-                        foreach (string filename in availableACESfiles)
-                        {
-                            aces.logHistoryEvent("", "0\tAutomation found xml file " + filename);
-                            fileBeingProcessed = filename;
-                            automationProcessedFiles.Add(filename);
-                            labelAutomationStatus.Text = "Found usable ACES file in input directory - loading it";
-
-                            progBarPrimeACESload.Visible = true;
-                            var progressIndicator = new Progress<int>(ReportPrimeACESImportProgress);
-                            //eee
-                            // calculate an md5 hash of the ACES file for later storage in the registry
-                            using (var md5 = MD5.Create())
-                            {
-                                using (var stream = File.OpenRead(fileBeingProcessed))
-                                {
-                                    aces.fileMD5hash = BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty);
-                                    aces.logHistoryEvent("", "10\tAutomation - calculating md5 hash of selected ACES file (" + fileBeingProcessed + "): " + aces.fileMD5hash);
-                                }
-                            }
-
-                            aces.logHistoryEvent("", "10\tAutomation - starting import of ACES file");
-                            var result = await Task.Run(() => aces.importXML(fileBeingProcessed, "", checkBoxRespectValidateTag.Checked, checkBoxImportDeletes.Checked, noteTranslationDictionary, noteToQdbTransformDictionary, vcdb, progressIndicator));
-                            aces.logHistoryEvent("", "10\tAutomation - completed import of ACES file. " + result.ToString() + " apps imported.");
-                            if (aces.discardedDeletsOnImport > 0) { MessageBox.Show(fileBeingProcessed + " contains \"D\" (delete) applications. These were excluded from the import. Only the \"A\" (add) application are used."); aces.logHistoryEvent("", "10\tAutomation - found some deleted apps in import"); }
-                            automationState = 3;
-
-                            break; // only process one (first) file found
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        aces.logHistoryEvent("", "0\tAutomation failed to get list of xml files from  " + labelAutomatedPath.Text + " ---  Exception message: " + ex.Message);
-                    }
-
-
-                    break;
-
-                case 3:
-                    // 3=analyzing found file
-
-                    aces.logHistoryEvent("", "0\tAutomation - starting analyze");
-                    //timerAutomation.Enabled = false;
-
-                    analyze();
-
-                    automationState = 4;
-
-                    //timerAutomation.Enabled = true;
-
-
-
-
-                    break;
-
-
-                case 4:
-                    // waiting for analysis
-
-                    if (aces.analysisRunning)
-                    {
-                        labelAutomationStatus.Text = "analyzing...";
-                    }
-                    else
-                    {
-                        automationSuccessCount++;
-                        automationState = 5;
-                        aces.logHistoryEvent("", "0\tAutomation - finished analyze");
-                    }
-
-                    break;
-
-
-
-
-                case 5:
-                    // 5=post-processing cleanup
-                    // delete the input file
-
-                    try
-                    { 
-                        File.Delete(fileBeingProcessed);
-                        aces.logHistoryEvent("", "0\tAutomation deleted " + fileBeingProcessed);
-                    }
-                    catch (Exception ex) 
-                    {
-                        aces.logHistoryEvent("", "0\tAutomation failed to delete " + fileBeingProcessed + " ---  Exception message: " + ex.Message);
-                    }
-
-                    fileBeingProcessed = "";
-                    labelAutomationStatus.Text = "Waiting for files. Processed "+ automationSuccessCount.ToString();
-                    automationState = 2;
-                    break;
-
-                default: automationState = 0;  break;
-            }
-
-        }
-
-
-
-
-
-
-
-
-
-
-
+     
         private string escapeXMLspecialChars(string inputString)
         {
             string outputString = inputString;

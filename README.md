@@ -6,6 +6,9 @@ autopartsource.com/ACESinspector or on github as a "release"
 
 
 # Changelog
+1.2.0.49 (7/20/2023)
+ - Added support for App-level brand and subbrand codes. They get prefixed onto the partnumber like ABCD_EFGH_PARTNUMBER. This is to allow for branding to solve overlaps
+
 1.2.0.48 (2/27/2023)
  - Completely back-tracked on the automation endevor - it was a fool's erand. The multi-threaded nature of the existing was pushing me down a road of hacks and compromises that were just too far.
  - Began dev on a simpler (non-GUI) version called ACESinspectorCLI

@@ -3341,7 +3341,13 @@ default: return 0;
                 }
 
                 appTemp.part = (string)appElement.Element("Part");
-                if (ignoreNAitems && (appTemp.part == "NA" || appTemp.part == "NR" || appTemp.part == "N/A"|| appTemp.part == "N/R"|| appTemp.part == "")) { continue; } // skip place-holder part numbers like "NA"
+                if (ignoreNAitems && (appTemp.part == "NA" || appTemp.part == "NR" || appTemp.part == "N/A" || appTemp.part == "N/R" || appTemp.part == "")) { continue; } // skip place-holder part numbers like "NA"
+
+                string brandCode = ""; string subBrandCode = "";
+                XElement partElement = appElement.Element("Part");
+                if (partElement.Attribute("BrandAAIAID") != null){brandCode = (string)partElement.Attribute("BrandAAIAID");}
+                if (partElement.Attribute("SubBrandAAIAID") != null) { subBrandCode = (string)partElement.Attribute("SubBrandAAIAID"); }
+                if (brandCode != "" || subBrandCode != "") { appTemp.part = brandCode + "_" + subBrandCode + "_" + appTemp.part; }
 
                 appTemp.id = Convert.ToInt32(appElement.Attribute("id").Value);
                 xmlAppNodeCount++;

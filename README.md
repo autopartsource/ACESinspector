@@ -6,6 +6,9 @@ autopartsource.com/ACESinspector or on github as a "release"
 
 
 # Changelog
+1.2.0.50 (7/27/2023)
+ - Fixed support for App-level brand and subbrand codes. This is to allow for branding to solve overlaps. They are now properties of the "app" object
+
 1.2.0.49 (7/20/2023)
  - Added support for App-level brand and subbrand codes. They get prefixed onto the partnumber like ABCD_EFGH_PARTNUMBER. This is to allow for branding to solve overlaps
 

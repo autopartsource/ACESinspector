@@ -1847,7 +1847,7 @@ namespace ACESinspector
 
                                 foreach (App app in entry.Value)
                                 {
-                                    sw.Write("<Row><Cell><Data ss:Type=\"String\">" + problemDescription + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(entry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + app.id.ToString() + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + app.basevehilceid.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(vcdb.niceModelOfBasevid(app.basevehilceid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + vcdb.niceYearOfBasevid(app.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.niceParttype(app.parttypeid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.nicePosition(app.positionid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + app.quantity.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + app.part + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(app.niceFullFitmentString(vcdb, qdb)) + "</Data></Cell></Row>");
+                                    sw.Write("<Row><Cell><Data ss:Type=\"String\">" + problemDescription + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(entry.Key) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + app.id.ToString() + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + app.basevehicleid.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + vcdb.niceMakeOfBasevid(app.basevehicleid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(vcdb.niceModelOfBasevid(app.basevehicleid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + vcdb.niceYearOfBasevid(app.basevehicleid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.niceParttype(app.parttypeid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.nicePosition(app.positionid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + app.quantity.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + app.part + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(app.niceFullFitmentString(vcdb, qdb)) + "</Data></Cell></Row>");
                                 }
                             }
                             excelTabColorXMLtag = "<TabColorIndex>10</TabColorIndex>";
@@ -1875,11 +1875,11 @@ namespace ACESinspector
                             {
                                 string[] fields = line.Split('\t');
                                 tempApp.Clear();
-                                tempApp.basevehilceid = Convert.ToInt32(fields[1]);
-                                if (vcdb.niceMakeOfBasevid(tempApp.basevehilceid) == "not found") { continue; }
+                                tempApp.basevehicleid = Convert.ToInt32(fields[1]);
+                                if (vcdb.niceMakeOfBasevid(tempApp.basevehicleid) == "not found") { continue; }
                                 tempApp.parttypeid = Convert.ToInt32(fields[2]);
                                 tempApp.positionid = Convert.ToInt32(fields[3]);
-                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + tempApp.basevehilceid.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + vcdb.niceMakeOfBasevid(tempApp.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(vcdb.niceModelOfBasevid(tempApp.basevehilceid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + vcdb.niceYearOfBasevid(tempApp.basevehilceid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.niceParttype(tempApp.parttypeid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.nicePosition(tempApp.positionid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[5]) + "</Data></Cell></Row>");
+                                sw.Write("<Row><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[0]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + tempApp.basevehicleid.ToString() + "</Data></Cell><Cell><Data ss:Type=\"String\">" + vcdb.niceMakeOfBasevid(tempApp.basevehicleid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(vcdb.niceModelOfBasevid(tempApp.basevehicleid)) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + vcdb.niceYearOfBasevid(tempApp.basevehicleid) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.niceParttype(tempApp.parttypeid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(pcdb.nicePosition(tempApp.positionid)) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fields[5]) + "</Data></Cell></Row>");
                             }
                             sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                         }
@@ -2145,7 +2145,7 @@ namespace ACESinspector
 
                                 foreach (App app in entry.Value)
                                 {
-                                    sw.Write("Fitment Logic Problems\t" + problemDescription + " - " + entry.Key + "\t" + app.basevehilceid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehilceid) + "\t" + vcdb.niceModelOfBasevid(app.basevehilceid) + "\t" + vcdb.niceYearOfBasevid(app.basevehilceid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceFullFitmentString(vcdb, qdb) + "\r\n");
+                                    sw.Write("Fitment Logic Problems\t" + problemDescription + " - " + entry.Key + "\t" + app.basevehicleid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehicleid) + "\t" + vcdb.niceModelOfBasevid(app.basevehicleid) + "\t" + vcdb.niceYearOfBasevid(app.basevehicleid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceFullFitmentString(vcdb, qdb) + "\r\n");
                                 }
                             }
                         }
@@ -2536,7 +2536,7 @@ namespace ACESinspector
 
                             foreach (App app in entry.Value)
                             {
-                                dgFitmentLogicProblems.Rows.Add(problemDescription,entry.Key,app.id.ToString(),app.reference,app.basevehilceid.ToString(), vcdb.niceMakeOfBasevid(app.basevehilceid), vcdb.niceModelOfBasevid(app.basevehilceid), vcdb.niceYearOfBasevid(app.basevehilceid),pcdb.niceParttype(app.parttypeid),pcdb.nicePosition(app.positionid),app.quantity.ToString(),app.part,app.niceFullFitmentString(vcdb, qdb));
+                                dgFitmentLogicProblems.Rows.Add(problemDescription,entry.Key,app.id.ToString(),app.reference,app.basevehicleid.ToString(), vcdb.niceMakeOfBasevid(app.basevehicleid), vcdb.niceModelOfBasevid(app.basevehicleid), vcdb.niceYearOfBasevid(app.basevehicleid),pcdb.niceParttype(app.parttypeid),pcdb.nicePosition(app.positionid),app.quantity.ToString(),app.part,app.niceFullFitmentString(vcdb, qdb));
                             }
                         }
                     }
@@ -2555,7 +2555,7 @@ namespace ACESinspector
 
                         foreach (App app in entry.Value)
                         {
-                            dgFitmentLogicProblems.Rows.Add(problemDescription, entry.Key, app.id.ToString(), app.reference, app.basevehilceid.ToString(), vcdb.niceMakeOfBasevid(app.basevehilceid), vcdb.niceModelOfBasevid(app.basevehilceid), vcdb.niceYearOfBasevid(app.basevehilceid), pcdb.niceParttype(app.parttypeid), pcdb.nicePosition(app.positionid), app.quantity.ToString(), app.part, app.niceFullFitmentString(vcdb, qdb));
+                            dgFitmentLogicProblems.Rows.Add(problemDescription, entry.Key, app.id.ToString(), app.reference, app.basevehicleid.ToString(), vcdb.niceMakeOfBasevid(app.basevehicleid), vcdb.niceModelOfBasevid(app.basevehicleid), vcdb.niceYearOfBasevid(app.basevehicleid), pcdb.niceParttype(app.parttypeid), pcdb.nicePosition(app.positionid), app.quantity.ToString(), app.part, app.niceFullFitmentString(vcdb, qdb));
                         }
                     }
                 }
@@ -3814,7 +3814,7 @@ namespace ACESinspector
                     // cache key is basevid,parttype,position
 
                     App firstAppInGroup =  aces.fitmentProblemGroupsAppLists[macroProblemGroupKeyInView][0];
-                    string cacheHashkey = firstAppInGroup.basevehilceid.ToString() + "," + firstAppInGroup.parttypeid.ToString() + "," + firstAppInGroup.positionid.ToString();
+                    string cacheHashkey = firstAppInGroup.basevehicleid.ToString() + "," + firstAppInGroup.parttypeid.ToString() + "," + firstAppInGroup.positionid.ToString();
 
                     if (!aces.fitmentPermutationMiningCache.ContainsKey(cacheHashkey))
                     {

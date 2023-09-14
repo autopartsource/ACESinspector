@@ -6,6 +6,10 @@ autopartsource.com/ACESinspector or on github as a "release"
 
 
 # Changelog
+1.2.0.51 (9/14/2023)
+ - Updated the internal version of the 4.2 xsd to "rev 2 11-19-2021"
+ - fix spelling of a variable: basevehilceid -> basevehicleid
+
 1.2.0.50 (7/27/2023)
  - Fixed support for App-level brand and subbrand codes. This is to allow for branding to solve overlaps. They are now properties of the "app" object
 

@@ -244,6 +244,7 @@
             this.dgQuantityWarnings = new System.Windows.Forms.DataGridView();
             this.dataGridViewTextBoxColumn11 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn12 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn23 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn13 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn14 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn15 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -302,6 +303,7 @@
             this.lblRefACESLoadStatus = new System.Windows.Forms.Label();
             this.btnSelectAssetNameInterchange = new System.Windows.Forms.Button();
             this.lblAssetNameInterchangefilePath = new System.Windows.Forms.Label();
+            this.checkBoxFlagDupQdb = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dgParts)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageStats.SuspendLayout();
@@ -780,6 +782,7 @@
             // 
             // tabPageSettings
             // 
+            this.tabPageSettings.Controls.Add(this.checkBoxFlagDupQdb);
             this.tabPageSettings.Controls.Add(this.checkBoxVerboseLogging);
             this.tabPageSettings.Controls.Add(this.checkBoxImportDeletes);
             this.tabPageSettings.Controls.Add(this.groupBoxAssessmentFile);
@@ -807,17 +810,18 @@
             // checkBoxVerboseLogging
             // 
             this.checkBoxVerboseLogging.AutoSize = true;
-            this.checkBoxVerboseLogging.Location = new System.Drawing.Point(254, 336);
+            this.checkBoxVerboseLogging.Location = new System.Drawing.Point(254, 359);
             this.checkBoxVerboseLogging.Name = "checkBoxVerboseLogging";
             this.checkBoxVerboseLogging.Size = new System.Drawing.Size(106, 17);
             this.checkBoxVerboseLogging.TabIndex = 26;
             this.checkBoxVerboseLogging.Text = "Verbose Logging";
             this.checkBoxVerboseLogging.UseVisualStyleBackColor = true;
+            this.checkBoxVerboseLogging.CheckedChanged += new System.EventHandler(this.checkBoxVerboseLogging_CheckedChanged);
             // 
             // checkBoxImportDeletes
             // 
             this.checkBoxImportDeletes.AutoSize = true;
-            this.checkBoxImportDeletes.Location = new System.Drawing.Point(254, 313);
+            this.checkBoxImportDeletes.Location = new System.Drawing.Point(254, 336);
             this.checkBoxImportDeletes.Name = "checkBoxImportDeletes";
             this.checkBoxImportDeletes.Size = new System.Drawing.Size(138, 17);
             this.checkBoxImportDeletes.TabIndex = 25;
@@ -1324,7 +1328,7 @@
             this.groupBoxFitmentLogicSettings.Controls.Add(this.checkBoxConcernForDisparate);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.label24);
             this.groupBoxFitmentLogicSettings.Controls.Add(this.numericUpDownTreeConfigLimit);
-            this.groupBoxFitmentLogicSettings.Location = new System.Drawing.Point(940, 26);
+            this.groupBoxFitmentLogicSettings.Location = new System.Drawing.Point(555, 150);
             this.groupBoxFitmentLogicSettings.Name = "groupBoxFitmentLogicSettings";
             this.groupBoxFitmentLogicSettings.Size = new System.Drawing.Size(247, 118);
             this.groupBoxFitmentLogicSettings.TabIndex = 4;
@@ -2562,6 +2566,7 @@
             this.dgQuantityWarnings.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.dataGridViewTextBoxColumn11,
             this.dataGridViewTextBoxColumn12,
+            this.dataGridViewTextBoxColumn23,
             this.dataGridViewTextBoxColumn13,
             this.dataGridViewTextBoxColumn14,
             this.dataGridViewTextBoxColumn15,
@@ -2593,6 +2598,12 @@
             this.dataGridViewTextBoxColumn12.Name = "dataGridViewTextBoxColumn12";
             this.dataGridViewTextBoxColumn12.ReadOnly = true;
             this.dataGridViewTextBoxColumn12.Width = 51;
+            // 
+            // dataGridViewTextBoxColumn23
+            // 
+            this.dataGridViewTextBoxColumn23.HeaderText = "Reference";
+            this.dataGridViewTextBoxColumn23.Name = "dataGridViewTextBoxColumn23";
+            this.dataGridViewTextBoxColumn23.ReadOnly = true;
             // 
             // dataGridViewTextBoxColumn13
             // 
@@ -2671,6 +2682,7 @@
             this.dataGridViewTextBoxColumn201.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
             this.dataGridViewTextBoxColumn201.HeaderText = "Qdb-coded attributes";
             this.dataGridViewTextBoxColumn201.Name = "dataGridViewTextBoxColumn201";
+            this.dataGridViewTextBoxColumn201.ReadOnly = true;
             this.dataGridViewTextBoxColumn201.Width = 120;
             // 
             // dataGridViewTextBoxColumn22
@@ -2678,6 +2690,7 @@
             this.dataGridViewTextBoxColumn22.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
             this.dataGridViewTextBoxColumn22.HeaderText = "Notes";
             this.dataGridViewTextBoxColumn22.Name = "dataGridViewTextBoxColumn22";
+            this.dataGridViewTextBoxColumn22.ReadOnly = true;
             this.dataGridViewTextBoxColumn22.Width = 60;
             // 
             // tabPageFitmentLogic
@@ -3128,6 +3141,17 @@
             this.lblAssetNameInterchangefilePath.TabIndex = 55;
             this.lblAssetNameInterchangefilePath.Text = "label1";
             // 
+            // checkBoxFlagDupQdb
+            // 
+            this.checkBoxFlagDupQdb.AutoSize = true;
+            this.checkBoxFlagDupQdb.Location = new System.Drawing.Point(254, 313);
+            this.checkBoxFlagDupQdb.Name = "checkBoxFlagDupQdb";
+            this.checkBoxFlagDupQdb.Size = new System.Drawing.Size(183, 17);
+            this.checkBoxFlagDupQdb.TabIndex = 27;
+            this.checkBoxFlagDupQdb.Text = "Flag Duplicate Qdb within an app";
+            this.checkBoxFlagDupQdb.UseVisualStyleBackColor = true;
+            this.checkBoxFlagDupQdb.CheckedChanged += new System.EventHandler(this.checkBoxFlagDupQdb_CheckedChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3355,19 +3379,6 @@
         private System.Windows.Forms.PictureBox pictureBoxCommonErrors;
         private System.Windows.Forms.Button btnExportPrimaryACES;
         private System.Windows.Forms.CheckBox checkBoxEncipherExport;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn11;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn12;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn13;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn14;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn15;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn16;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn17;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn18;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn19;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn21;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn20;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn201;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn22;
         private System.Windows.Forms.TabPage tabPageSettings;
         private System.Windows.Forms.GroupBox groupBoxFitmentLogicSettings;
         private System.Windows.Forms.CheckBox checkBoxAnonymizeErrorsACES;
@@ -3513,6 +3524,21 @@
         private System.Windows.Forms.CheckBox checkBoxImportDeletes;
         private System.Windows.Forms.CheckBox checkBoxVerboseLogging;
         private System.Windows.Forms.CheckBox checkBoxRespectQdbType;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn11;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn12;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn23;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn13;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn14;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn15;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn16;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn17;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn18;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn19;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn21;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn20;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn201;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn22;
+        private System.Windows.Forms.CheckBox checkBoxFlagDupQdb;
     }
 }
 

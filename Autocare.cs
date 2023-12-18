@@ -2348,7 +2348,7 @@ namespace ACESinspector
         // these are all lump together into a single function so it can be called as a seperate (in-parrallel) tasks with sub-sections of the full appslists to chew on.
         // The rationale is to maximize multi-core environments. The apps list could be all apps in the primary aces object or a smaller subset.
         //  The found problems will be written to their respective files named by hash and "taskumber" for re-assembly by the calling process
-        public void findIndividualAppErrors(analysisChunk chunk, VCdb vcdb, PCdb pcdb, Qdb qdb)
+        public void findIndividualAppErrors(analysisChunk chunk, VCdb vcdb, PCdb pcdb, Qdb qdb, bool flagDupQdb)
         {
             string cacheFilename;
             string errorString = "";
@@ -2405,8 +2405,31 @@ namespace ACESinspector
                         }
                     }
                 }
+
+                if (flagDupQdb)
+                {
+                    List<int> tempQdbList = new List<int>();
+                    foreach (App app in chunk.appsList)
+                    {
+                        if (app.action == "D") { continue; } // ignore "Delete" apps
+                        tempQdbList.Clear();
+                        foreach (QdbQualifier myQdbQualifier in app.QdbQualifiers)
+                        {
+                            if (tempQdbList.Contains(myQdbQualifier.qualifierId))
+                            {// qualifier is on the app multiple times 
+                                chunk.qdbErrorsCount++;
+                                sw.WriteLine("Multiple instances of Qdb (" + myQdbQualifier.qualifierId.ToString() + ") on app" + "\t" + app.id + "\t" + app.basevehicleid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehicleid) + "\t" + vcdb.niceModelOfBasevid(app.basevehicleid) + "\t" + vcdb.niceYearOfBasevid(app.basevehicleid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity + "\t" + app.part + "\t" + app.niceFullFitmentString(vcdb, qdb) + "\t" + string.Join(";", app.notes));
+                            }
+                            else
+                            {
+                                tempQdbList.Add(myQdbQualifier.qualifierId);
+                            }
+                        }
+                    }
+                }
+
             }
-            if(chunk.qdbErrorsCount == 0) { File.Delete(cacheFilename); } else { logHistoryEvent("", "5\tError: " + chunk.qdbErrorsCount.ToString() + " invalid Qdb references (task " + chunk.id.ToString() + ")"); }  // delete cache file if empty
+            if (chunk.qdbErrorsCount == 0) { File.Delete(cacheFilename); } else { logHistoryEvent("", "5\tError: " + chunk.qdbErrorsCount.ToString() + " invalid Qdb references (task " + chunk.id.ToString() + ")"); }  // delete cache file if empty
 
 
             //----------------------------------------------- Questioable Notes ---------------------------
@@ -2635,15 +2658,15 @@ namespace ACESinspector
                     if (parttypePositionQtyPrevelence[hashKey] < outliernessThreshold && parttypePositionDict[hashKeyTypePosition] >= qtyOutlierSampleSize)
                     {
                         chunk.qtyOutlierCount++; alreadyFlaggedThisApp = true;
-                        sw.WriteLine("Quantity of " + app.quantity.ToString() + " is in the minority for this part-type and position\t" + app.id.ToString() + "\t" + app.basevehicleid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehicleid) + "\t" + vcdb.niceModelOfBasevid(app.basevehicleid) + "\t" + vcdb.niceYearOfBasevid(app.basevehicleid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + app.niceQdbQualifierString(qdb) + "\t" + string.Join(";", app.notes));
+                        sw.WriteLine("Quantity of " + app.quantity.ToString() + " is in the minority for this part-type and position\t" + app.id.ToString() + "\t" + app.reference  + "\t" + app.basevehicleid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehicleid) + "\t" + vcdb.niceModelOfBasevid(app.basevehicleid) + "\t" + vcdb.niceYearOfBasevid(app.basevehicleid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + app.niceQdbQualifierString(qdb) + "\t" + string.Join(";", app.notes));
                     }
 
-                    //also check "typical" quantities alos
+                    //also check "typical" quantities also
                     typicalQty=typicalAppQty(app.parttypeid, app.positionid);
                     if (!alreadyFlaggedThisApp && typicalQty !=0 && app.quantity != typicalQty)
                     {
                         chunk.qtyOutlierCount++;
-                        sw.WriteLine("Quantity of " + app.quantity.ToString() + " is not typical for this part-type and position\t" + app.id.ToString() + "\t" + app.basevehicleid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehicleid) + "\t" + vcdb.niceModelOfBasevid(app.basevehicleid) + "\t" + vcdb.niceYearOfBasevid(app.basevehicleid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + app.niceQdbQualifierString(qdb) + "\t" + string.Join(";", app.notes));
+                        sw.WriteLine("Quantity of " + app.quantity.ToString() + " is not typical for this part-type and position\t" + app.id.ToString() + "\t" + app.reference +  "\t" + app.basevehicleid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehicleid) + "\t" + vcdb.niceModelOfBasevid(app.basevehicleid) + "\t" + vcdb.niceYearOfBasevid(app.basevehicleid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity.ToString() + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + app.niceQdbQualifierString(qdb) + "\t" + string.Join(";", app.notes));
                     }
 
 
@@ -3553,10 +3576,19 @@ default: return 0;
                     foreach (QdbQualifier existinQdbQualifier in appTemp.QdbQualifiers)
                     {// skip the import of multiple qualifiers with the same ID
                         if (QdbQualifierTemp.qualifierId == existinQdbQualifier.qualifierId) { 
-                            foundExistingQdbQualifier = true; break; 
+                           foundExistingQdbQualifier = true; break; 
                         }
                     }
-                    if(!foundExistingQdbQualifier){appTemp.QdbQualifiers.Add(QdbQualifierTemp);}
+
+                    if (!foundExistingQdbQualifier)
+                    {
+                        appTemp.QdbQualifiers.Add(QdbQualifierTemp);
+                    }
+                    else
+                    { // this Qdb id is already used in this app - technically ok, but poor form and it will cause problems in the tree analysis later
+                      // maybe convert it to a note?
+                        appTemp.QdbQualifiers.Add(QdbQualifierTemp);
+                    }
                 }
 
                 // see if any of the note strings in the app have Qdb transforms defined

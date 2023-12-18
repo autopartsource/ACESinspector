@@ -6,6 +6,12 @@ autopartsource.com/ACESinspector or on github as a "release"
 
 
 # Changelog
+1.2.0.53 (12/18/2023)
+ - Added allowance and detection of duplicate Qdb IDs on same app. Dups were being dropped on import before this version. This is somewhat controversial in the community.
+
+1.2.0.52 (10/24/2023)
+ - Added "reference" column to qty outliers grid
+
 1.2.0.51 (9/14/2023)
  - Updated the internal version of the 4.2 xsd to "rev 2 11-19-2021"
  - fix spelling of a variable: basevehilceid -> basevehicleid

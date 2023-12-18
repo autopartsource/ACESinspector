@@ -7,15 +7,12 @@ using System.Windows.Forms;
 using System.IO;
 using Microsoft.Win32;
 using System.Security.Cryptography;
-//using System.Diagnostics;
 using MySql.Data.MySqlClient;
 using System.Net;
 
 // TO-DO list
 // EngineBlock support when using MySQL VCdb
-// Auto-process files from a folder
 // ability to include/exclude the MFRlabel in overlap detection (checkbox in settings. Default is include)
-
 
 namespace ACESinspector
 {
@@ -100,7 +97,7 @@ namespace ACESinspector
                         {
                             lblAppVersion.Text = "Newer Version Avail";
                             lblAppVersion.BackColor = Color.Red;
-                            newestVersionsAvail = "A newer version of ACESinspector (" + publishedLatestVersion.ToString() + ") is available for download from autopartsource.com/ACESinspector";
+                            newestVersionsAvail = "A newer version of ACESinspector (" + publishedLatestVersion.ToString() + ") is available for download from github.com/autopartsource/ACESinspector/releases";
                         }
                         else
                         {// newest avail is equal or older than this version
@@ -374,6 +371,16 @@ namespace ACESinspector
                     }
                 }
             }
+
+            if (key.GetValue("flagDupQdb") == null)
+            {// no key present - we want to assert one and set its value to "1"
+                key.SetValue("flagDupQdb", "1"); checkBoxFlagDupQdb.Checked = true;
+            }
+            else
+            {
+                if ((string)key.GetValue("flagDupQdb") == "1") { checkBoxFlagDupQdb.Checked = true; } else { checkBoxFlagDupQdb.Checked = false; }
+            }
+
 
             // check for friends-and-family reserved features
             if (key.GetValue("endorsement:APSPIMformattedfitmentNodesFlaggedAsCosmetic") != null) { endoresments.Add("APSPIMformattedfitmentNodesFlaggedAsCosmetic"); }
@@ -1410,7 +1417,7 @@ namespace ACESinspector
             // run in a parallel (an arbitrary number a chunks) the individaul analysis of the primary ACES apps list
            
             //if (vcdb.useRemoteDB) { foreach (analysisChunk chunk in aces.individualAnanlysisChunksList) { vcdb.addNewMySQLconnection(); } } // instance one mysql connection for each chunk
-            var individialAppAnalysisTask = new Task(() => { Parallel.ForEach(aces.individualAnanlysisChunksList, chunk => { aces.findIndividualAppErrors(chunk, vcdb,pcdb, qdb); }); });
+            var individialAppAnalysisTask = new Task(() => { Parallel.ForEach(aces.individualAnanlysisChunksList, chunk => { aces.findIndividualAppErrors(chunk, vcdb,pcdb, qdb, checkBoxFlagDupQdb.Checked); }); });
             taskList.Add(individialAppAnalysisTask);
             individialAppAnalysisTask.Start();
 
@@ -1643,13 +1650,13 @@ namespace ACESinspector
 
                         if (aces.qtyOutlierCount > 0)
                         {
-                            sw.Write("<Worksheet ss:Name=\"Qty Outliers\"><Table ss:ExpandedColumnCount=\"13\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"180\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Qdb-coded qualifiers</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
+                            sw.Write("<Worksheet ss:Name=\"Qty Outliers\"><Table ss:ExpandedColumnCount=\"14\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"180\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Reference</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Qdb-coded qualifiers</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
                             using (var reader = new StreamReader(lblCachePath.Text + "\\AiFragments\\" + aces.fileMD5hash + "_qtyOutliers.txt"))
                             {
                                 while (!reader.EndOfStream)
                                 {
                                     string line = reader.ReadLine(); string[] fileds = line.Split('\t');
-                                    sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[2] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[3]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[8] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[9]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[12]) + "</Data></Cell></Row>");
+                                    sw.Write("<Row><Cell><Data ss:Type=\"String\">" + fileds[0] + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[1] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[2]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[3] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[4]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[5]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[6]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[7]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[8]) + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + fileds[9] + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[10]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[11]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[12]) + "</Data></Cell><Cell><Data ss:Type=\"String\">" + escapeXMLspecialChars(fileds[13]) + "</Data></Cell></Row>");
                                 }
                             }
                             excelTabColorXMLtag = "<TabColorIndex>13</TabColorIndex>";
@@ -1683,7 +1690,7 @@ namespace ACESinspector
 
                         if (aces.qdbErrorsCount > 0)
                         {
-                            sw.Write("<Worksheet ss:Name=\"Qdb Errors\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"115\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb-coded attributes</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
+                            sw.Write("<Worksheet ss:Name=\"Qdb Errors\"><Table ss:ExpandedColumnCount=\"12\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:Width=\"115\"/><Column ss:Width=\"36\"/><Column ss:Width=\"77\"/><Column ss:Width=\"120\"/><Column ss:Width=\"33\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"120\"/><Column ss:Width=\"46\"/><Column ss:Width=\"120\"/><Column ss:Width=\"180\"/><Column ss:Width=\"180\"/><Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Error Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">App Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Base Vehicle Id</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Make</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Model</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Year</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part Type</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Position</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Quantity</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Part</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">VCdb and Qdb fitment</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Notes</Data></Cell></Row>");
                             foreach (analysisChunk chunk in aces.individualAnanlysisChunksList)
                             {
                                 if (chunk.qdbErrorsCount > 0)
@@ -3872,6 +3879,12 @@ namespace ACESinspector
             if (checkBoxLimitDataGridRows.Checked) { key.SetValue("limitDatagridRows", "1"); } else { key.SetValue("limitDatagridRows", "0"); }
         }
 
+        private void checkBoxFlagDupQdb_CheckedChanged(object sender, EventArgs e)
+        {
+            RegistryKey key = Registry.CurrentUser.OpenSubKey("Software", true); key.CreateSubKey("ACESinspector"); key = key.OpenSubKey("ACESinspector", true);
+            if (checkBoxFlagDupQdb.Checked) { key.SetValue("flagDupQdb", "1"); } else { key.SetValue("flagDupQdb", "1"); }
+        }
+
         private void btnSelectNoteInterchangeFile_Click(object sender, EventArgs e)
         {//note translation can be a simple two-column input/output list or a more complex transform from simple notes to Qdb-coded values
          // both types can be present in the note translation file
@@ -4607,7 +4620,11 @@ namespace ACESinspector
             if (checkBoxAssetsAsFitment.Checked) { key.SetValue("assetsAsFitment", "1"); } else { key.SetValue("assetsAsFitment", "0"); }
         }
 
-     
+        private void checkBoxVerboseLogging_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
         private string escapeXMLspecialChars(string inputString)
         {
             string outputString = inputString;

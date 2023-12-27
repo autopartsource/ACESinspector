@@ -6,6 +6,9 @@ autopartsource.com/ACESinspector or on github as a "release"
 
 
 # Changelog
+1.2.0.54 (12/27/2023)
+ - Added ability to gracefull consume an app with a missing parttype so that a XSD error could be thrown. Joe Thomas helped identify the need for this fix.
+
 1.2.0.53 (12/18/2023)
  - Added allowance and detection of duplicate Qdb IDs on same app. Dups were being dropped on import before this version. This is somewhat controversial in the community.
 

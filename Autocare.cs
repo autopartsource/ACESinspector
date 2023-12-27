@@ -3402,7 +3402,7 @@ default: return 0;
                 }
 
                 appTemp.positionid = 0; if ((string)appElement.Element("Position") != null && (string)appElement.Element("Position").Attribute("id").Value!="") { appTemp.positionid = Convert.ToInt32(appElement.Element("Position").Attribute("id").Value); }
-                appTemp.parttypeid = Convert.ToInt32(appElement.Element("PartType").Attribute("id").Value);
+                appTemp.parttypeid = 0; if ((string)appElement.Element("PartType") != null && (string)appElement.Element("PartType").Attribute("id").Value != "") { appTemp.parttypeid = Convert.ToInt32(appElement.Element("PartType").Attribute("id").Value); }
                 appTemp.mfrlabel = (string)appElement.Element("MfrLabel");
                 appTemp.quantity = Convert.ToInt32((string)appElement.Element("Qty"));
 

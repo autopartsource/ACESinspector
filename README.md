@@ -6,6 +6,9 @@ autopartsource.com/ACESinspector or on github as a "release"
 
 
 # Changelog
+1.2.0.55 (1/16/2024)
+ - Fixed a crash problem in branch analysis that was introduced by allowing multiple instances of the same QdbID on an app. Dave Logan (AutoCare) identified this one.
+
 1.2.0.54 (12/27/2023)
  - Added ability to gracefull consume an app with a missing parttype so that a XSD error could be thrown. Joe Thomas helped identify the need for this fix.
 

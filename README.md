@@ -6,6 +6,9 @@ autopartsource.com/ACESinspector or on github as a "release"
 
 
 # Changelog
+1.2.0.56 (1/30/2024)
+ - added qdb code listing tab to the assessment output spreadsheet
+
 1.2.0.55 (1/16/2024)
  - Fixed a crash problem in branch analysis that was introduced by allowing multiple instances of the same QdbID on an app. Dave Logan (AutoCare) identified this one.
 

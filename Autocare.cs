@@ -839,7 +839,8 @@ namespace ACESinspector
         public Dictionary<string, List<int>> partsPartTypes = new Dictionary<string, List<int>>();
         public Dictionary<string, List<int>> partsPositions = new Dictionary<string, List<int>>();
         public Dictionary<string, int> noteCounts = new Dictionary<string, int>();
-        public Dictionary<int, int> basevidOccurrences = new Dictionary<int, int>(); 
+        public Dictionary<int, int> basevidOccurrences = new Dictionary<int, int>();
+        public Dictionary<int, int> qdbidOccurrences = new Dictionary<int, int>();
         public List<string> distinctAssets = new List<string>();
         public List<string> distinctMfrLabels = new List<string>();
         public List<int> distinctPartTypes = new List<int>();
@@ -3598,9 +3599,21 @@ default: return 0;
                         appTemp.QdbQualifiers.Add(QdbQualifierTemp);
                     }
                     else
-                    { // this Qdb id is already used in this app - technically ok, but poor form and it will cause problems in the tree analysis later
+                    { // this Qdb id is already used in this app - technically ok, but poor form
                       // maybe convert it to a note?
                         appTemp.QdbQualifiers.Add(QdbQualifierTemp);
+                    }
+
+
+
+                    // update stats on qdb usage
+                    if (!qdbidOccurrences.ContainsKey(QdbQualifierTemp.qualifierId))
+                    {// first time seeing this qdbid
+                        qdbidOccurrences.Add(QdbQualifierTemp.qualifierId, 1);
+                    }
+                    else
+                    {// seen this qdbid before
+                        qdbidOccurrences[QdbQualifierTemp.qualifierId]++;
                     }
                 }
 

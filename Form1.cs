@@ -1604,6 +1604,16 @@ namespace ACESinspector
                             sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
                         }
 
+                        // Qdb usage listing
+                        sw.Write("<Worksheet ss:Name=\"Qdb Usage\"><Table ss:ExpandedColumnCount=\"2\" x:FullColumns=\"1\" x:FullRows=\"1\" ss:DefaultRowHeight=\"15\"><Column ss:AutoFitWidth=\"0\" ss:Width=\"50\"/><Column ss:AutoFitWidth=\"0\" ss:Width=\"70\"/>");
+                        sw.Write("<Row><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Qdb ID</Data></Cell><Cell ss:StyleID=\"s65\"><Data ss:Type=\"String\">Occurrences</Data></Cell></Row>");
+                        foreach (KeyValuePair<int, int> entry in aces.qdbidOccurrences)
+                        {
+                            sw.Write("<Row><Cell><Data ss:Type=\"Number\">" + entry.Key.ToString() + "</Data></Cell><Cell><Data ss:Type=\"Number\">" + entry.Value.ToString() + "</Data></Cell></Row>");
+                        }
+                        sw.Write("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\"><PageSetup><Header x:Margin=\"0.3\"/><Footer x:Margin=\"0.3\"/><PageMargins x:Bottom=\"0.75\" x:Left=\"0.7\" x:Right=\"0.7\" x:Top=\"0.75\"/></PageSetup>" + excelTabColorXMLtag + "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>3</Number></Pane><Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>");
+
+
                         if (aces.noteCounts.Count > 0)
                         {
                             if (noteToQdbTransformDictionary.Count() > 0)

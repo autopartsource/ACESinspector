@@ -6,6 +6,10 @@ autopartsource.com/ACESinspector or on github as a "release"
 
 
 # Changelog
+
+1.2.0.57 (2/5/2024)
+ - Added allowance for a year-range app that specifies MakeID but not ModelID (yes, I’ve actually seen someone do it).
+
 1.2.0.56 (1/30/2024)
  - added qdb code listing tab to the assessment output spreadsheet
 

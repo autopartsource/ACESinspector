@@ -617,9 +617,13 @@ namespace ACESinspector
     {
         public bool valid;
         public string MakeName;
+        public int MakeId;
         public string ModelName;
-        public string YearId;
+        public int ModelId;
+        public string YearName;
+        public int Year;
         public string VehicleTypeName;
+        public int VehicleTypeId;
         public Dictionary<int, vcdbVehilce> vcdbVehicleDict = new Dictionary<int, vcdbVehilce>();
     }
 
@@ -3404,10 +3408,13 @@ default: return 0;
                 else
                 {// this is a year-range style app (not a specific basevid)
                     if (appElement.Element("Years") != null)
-                    {// year-range style app
-                        if ((string)appElement.Element("Make").Attribute("id").Value != null && (string)appElement.Element("Model").Attribute("id").Value != null && (string)appElement.Element("Years").Attribute("from").Value != null && (string)appElement.Element("Years").Attribute("to").Value != null)
+                    {// year-range style app. It may contain only makeid, but could also include modelid
+
+                        int MakeIDtemp = 0; if (appElement.Element("Make") != null) { MakeIDtemp = Convert.ToInt32((string)appElement.Element("Make").Attribute("id").Value); }
+                        int ModelIDtemp = 0; if (appElement.Element("Model") != null) { MakeIDtemp = Convert.ToInt32((string)appElement.Element("Model").Attribute("id").Value); }
+                        if ((string)appElement.Element("Years").Attribute("from").Value != null && (string)appElement.Element("Years").Attribute("to").Value != null)
                         {
-                            basevidsInRange = vcdb.basevidsFromYearRange(Convert.ToInt32((string)appElement.Element("Make").Attribute("id").Value), Convert.ToInt32((string)appElement.Element("Model").Attribute("id").Value), Convert.ToInt32((string)appElement.Element("Years").Attribute("from").Value), Convert.ToInt32((string)appElement.Element("Years").Attribute("to").Value));
+                            basevidsInRange = vcdb.basevidsFromYearRange(MakeIDtemp, ModelIDtemp, Convert.ToInt32((string)appElement.Element("Years").Attribute("from").Value), Convert.ToInt32((string)appElement.Element("Years").Attribute("to").Value));
                         }
                     }
                     else
@@ -4126,7 +4133,7 @@ default: return 0;
                             //if ( Convert.ToInt32(entry.Value.YearId) >= 2016 && entry.Value.VehicleTypeName=="Car")
                             //{
 
-                            sw.WriteLine(entry.Key.ToString() + "\t" + entry.Value.MakeName + "\t" + entry.Value.ModelName + "\t" + entry.Value.YearId + "\t" + entry.Value.VehicleTypeName);
+                            sw.WriteLine(entry.Key.ToString() + "\t" + entry.Value.MakeName + "\t" + entry.Value.ModelName + "\t" + entry.Value.YearName + "\t" + entry.Value.VehicleTypeName);
                             hitcount++;
                             //}
                         }
@@ -4775,7 +4782,7 @@ default: return 0;
             BaseVehicle basevidTemp = new BaseVehicle(); //basevidTemp.MakeName = "";
             if (vcdbBasevhicleDict.TryGetValue(baseVid, out basevidTemp))
             {
-                return basevidTemp.YearId;
+                return basevidTemp.YearName;
             }
             else
             {
@@ -4787,17 +4794,32 @@ default: return 0;
         public List<int> basevidsFromYearRange(int makeid, int modelid, int startYear, int endYear)
         {
             List<int> basevidList = new List<int>();
-            string mmyKeyTemp = "";
-            for (int yearID = startYear; yearID <= endYear; yearID++)
-            {
-                mmyKeyTemp = makeid.ToString() + "_" + modelid.ToString() + "_" + yearID.ToString();
-                if (vcdbReverseBasevhicleDict.ContainsKey(mmyKeyTemp))
+
+            if (modelid == 0)
+            {// model was not specified - technically ok, but what the hell?!
+                
+                foreach (KeyValuePair<int, BaseVehicle> baseVehicleEntry in vcdbBasevhicleDict)
                 {
-                    basevidList.Add(vcdbReverseBasevhicleDict[mmyKeyTemp]);
+                    if (baseVehicleEntry.Value.MakeId == makeid && baseVehicleEntry.Value.Year >= startYear && baseVehicleEntry.Value.Year <= endYear)
+                    {
+                        basevidList.Add(baseVehicleEntry.Key);
+                    }
                 }
-                else
-                {// this MMY is not valid from given VCDB
-                    basevidList.Add(0);
+            }
+            else
+            {// modelid was specified (non-0)
+                string mmyKeyTemp = "";
+                for (int yearID = startYear; yearID <= endYear; yearID++)
+                {
+                    mmyKeyTemp = makeid.ToString() + "_" + modelid.ToString() + "_" + yearID.ToString();
+                    if (vcdbReverseBasevhicleDict.ContainsKey(mmyKeyTemp))
+                    {
+                        basevidList.Add(vcdbReverseBasevhicleDict[mmyKeyTemp]);
+                    }
+                    else
+                    {// this MMY is not valid from given VCDB
+                        basevidList.Add(0);
+                    }
                 }
             }
             return basevidList;
@@ -5404,7 +5426,7 @@ default: return 0;
             try
             {
                 int i;
-                OleDbCommand command = new OleDbCommand("SELECT BaseVehicle.BaseVehicleId,Make.MakeName,Model.ModelName,BaseVehicle.YearId,VehicleType.VehicleTypeName FROM BaseVehicle,Make,Model,VehicleType where BaseVehicle.MakeId=Make.MakeId and BaseVehicle.ModelId=Model.ModelId and Model.VehicleTypeId=VehicleType.VehicleTypeId order by MakeName,ModelName,YearId;");
+                OleDbCommand command = new OleDbCommand("SELECT BaseVehicle.BaseVehicleId,Make.MakeName,Model.ModelName,BaseVehicle.YearId,VehicleType.VehicleTypeName,Make.MakeId,Model.ModelId,VehicleType.VehicleTypeId FROM BaseVehicle,Make,Model,VehicleType where BaseVehicle.MakeId=Make.MakeId and BaseVehicle.ModelId=Model.ModelId and Model.VehicleTypeId=VehicleType.VehicleTypeId order by MakeName,ModelName,YearId;");
                 command.Connection = connectionOLEDB;
                 OleDbDataReader reader = command.ExecuteReader();
                 while (reader.Read())
@@ -5413,8 +5435,12 @@ default: return 0;
                     BaseVehicle basevidTemp = new BaseVehicle();
                     basevidTemp.MakeName = reader.GetValue(1).ToString();
                     basevidTemp.ModelName = reader.GetValue(2).ToString();
-                    basevidTemp.YearId = reader.GetValue(3).ToString();
+                    basevidTemp.YearName = reader.GetValue(3).ToString();
+                    basevidTemp.Year = Convert.ToInt32(reader.GetValue(3).ToString());
                     basevidTemp.VehicleTypeName = reader.GetValue(4).ToString();
+                    basevidTemp.MakeId = Convert.ToInt32(reader.GetValue(5).ToString());
+                    basevidTemp.ModelId = Convert.ToInt32(reader.GetValue(6).ToString());
+                    basevidTemp.VehicleTypeId = Convert.ToInt32(reader.GetValue(7).ToString());
                     vcdbBasevhicleDict.Add(i, basevidTemp);
                 }
                 reader.Close();
@@ -5837,7 +5863,7 @@ default: return 0;
                     BaseVehicle basevidTemp = new BaseVehicle();
                     basevidTemp.MakeName = reader.GetValue(1).ToString();
                     basevidTemp.ModelName = reader.GetValue(2).ToString();
-                    basevidTemp.YearId = reader.GetValue(3).ToString();
+                    basevidTemp.YearName = reader.GetValue(3).ToString();
                     basevidTemp.VehicleTypeName = reader.GetValue(4).ToString();
                     vcdbBasevhicleDict.Add(i, basevidTemp);
                 }

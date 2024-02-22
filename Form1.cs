@@ -107,7 +107,7 @@ namespace ACESinspector
                             }
                             else
                             {// myversion is newer than published
-                                newestVersionsAvail = "The version installed (" + lblAppVersion.Text + ") is NEWER the latest published ("+ publishedLatestVersion.ToString() + "). You have something special!";
+                                newestVersionsAvail = "The version installed (" + lblAppVersion.Text + ") is NEWER than the latest published ("+ publishedLatestVersion.ToString() + "). You have something special! Consider yourself friends-and-family.";
                                 lblAppVersion.BackColor = Color.Blue;
                                 lblAppVersion.ForeColor = Color.White;
                             }
@@ -870,6 +870,11 @@ namespace ACESinspector
         private async void btnSelectVCdbFile_Click(object sender, EventArgs e)
         {
             string md5Hash = "";
+            string versionOfSelectedVCdb = "";
+            string cacheImportTestResult = "";
+            string cacheImportResult = "";
+            string OLEDBimportResult = "";
+            string VCdbSourceName = "";
 
             using (var openFileDialog = new OpenFileDialog())
             {
@@ -898,13 +903,38 @@ namespace ACESinspector
                     vcdb.importIsRunning = true;
                     progBarVCdbload.Visible = true; progBarVCdbload.Value = 0; lblVCdbFilePath.Text = ""; lblVCdbLoadStatus.Text = "Loading VCdb - 0%";
                     vcdb.useRemoteDB = false;
-                    vcdb.connectLocalOLEDB(openFileDialog.FileName);
-                    var result = await Task.Run(() => vcdb.importOLEDBdata());
+
+                    versionOfSelectedVCdb=vcdb.getVersionFromAccessFile(openFileDialog.FileName);
+                    if (versionOfSelectedVCdb.Substring(4, 1) == "-" && versionOfSelectedVCdb.Substring(7, 1) == "-")
+                    {// file that the user selected appears to be a valid VCdb because the version query was successful
+
+                        // run a test import on the cache files that MAY exist for they given version
+                        cacheImportTestResult = vcdb.importCachedData(lblCachePath.Text + "\\AiFragments", versionOfSelectedVCdb, true);
+                        if (cacheImportTestResult == "")
+                        {// cache is viable (all 50 files contained at least one record with expected column counts and data types
+
+                            cacheImportTestResult = await Task.Run(() => vcdb.importCachedData(lblCachePath.Text + "\\AiFragments", versionOfSelectedVCdb, false));
+                            VCdbSourceName = " (from local cache)";
+                        }
+                        else
+                        { // no valid cache available to consume. Use the access file directly
+                            vcdb.connectLocalOLEDB(openFileDialog.FileName);
+                            OLEDBimportResult = await Task.Run(() => vcdb.importOLEDBdata(lblCachePath.Text + "\\AiFragments"));
+                            VCdbSourceName = " (from access file)";
+                        }
+
+                    }
+                    else
+                    {// selected access file didn't pass the version query test - it's probably not a real VCdb 
+                        MessageBox.Show("Error importing VCdb (" + versionOfSelectedVCdb + ")"); aces.logHistoryEvent("", "0\tError importing VCdb (" + versionOfSelectedVCdb + ")");
+                    }
+
+
                     vcdb.importIsRunning = false;
-                    lblVCdbFilePath.Text = "Local VCdb Version: " + vcdb.version;
+                    lblVCdbFilePath.Text = "Local VCdb Version: " + vcdb.version + VCdbSourceName;
                     lblVCdbLoadStatus.Text = "";
                     progBarVCdbload.Value = 0; progBarVCdbload.Visible = false;
-                    if (vcdb.version != "" && result == "")
+                    if (vcdb.version != "" && OLEDBimportResult == "")
                     {
                         key.SetValue("lastVCdbDirectoryPath", Path.GetDirectoryName(openFileDialog.FileName));
                         key.SetValue("lastVCdbFilePath", openFileDialog.FileName);
@@ -914,7 +944,7 @@ namespace ACESinspector
                     }
                     else
                     {
-                        MessageBox.Show("Error importing VCdb (" + result + ")"); aces.logHistoryEvent("", "0\tError importing VCdb (" + result + ")");
+                        MessageBox.Show("Error importing VCdb (" + OLEDBimportResult + ")"); aces.logHistoryEvent("", "0\tError importing VCdb (" + OLEDBimportResult + ")");
                     }
                 }
             }
@@ -1040,7 +1070,7 @@ namespace ACESinspector
                                 vcdb.clear();
                                 vcdb.useRemoteDB = false;
                                 vcdb.connectLocalOLEDB(vcdbFilePath);
-                                vcdb.importOLEDBdata();
+                                vcdb.importOLEDBdata(lblCachePath.Text + "\\AiFragments");
                                 aces.logHistoryEvent("", "1\tAuto-loaded local VCdb: " + vcdb.version);
                             }
                             else

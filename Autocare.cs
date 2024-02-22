@@ -5419,16 +5419,1401 @@ default: return 0;
         }
 
 
-        public string importOLEDBdata()
+        public string importCachedData(string cachepath, string cachedversion, bool testmode)
+        {// fff
+            int i; int basevehicleidTemp; int vehicleidTemp;
+            importSuccess = true;
+            int validTestRecordCount = 0;
+            try
+            {
+                vcdbBasevhicleDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_basevehicle_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 8)
+                        {//text must be exactly 8 columns seperated by tab
+                            i = Convert.ToInt32(fields[0]);
+                            BaseVehicle basevidTemp = new BaseVehicle();
+                            basevidTemp.MakeName = fields[1];
+                            basevidTemp.ModelName = fields[2];
+                            basevidTemp.YearName = fields[3];
+                            basevidTemp.Year = Convert.ToInt32(fields[3]);
+                            basevidTemp.VehicleTypeName = fields[4];
+                            basevidTemp.MakeId = Convert.ToInt32(fields[5]);
+                            basevidTemp.ModelId = Convert.ToInt32(fields[6]);
+                            basevidTemp.VehicleTypeId = Convert.ToInt32(fields[7]);
+                            vcdbBasevhicleDict.Add(i, basevidTemp);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "basevehicle --- " + ex.Message;
+            }
+
+            importProgress = 20;
+
+
+            try
+            {
+                vcdbReverseBasevhicleDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_basevehiclereverse_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            if (!vcdbReverseBasevhicleDict.ContainsKey(fields[0]))
+                            {
+                                vcdbReverseBasevhicleDict.Add(fields[0], Convert.ToInt32(fields[1]));
+                            }
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "basevehiclereverse --- " + ex.Message;
+            }
+
+            importProgress = 30;
+
+            try
+            {
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_vehicle_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 5)
+                        {
+                            basevehicleidTemp = Convert.ToInt32(fields[1]);
+                            vehicleidTemp = Convert.ToInt32(fields[0]);
+                            vcdbVehilce vcdbVehicleTemp = new vcdbVehilce();
+                            vcdbVehicleTemp.SubmodelID = Convert.ToInt32(fields[2]);
+                            vcdbVehicleTemp.RegionID = Convert.ToInt32(fields[3]);
+                            vcdbVehicleTemp.PublicationStageID = Convert.ToInt32(fields[4]);
+
+                            if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp))
+                            {
+                                if (!vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
+                                {// this vcdbBasevhicleDict entry does not contain a vcdbVehicleDict entry for VehicleID in this query result record
+                                    vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.Add(vehicleidTemp, vcdbVehicleTemp);
+                                }
+                            }
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "vehicle --- " + ex.Message;
+            }
+
+            importProgress = 45;
+
+
+            try
+            {
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_vehicle-drivetype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 3)
+                        {
+                            basevehicleidTemp = Convert.ToInt32(fields[0]);
+                            vehicleidTemp = Convert.ToInt32(fields[1]);
+
+                            if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
+                            {
+                                vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].DriveTypeIDlist.Add(Convert.ToInt32(fields[2]));
+                            }
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "vehicle-drivetype --- " + ex.Message;
+            }
+
+            importProgress = 50;
+
+
+            try
+            {
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_vehicle-wheelbase_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 3)
+                        {
+                            basevehicleidTemp = Convert.ToInt32(fields[0]);
+                            vehicleidTemp = Convert.ToInt32(fields[1]);
+                            if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
+                            {
+                                vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].WheelBaseIDlist.Add(Convert.ToInt32(fields[2]));
+                            }
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "vehicle-wheelbase --- " + ex.Message;
+            }
+
+            importProgress = 55;
+
+
+            try
+            {
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_vehicle-mfrbodycode_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 3)
+                        {
+                            basevehicleidTemp = Convert.ToInt32(fields[0]);
+                            vehicleidTemp = Convert.ToInt32(fields[1]);
+                            if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
+                            {
+                                vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].MfrBodyCodeIDlist.Add(Convert.ToInt32(fields[2]));
+                            }
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "vehicle-mfrbodycode --- " + ex.Message;
+            }
+
+            importProgress = 60;
+
+
+            try
+            {
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_vehicle-bedconfig_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 4)
+                        {
+                            basevehicleidTemp = Convert.ToInt32(fields[0]);
+                            vehicleidTemp = Convert.ToInt32(fields[1]);
+                            if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
+                            {
+                                vcdbBedConfig vcdbBedConfigTemp = new vcdbBedConfig();
+                                vcdbBedConfigTemp.BedLengthID = Convert.ToInt32(fields[2]);
+                                vcdbBedConfigTemp.BedTypeID = Convert.ToInt32(fields[3]);
+                                vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].BedConfigList.Add(vcdbBedConfigTemp);
+                            }
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "vehicle-bedconfig --- " + ex.Message;
+            }
+
+            importProgress = 65;
+
+
+            try
+            {
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_vehicle-bodystyleconfig_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 4)
+                        {
+                            basevehicleidTemp = Convert.ToInt32(fields[0]);
+                            vehicleidTemp = Convert.ToInt32(fields[1]);
+                            if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
+                            {
+                                vcdbBodyStyleConfig vcdbBodyStyleConfigTemp = new vcdbBodyStyleConfig();
+                                vcdbBodyStyleConfigTemp.BodyTypeID = Convert.ToInt32(fields[2]);
+                                vcdbBodyStyleConfigTemp.BodyNumDoorsID = Convert.ToInt32(fields[3]);
+                                vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].BodyStyleConfigList.Add(vcdbBodyStyleConfigTemp);
+                            }
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "vehicle-bodystyleconfig --- " + ex.Message;
+            }
+
+            importProgress = 70;
+
+
+            try
+            {
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_vehicle-brakeconfig_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 6)
+                        {
+                            basevehicleidTemp = Convert.ToInt32(fields[0]);
+                            vehicleidTemp = Convert.ToInt32(fields[1]);
+                            if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
+                            {
+                                vcdbBrakeConfig vcdbBrakeConfigTemp = new vcdbBrakeConfig();
+                                vcdbBrakeConfigTemp.FrontBrakeTypeID = Convert.ToInt32(fields[2]);
+                                vcdbBrakeConfigTemp.RearBrakeTypeID = Convert.ToInt32(fields[3]);
+                                vcdbBrakeConfigTemp.BrakeSystemID = Convert.ToInt32(fields[4]);
+                                vcdbBrakeConfigTemp.BrakeABSID = Convert.ToInt32(fields[5]);
+                                vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].BrakeConfigList.Add(vcdbBrakeConfigTemp);
+                            }
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "vehicle-brakeconfig --- " + ex.Message;
+            }
+
+            importProgress = 75;
+
+
+            try
+            {
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_vehicle-springtypeconfig_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 4)
+                        {
+                            basevehicleidTemp = Convert.ToInt32(fields[0]);
+                            vehicleidTemp = Convert.ToInt32(fields[1]);
+                            if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
+                            {
+                                vcdbSpringTypeConfig vcdbSpringTypeConfigTemp = new vcdbSpringTypeConfig();
+                                vcdbSpringTypeConfigTemp.FrontSpringTypeID = Convert.ToInt32(fields[2]);
+                                vcdbSpringTypeConfigTemp.RearSpringTypeID = Convert.ToInt32(fields[3]);
+                                vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].SpringTypeConfigList.Add(vcdbSpringTypeConfigTemp);
+                            }
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "vehicle-springtypeconfig --- " + ex.Message;
+            }
+
+            importProgress = 80;
+
+
+            try
+            {
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_vehicle-steeringconfig_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 4)
+                        {
+                            basevehicleidTemp = Convert.ToInt32(fields[0]);
+                            vehicleidTemp = Convert.ToInt32(fields[1]);
+                            if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
+                            {
+                                vcdbSteeringConfig vcdbSteeringConfigTemp = new vcdbSteeringConfig();
+                                vcdbSteeringConfigTemp.SteeringTypeID = Convert.ToInt32(fields[2]);
+                                vcdbSteeringConfigTemp.SteeringSystemID = Convert.ToInt32(fields[3]);
+                                vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].SteeringConfigList.Add(vcdbSteeringConfigTemp);
+                            }
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "vehicle-steeringconfig --- " + ex.Message;
+            }
+
+            importProgress = 85;
+
+
+            try
+            {
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_vehicle-engineconfig2_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 18)
+                        {
+                            basevehicleidTemp = Convert.ToInt32(fields[0]);
+                            vehicleidTemp = Convert.ToInt32(fields[1]);
+                            if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
+                            {
+                                vcdbEngineConfig vcdbEngineConfigTemp = new vcdbEngineConfig();
+                                vcdbEngineConfigTemp.EngineBaseID = Convert.ToInt32(fields[2]);
+                                vcdbEngineConfigTemp.EngineDesignationID = Convert.ToInt32(fields[3]);
+                                vcdbEngineConfigTemp.EngineVINID = Convert.ToInt32(fields[4]);
+                                vcdbEngineConfigTemp.ValvesID = Convert.ToInt32(fields[5]);
+                                vcdbEngineConfigTemp.AspirationID = Convert.ToInt32(fields[6]);
+                                vcdbEngineConfigTemp.CylinderHeadTypeID = Convert.ToInt32(fields[7]);
+                                vcdbEngineConfigTemp.FuelTypeID = Convert.ToInt32(fields[8]);
+                                vcdbEngineConfigTemp.IgnitionSystemTypeID = Convert.ToInt32(fields[9]);
+                                vcdbEngineConfigTemp.EngineMfrID = Convert.ToInt32(fields[10]);
+                                vcdbEngineConfigTemp.EngineVersionID = Convert.ToInt32(fields[11]);
+                                vcdbEngineConfigTemp.PowerOutputID = Convert.ToInt32(fields[12]);
+                                vcdbEngineConfigTemp.FuelDeliveryTypeID = Convert.ToInt32(fields[13]);
+                                vcdbEngineConfigTemp.FuelDeliverySubTypeID = Convert.ToInt32(fields[14]);
+                                vcdbEngineConfigTemp.FuelSystemControlTypeID = Convert.ToInt32(fields[15]);
+                                vcdbEngineConfigTemp.FuelSystemDesignID = Convert.ToInt32(fields[16]);
+                                vcdbEngineConfigTemp.EngineBlockID = Convert.ToInt32(fields[17]);
+                                vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].EngineConfigList.Add(vcdbEngineConfigTemp);
+                            }
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "vehicle-engineconfig2 --- " + ex.Message;
+            }
+
+            importProgress = 90;
+
+
+            try
+            {
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_vehicle-transmission_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 9)
+                        {
+                            basevehicleidTemp = Convert.ToInt32(fields[0]);
+                            vehicleidTemp = Convert.ToInt32(fields[1]);
+                            if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
+                            {
+                                vcdbTransmission vcdbTransmissionTemp = new vcdbTransmission();
+                                vcdbTransmissionTemp.TransmissionBaseID = Convert.ToInt32(fields[2]);
+                                vcdbTransmissionTemp.TransmissionTypeID = Convert.ToInt32(fields[3]);
+                                vcdbTransmissionTemp.TransmissionNumSpeedsID = Convert.ToInt32(fields[4]);
+                                vcdbTransmissionTemp.TransmissionControlTypeID = Convert.ToInt32(fields[5]);
+                                vcdbTransmissionTemp.TransmissionMfrCodeID = Convert.ToInt32(fields[6]);
+                                vcdbTransmissionTemp.TransmissionElecControlledID = Convert.ToInt32(fields[7]);
+                                vcdbTransmissionTemp.TransmissionMfrID = Convert.ToInt32(fields[8]);
+                                vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].TransmissionList.Add(vcdbTransmissionTemp);
+                            }
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "vehicle-transmission --- " + ex.Message;
+            }
+
+            importProgress = 98;
+
+
+            try
+            {
+                enginebaseDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_enginebase_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            enginebaseDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "enginebase --- " + ex.Message;
+            }
+
+
+            try
+            {
+                engineblockDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_engineblock_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            engineblockDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "engineblock --- " + ex.Message;
+            }
+
+
+            try
+            {
+                submodelDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_submodel_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            submodelDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "submodel --- " + ex.Message;
+            }
+
+
+            try
+            {
+                drivetypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_drivetype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            drivetypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "drivetype --- " + ex.Message;
+            }
+
+            try
+            {
+                aspirationDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_aspiration_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            aspirationDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "aspiration --- " + ex.Message;
+            }
+
+
+            try
+            {
+                fueltypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_fueltype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            fueltypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "fueltype --- " + ex.Message;
+            }
+
+
+            try
+            {
+                braketypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_braketype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            braketypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "braketype --- " + ex.Message;
+            }
+
+
+            try
+            {
+                brakeabsDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_brakeabs_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            brakeabsDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "brakeabs --- " + ex.Message;
+            }
+
+            try
+            {
+                mfrbodycodeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_mfrbodycode_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            mfrbodycodeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "mfrbodycode --- " + ex.Message;
+            }
+
+
+            try
+            {
+                bodynumdoorsDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_bodynumdoors_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            bodynumdoorsDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "bodynumdoors --- " + ex.Message;
+            }
+
+            try
+            {
+                bodytypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_bodytype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            bodytypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "bodytype --- " + ex.Message;
+            }
+
+
+            try
+            {
+                enginedesignationDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_enginedesignation_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            enginedesignationDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "enginedesignation --- " + ex.Message;
+            }
+
+
+            try
+            {
+                enginevinDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_enginevin_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            enginevinDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "enginevin --- " + ex.Message;
+            }
+
+
+            try
+            {
+                engineversionDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_engineversion_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            engineversionDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "engineversion --- " + ex.Message;
+            }
+
+
+            try
+            {
+                mfrDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_mfr_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            mfrDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "mfr --- " + ex.Message;
+            }
+
+            try
+            {
+                fueldeliverytypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_fueldeliverytype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            fueldeliverytypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "fueldeliverytype --- " + ex.Message;
+            }
+
+            try
+            {
+                fueldeliverysubtypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_fueldeliverysubtype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            fueldeliverysubtypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "fueldeliverysubtype --- " + ex.Message;
+            }
+
+            try
+            {
+                fuelsystemcontroltypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_fuelsystemcontroltype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            fuelsystemcontroltypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "fuelsystemcontroltype --- " + ex.Message;
+            }
+
+            try
+            {
+                fuelsystemdesignDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_fuelsystemdesign_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            fuelsystemdesignDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "fuelsystemdesign --- " + ex.Message;
+            }
+
+
+            try
+            {
+                cylinderheadtypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_cylinderheadtype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            cylinderheadtypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "cylinderheadtype --- " + ex.Message;
+            }
+
+
+            try
+            {
+                ignitionsystemtypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_ignitionsystemtype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            ignitionsystemtypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "ignitionsystemtype --- " + ex.Message;
+            }
+
+
+            try
+            {
+                transmissionmfrcodeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_transmissionmfrcode_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            transmissionmfrcodeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "transmissionmfrcode ---- " + ex.Message;
+            }
+
+            try
+            {
+                transmissionbaseDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_transmissionbase_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            transmissionbaseDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "transmissionbase --- " + ex.Message;
+            }
+
+
+            try
+            {
+                transmissiontypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_transmissiontype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            transmissiontypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "transmissiontype --- " + ex.Message;
+            }
+
+
+            try
+            {
+                transmissioncontroltypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_transmissioncontroltype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            transmissioncontroltypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "transmissioncontroltype --- " + ex.Message;
+            }
+
+
+
+            try
+            {
+                transmissioeleccontrolledDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_eleccontrolled_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            transmissioeleccontrolledDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "eleccontrolled --- " + ex.Message;
+            }
+
+            try
+            {
+                transmissionnumspeedsDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_transmissionnumspeeds_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            transmissionnumspeedsDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "transmissionnumspeeds --- " + ex.Message;
+            }
+
+            try
+            {
+                bedlengthDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_bedlength_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            bedlengthDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "bedlength --- " + ex.Message;
+            }
+
+            try
+            {
+                bedtypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_bedtype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            bedtypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "bedtype --- " + ex.Message;
+            }
+
+            try
+            {
+                wheelbaseDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_wheelbase_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            wheelbaseDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "wheelbase ---- " + ex.Message;
+            }
+
+            try
+            {
+                brakesystemDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_brakesystem_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            brakesystemDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "brakesystem --- " + ex.Message;
+            }
+
+
+
+            try
+            {
+                regionDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_region_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            regionDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "region --- " + ex.Message;
+            }
+
+            try
+            {
+                springtypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_springtype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            springtypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "springtype ---- " + ex.Message;
+            }
+
+            try
+            {
+                steeringsystemDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_steeringsystem_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            steeringsystemDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "steeringsystem --- " + ex.Message;
+            }
+
+
+            try
+            {
+                steeringtypeDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_steeringtype_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            steeringtypeDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "steeringtype --- " + ex.Message;
+            }
+
+            try
+            {
+                valvesDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_valves_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            valvesDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "valves ---- " + ex.Message;
+            }
+
+            try
+            {
+                poweroutputDict.Clear();
+                using (var reader = new StreamReader(cachepath + "\\" + "vcdb_poweroutput_" + cachedversion + ".txt"))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var fields = line.Split('\t');
+                        if (fields.Count() == 2)
+                        {
+                            poweroutputDict.Add(Convert.ToInt32(fields[0]), fields[1]);
+                            if (testmode) { validTestRecordCount++; break; }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                importSuccess = false;
+                return "poweroutput --- " + ex.Message;
+            }
+
+
+            version = cachedversion;
+            importProgress = 100;
+            if (testmode)
+            {
+                if (validTestRecordCount < 50)
+                {
+                    return "valid record count too low (" + validTestRecordCount.ToString() + ")";
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            else
+            {
+                return "";
+            }
+
+        }
+
+
+        public string getVersionFromAccessFile(string path)
+        {
+            string result = "";            
+            try
+            {
+                if (connectionOLEDB.State != System.Data.ConnectionState.Closed)
+                {
+                    connectionOLEDB.Close();
+                }
+                connectionOLEDB.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + path + ";Mode=Read";
+                connectionOLEDB.Open();
+
+                OleDbCommand command = new OleDbCommand("SELECT versiondate from version;");
+                command.Connection = connectionOLEDB;
+                OleDbDataReader reader = command.ExecuteReader();
+                while (reader.Read()) { result = reader.GetValue(0).ToString(); }
+
+                DateTime dt = new DateTime();
+                if (DateTime.TryParseExact(result, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { result = dt.ToString("yyyy-MM-dd"); }
+
+                reader.Close();
+                connectionOLEDB.Close();
+
+            }
+            catch (Exception ex) { result = ex.Message; }
+            return result;
+        }
+
+
+        public string importOLEDBdata(string cachepath)
         {
             importSuccess = false;
-           
+            bool cachelocal = Directory.Exists(cachepath);
+            List<string> cachefileLinesList = new List<string>();
+
             try
             {
                 int i;
-                OleDbCommand command = new OleDbCommand("SELECT BaseVehicle.BaseVehicleId,Make.MakeName,Model.ModelName,BaseVehicle.YearId,VehicleType.VehicleTypeName,Make.MakeId,Model.ModelId,VehicleType.VehicleTypeId FROM BaseVehicle,Make,Model,VehicleType where BaseVehicle.MakeId=Make.MakeId and BaseVehicle.ModelId=Model.ModelId and Model.VehicleTypeId=VehicleType.VehicleTypeId order by MakeName,ModelName,YearId;");
+
+                OleDbCommand command = new OleDbCommand("SELECT versiondate from version;");
                 command.Connection = connectionOLEDB;
                 OleDbDataReader reader = command.ExecuteReader();
+                while (reader.Read()) { version = reader.GetValue(0).ToString(); }
+                reader.Close();
+
+                DateTime dt = new DateTime();
+                if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
+                reader.Close();
+
+                command.CommandText = "SELECT BaseVehicle.BaseVehicleId,Make.MakeName,Model.ModelName,BaseVehicle.YearId,VehicleType.VehicleTypeName,Make.MakeId,Model.ModelId,VehicleType.VehicleTypeId FROM BaseVehicle,Make,Model,VehicleType where BaseVehicle.MakeId=Make.MakeId and BaseVehicle.ModelId=Model.ModelId and Model.VehicleTypeId=VehicleType.VehicleTypeId order by MakeName,ModelName,YearId;";
+                reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     i = Convert.ToInt32(reader.GetValue(0).ToString());
@@ -5442,55 +6827,88 @@ default: return 0;
                     basevidTemp.ModelId = Convert.ToInt32(reader.GetValue(6).ToString());
                     basevidTemp.VehicleTypeId = Convert.ToInt32(reader.GetValue(7).ToString());
                     vcdbBasevhicleDict.Add(i, basevidTemp);
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + basevidTemp.MakeName + "\t" + basevidTemp.ModelName + "\t" + basevidTemp.YearName + "\t" + basevidTemp.VehicleTypeName + "\t" + basevidTemp.MakeId.ToString() + "\t" + basevidTemp.ModelId.ToString() + "\t" + basevidTemp.VehicleTypeId.ToString()); }
                 }
                 reader.Close();
+
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_basevehicle_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
                 importProgress = 5;
 
                 // populuate basevehicle lookup dict [makeid_modelid_yearid]=>basevidid  
                 string mmyKeyTemp = "";
+                cachefileLinesList.Clear();
                 command.CommandText = "select Make.MakeID, Model.ModelID, YearID, BaseVehicleID from Make,Model,BaseVehicle where Make.MakeID=BaseVehicle.MakeID and Model.ModelID =BaseVehicle.ModelID;"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
+                    i = Convert.ToInt32(reader.GetValue(3).ToString());
                     mmyKeyTemp = reader.GetValue(0).ToString() + "_" + reader.GetValue(1).ToString() + "_" + reader.GetValue(2).ToString();
                     if (!vcdbReverseBasevhicleDict.ContainsKey(mmyKeyTemp))
                     {
-                        vcdbReverseBasevhicleDict.Add(mmyKeyTemp, Convert.ToInt32(reader.GetValue(3).ToString()));
+                        vcdbReverseBasevhicleDict.Add(mmyKeyTemp, i);
                     }
+                    if (cachelocal) { cachefileLinesList.Add(mmyKeyTemp + "\t" + i.ToString()); }
                 }
                 reader.Close();
 
-
-
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_basevehiclereverse_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
 
                 // instance and populuate all the "Vehicle" table stuff (VehicleID,BaseVehicleID,SubmodelID,RegionID,PublicationStageID) and put it in the basevid-keyed dict
+                cachefileLinesList.Clear();
                 int basevehicleidTemp, vehicleidTemp;
                 command.CommandText = "select VehicleID,BaseVehicleID,SubmodelID,RegionID,PublicationStageID from Vehicle order by BaseVehicleID,VehicleID"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     basevehicleidTemp = Convert.ToInt32(reader.GetValue(1).ToString());
                     vehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
+                    vcdbVehilce vcdbVehicleTemp = new vcdbVehilce();
+                    vcdbVehicleTemp.SubmodelID = Convert.ToInt32(reader.GetValue(2).ToString());
+                    vcdbVehicleTemp.RegionID = Convert.ToInt32(reader.GetValue(3).ToString());
+                    vcdbVehicleTemp.PublicationStageID = Convert.ToInt32(reader.GetValue(4).ToString());
 
                     if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp))
                     {
                         if (!vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
                         {// this vcdbBasevhicleDict entry does not contain a vcdbVehicleDict entry for VehicleID in this query result record
-                            vcdbVehilce vcdbVehicleTemp = new vcdbVehilce();
-                            vcdbVehicleTemp.SubmodelID = Convert.ToInt32(reader.GetValue(2).ToString());
-                            vcdbVehicleTemp.RegionID = Convert.ToInt32(reader.GetValue(3).ToString());
-                            vcdbVehicleTemp.PublicationStageID = Convert.ToInt32(reader.GetValue(4).ToString());
                             vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.Add(vehicleidTemp, vcdbVehicleTemp);
                         }
                     }
+
+                    if (cachelocal) { cachefileLinesList.Add(vehicleidTemp.ToString() + "\t" + basevehicleidTemp.ToString() + "\t" + vcdbVehicleTemp.SubmodelID.ToString() + "\t" + vcdbVehicleTemp.RegionID.ToString() + "\t" + vcdbVehicleTemp.PublicationStageID.ToString()); }
                 }
                 reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_vehicle_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+
+                cachefileLinesList.Clear();
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, DriveType.DriveTypeID from Vehicle, VehicleToDriveType, DriveType where Vehicle.VehicleID= VehicleToDriveType.VehicleID and VehicleToDriveType.DriveTypeID = DriveType.DriveTypeID"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
                     vehicleidTemp = Convert.ToInt32(reader.GetValue(1).ToString());
+
+                    if (cachelocal) { cachefileLinesList.Add(basevehicleidTemp.ToString() + "\t" + vehicleidTemp.ToString() + "\t" + reader.GetValue(2).ToString()); }
+
                     if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
                     {
                         vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].DriveTypeIDlist.Add(Convert.ToInt32(reader.GetValue(2).ToString()));
@@ -5498,27 +6916,48 @@ default: return 0;
                 }
                 reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_vehicle-drivetype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+
+
+
+                cachefileLinesList.Clear();
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, WheelBase.WheelBaseID from Vehicle, VehicleToWheelbase, WheelBase where Vehicle.VehicleID= VehicleToWheelbase.VehicleID and VehicleToWheelbase.WheelbaseID = WheelBase.WheelBaseID"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
                     vehicleidTemp = Convert.ToInt32(reader.GetValue(1).ToString());
-
+                    if (cachelocal) { cachefileLinesList.Add(basevehicleidTemp.ToString() + "\t" + vehicleidTemp.ToString() + "\t" + reader.GetValue(2).ToString()); }
                     if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
                     {
                         vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].WheelBaseIDlist.Add(Convert.ToInt32(reader.GetValue(2).ToString()));
                     }
                 }
                 reader.Close();
+
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_vehicle-wheelbase_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
                 importProgress = 20;
 
+                cachefileLinesList.Clear();
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, MfrBodyCode.MfrBodyCodeID from Vehicle, VehicleToMfrBodyCode, MfrBodyCode where Vehicle.VehicleID= VehicleToMfrBodyCode.VehicleID and VehicleToMfrBodyCode.MfrBodyCodeID =MfrBodyCode.MfrBodyCodeID"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
                     vehicleidTemp = Convert.ToInt32(reader.GetValue(1).ToString());
-
+                    if (cachelocal) { cachefileLinesList.Add(basevehicleidTemp.ToString() + "\t" + vehicleidTemp.ToString() + "\t" + reader.GetValue(2).ToString()); }
                     if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
                     {
                         vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict[vehicleidTemp].MfrBodyCodeIDlist.Add(Convert.ToInt32(reader.GetValue(2).ToString()));
@@ -5526,12 +6965,23 @@ default: return 0;
                 }
                 reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_vehicle-mfrbodycode_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+                importProgress = 25;
+
+                cachefileLinesList.Clear();
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, BedLengthID, BedTypeID from Vehicle, VehicleToBedConfig, BedConfig where Vehicle.VehicleID = VehicleToBedConfig.VehicleID and VehicleToBedConfig.BedConfigID = BedConfig.BedConfigID"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
                     vehicleidTemp = Convert.ToInt32(reader.GetValue(1).ToString());
-
+                    if (cachelocal) { cachefileLinesList.Add(basevehicleidTemp.ToString() + "\t" + vehicleidTemp.ToString() + "\t" + reader.GetValue(2).ToString() + "\t" + reader.GetValue(3).ToString()); }
                     if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
                     {
                         vcdbBedConfig vcdbBedConfigTemp = new vcdbBedConfig();
@@ -5542,12 +6992,24 @@ default: return 0;
                 }
                 reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_vehicle-bedconfig_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+
+                importProgress = 30;
+
+                cachefileLinesList.Clear();
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID,  BodyTypeID, BodyNumDoorsID from Vehicle, VehicleToBodyStyleConfig, BodyStyleConfig where Vehicle.VehicleID = VehicleToBodyStyleConfig.VehicleID and VehicleToBodyStyleConfig.BodyStyleConfigID = BodyStyleConfig.BodyStyleConfigID"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
                     vehicleidTemp = Convert.ToInt32(reader.GetValue(1).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(basevehicleidTemp.ToString() + "\t" + vehicleidTemp.ToString() + "\t" + reader.GetValue(2).ToString() + "\t" + reader.GetValue(3).ToString()); }
                     if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
                     {
                         vcdbBodyStyleConfig vcdbBodyStyleConfigTemp = new vcdbBodyStyleConfig();
@@ -5558,12 +7020,23 @@ default: return 0;
                 }
                 reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_vehicle-bodystyleconfig_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                importProgress = 35;
+
+                cachefileLinesList.Clear();
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, FrontBrakeTypeID, RearBrakeTypeID, BrakeSystemID, BrakeABSID from Vehicle, VehicleToBrakeConfig, BrakeConfig where Vehicle.VehicleID = VehicleToBrakeConfig.VehicleID and VehicleToBrakeConfig.BrakeConfigID = BrakeConfig.BrakeConfigID"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
                     vehicleidTemp = Convert.ToInt32(reader.GetValue(1).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(basevehicleidTemp.ToString() + "\t" + vehicleidTemp.ToString() + "\t" + reader.GetValue(2).ToString() + "\t" + reader.GetValue(3).ToString() + "\t" + reader.GetValue(4).ToString() + "\t" + reader.GetValue(5).ToString()); }
                     if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
                     {
                         vcdbBrakeConfig vcdbBrakeConfigTemp = new vcdbBrakeConfig();
@@ -5575,14 +7048,25 @@ default: return 0;
                     }
                 }
                 reader.Close();
+
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_vehicle-brakeconfig_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+
                 importProgress = 40;
 
-
+                cachefileLinesList.Clear();
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, FrontSpringTypeID, RearSpringTypeID from Vehicle, VehicleToSpringTypeConfig, SpringTypeConfig where Vehicle.VehicleID = VehicleToSpringTypeConfig.VehicleID and VehicleToSpringTypeConfig.SpringTypeConfigID = SpringTypeConfig.SpringTypeConfigID"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
                     vehicleidTemp = Convert.ToInt32(reader.GetValue(1).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(basevehicleidTemp.ToString() + "\t" + vehicleidTemp.ToString() + "\t" + reader.GetValue(2).ToString() + "\t" + reader.GetValue(3).ToString()); }
                     if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
                     {
                         vcdbSpringTypeConfig vcdbSpringTypeConfigTemp = new vcdbSpringTypeConfig();
@@ -5593,12 +7077,24 @@ default: return 0;
                 }
                 reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_vehicle-springtypeconfig_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                importProgress = 45;
+
+
+                cachefileLinesList.Clear();
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, SteeringTypeID, SteeringSystemID from Vehicle, VehicleToSteeringConfig, SteeringConfig where Vehicle.VehicleID = VehicleToSteeringConfig.VehicleID and VehicleToSteeringConfig.SteeringConfigID = SteeringConfig.SteeringConfigID"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
                     vehicleidTemp = Convert.ToInt32(reader.GetValue(1).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(basevehicleidTemp.ToString() + "\t" + vehicleidTemp.ToString() + "\t" + reader.GetValue(2).ToString() + "\t" + reader.GetValue(3).ToString()); }
                     if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
                     {
                         vcdbSteeringConfig vcdbSteeringConfigTemp = new vcdbSteeringConfig();
@@ -5609,6 +7105,17 @@ default: return 0;
                 }
                 reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_vehicle-steeringconfig_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+                importProgress = 50;
+
+
                 int LPS20221004 = 0;
                 // if you wanted to limit the vcdb to type2 (pass car and light truck) vehicles:
                 //command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, EngineConfig.EngineBaseID, EngineDesignationID, EngineVINID, ValvesID, AspirationID, CylinderHeadTypeID, FuelTypeID, IgnitionSystemTypeID, EngineMfrID, EngineVersionID, PowerOutputID, FuelDeliveryTypeID, FuelDeliverySubTypeID, FuelSystemControlTypeID, FuelSystemDesignID from BaseVehicle, Model, VehicleType, Vehicle, VehicleToEngineConfig, EngineConfig, EngineBase, FuelDeliveryConfig where Vehicle.BaseVehicleID=BaseVehicle.BaseVehicleID and BaseVehicle.ModelID=Model.ModelID and Model.VehicleTypeID=VehicleType.VehicleTypeID and Vehicle.VehicleID = VehicleToEngineConfig.VehicleID and VehicleToEngineConfig.EngineConfigID = EngineConfig.EngineConfigID and EngineConfig.EngineBaseID = EngineBase.EngineBaseID and EngineConfig.FuelDeliveryConfigID=FuelDeliveryConfig.FuelDeliveryConfigID and VehicleType.VehicleTypeGroupID=2";
@@ -5616,12 +7123,14 @@ default: return 0;
 
 
                 // classic (before engineBlock was a thing) command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, EngineConfig.EngineBaseID, EngineDesignationID, EngineVINID, ValvesID, AspirationID, CylinderHeadTypeID, FuelTypeID, IgnitionSystemTypeID, EngineMfrID, EngineVersionID, PowerOutputID, FuelDeliveryTypeID, FuelDeliverySubTypeID, FuelSystemControlTypeID, FuelSystemDesignID from Vehicle, VehicleToEngineConfig, EngineConfig, EngineBase, FuelDeliveryConfig where Vehicle.VehicleID = VehicleToEngineConfig.VehicleID and VehicleToEngineConfig.EngineConfigID = EngineConfig.EngineConfigID and EngineConfig.EngineBaseID = EngineBase.EngineBaseID and EngineConfig.FuelDeliveryConfigID=FuelDeliveryConfig.FuelDeliveryConfigID"; reader = command.ExecuteReader();
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT Vehicle.BaseVehicleID, Vehicle.VehicleID, EngineConfig2.EngineBaseID, EngineConfig2.EngineDesignationID, EngineConfig2.EngineVINID, EngineConfig2.ValvesID, EngineConfig2.AspirationID, EngineConfig2.CylinderHeadTypeID, EngineConfig2.FuelTypeID, EngineConfig2.IgnitionSystemTypeID, EngineConfig2.EngineMfrID, EngineConfig2.EngineVersionID, EngineConfig2.PowerOutputID, FuelDeliveryConfig.FuelDeliveryTypeID, FuelDeliveryConfig.FuelDeliverySubTypeID, FuelDeliveryConfig.FuelSystemControlTypeID, FuelDeliveryConfig.FuelSystemDesignID, EngineBlock.EngineBlockID FROM Vehicle INNER JOIN (FuelDeliveryConfig INNER JOIN ((EngineBlock INNER JOIN (EngineBase2 INNER JOIN (EngineBase INNER JOIN EngineConfig2 ON EngineBase.EngineBaseID = EngineConfig2.EngineBaseID) ON EngineBase2.EngineBaseID = EngineConfig2.EngineBaseID) ON EngineBlock.EngineBlockID = EngineBase2.EngineBlockID) INNER JOIN VehicleToEngineConfig ON EngineConfig2.EngineConfigID = VehicleToEngineConfig.EngineConfigID) ON FuelDeliveryConfig.FuelDeliveryConfigID = EngineConfig2.FuelDeliveryConfigID) ON Vehicle.VehicleID = VehicleToEngineConfig.VehicleID WHERE (((Vehicle.VehicleID)=[VehicleToEngineConfig].[VehicleID]) AND ((VehicleToEngineConfig.EngineConfigID)=[EngineConfig2].[EngineConfigID]) AND ((EngineConfig2.EngineBaseID)=[EngineBase].[EngineBaseID]) AND ((EngineConfig2.FuelDeliveryConfigID)=[FuelDeliveryConfig].[FuelDeliveryConfigID]));"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     LPS20221004++;
-                       basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
+                    basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
                     vehicleidTemp = Convert.ToInt32(reader.GetValue(1).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(basevehicleidTemp.ToString() + "\t" + vehicleidTemp.ToString() + "\t" + reader.GetValue(2).ToString() + "\t" + reader.GetValue(3).ToString() + "\t" + reader.GetValue(4).ToString() + "\t" + reader.GetValue(5).ToString() + "\t" + reader.GetValue(6).ToString() + "\t" + reader.GetValue(7).ToString() + "\t" + reader.GetValue(8).ToString() + "\t" + reader.GetValue(9).ToString() + "\t" + reader.GetValue(10).ToString() + "\t" + reader.GetValue(11).ToString() + "\t" + reader.GetValue(12).ToString() + "\t" + reader.GetValue(13).ToString() + "\t" + reader.GetValue(14).ToString() + "\t" + reader.GetValue(15).ToString() + "\t" + reader.GetValue(16).ToString() + "\t" + reader.GetValue(17).ToString()); }
                     if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
                     {
                         vcdbEngineConfig vcdbEngineConfigTemp = new vcdbEngineConfig();
@@ -5645,16 +7154,27 @@ default: return 0;
                     }
                 }
                 reader.Close();
+
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_vehicle-engineconfig2_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
                 importProgress = 70;
 
 
                 // if you wanted to limit the vcdb to type2 (pass car and light truck) vehicles:
                 //command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, Transmission.TransmissionBaseID, TransmissionTypeID, TransmissionNumSpeedsID, TransmissionControlTypeID, TransmissionMfrCodeID, TransmissionElecControlledID, TransmissionMfrID from BaseVehicle, Model, VehicleType, Vehicle, VehicleToTransmission, Transmission, TransmissionBase where Vehicle.BaseVehicleID=BaseVehicle.BaseVehicleID and BaseVehicle.ModelID=Model.ModelID and Model.VehicleTypeID=VehicleType.VehicleTypeID and Vehicle.VehicleID = VehicleToTransmission.VehicleID and VehicleToTransmission.TransmissionID = Transmission.TransmissionID and Transmission.TransmissionBaseID = TransmissionBase.TransmissionBaseID and VehicleType.VehicleTypeGroupID=2";
+                cachefileLinesList.Clear();
                 command.CommandText = "select BaseVehicleID, Vehicle.VehicleID, Transmission.TransmissionBaseID, TransmissionTypeID, TransmissionNumSpeedsID, TransmissionControlTypeID, TransmissionMfrCodeID, TransmissionElecControlledID, TransmissionMfrID from Vehicle, VehicleToTransmission, Transmission, TransmissionBase where Vehicle.VehicleID = VehicleToTransmission.VehicleID and VehicleToTransmission.TransmissionID = Transmission.TransmissionID and Transmission.TransmissionBaseID = TransmissionBase.TransmissionBaseID"; reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     basevehicleidTemp = Convert.ToInt32(reader.GetValue(0).ToString());
                     vehicleidTemp = Convert.ToInt32(reader.GetValue(1).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(basevehicleidTemp.ToString() + "\t" + vehicleidTemp.ToString() + "\t" + reader.GetValue(2).ToString() + "\t" + reader.GetValue(3).ToString() + "\t" + reader.GetValue(4).ToString() + "\t" + reader.GetValue(5).ToString() + "\t" + reader.GetValue(6).ToString() + "\t" + reader.GetValue(7).ToString() + "\t" + reader.GetValue(8).ToString()); }
                     if (vcdbBasevhicleDict.ContainsKey(basevehicleidTemp) && vcdbBasevhicleDict[basevehicleidTemp].vcdbVehicleDict.ContainsKey(vehicleidTemp))
                     {
                         vcdbTransmission vcdbTransmissionTemp = new vcdbTransmission();
@@ -5669,169 +7189,673 @@ default: return 0;
                     }
                 }
                 reader.Close();
+
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_vehicle-transmission_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+
                 importProgress = 85;
 
-                command.CommandText = "SELECT versiondate from version;"; reader = command.ExecuteReader();
-                while (reader.Read()) { version = reader.GetValue(0).ToString(); }
-                reader.Close(); 
 
-                DateTime dt = new DateTime();
-                if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
-                reader.Close(); 
-
+                cachefileLinesList.Clear();
+                string niceEngine = "";
                 command.CommandText = "SELECT enginebaseid,liter,cc,cid,cylinders,blocktype from enginebase;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); enginebaseDict.Add(i, reader.GetValue(5).ToString().Trim() + reader.GetValue(4).ToString().Trim() + " " + reader.GetValue(1).ToString().Trim() + "L (EngineBase)"); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    niceEngine = reader.GetValue(5).ToString().Trim() + reader.GetValue(4).ToString().Trim() + " " + reader.GetValue(1).ToString().Trim() + "L (EngineBase)";
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + niceEngine); }
+                    enginebaseDict.Add(i, niceEngine);
+                }
                 reader.Close();
 
-                // 2022-10-04 enginebase2 work ccc
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_enginebase_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT engineblockid,liter,cc,cid,cylinders,blocktype from engineblock;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); engineblockDict.Add(i, reader.GetValue(5).ToString().Trim() + reader.GetValue(4).ToString().Trim() + " " + reader.GetValue(1).ToString().Trim() + "L (EngineBlock)"); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    niceEngine = reader.GetValue(5).ToString().Trim() + reader.GetValue(4).ToString().Trim() + " " + reader.GetValue(1).ToString().Trim() + "L (EngineBlock)";
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + niceEngine); }
+                    engineblockDict.Add(i, niceEngine);
+                }
                 reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_engineblock_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT submodelid,submodelname from submodel"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); submodelDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    submodelDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_submodel_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+
+
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT drivetypeid,drivetypename from drivetype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); drivetypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    drivetypeDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_drivetype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
 
+
+
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT aspirationid,aspirationname from aspiration;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); aspirationDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    aspirationDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_aspiration_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+
+
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT fueltypeid,fueltypename from fueltype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fueltypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    fueltypeDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_fueltype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT braketypeid,braketypename from braketype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); braketypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    braketypeDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_braketype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT brakeabsid,brakeabsname from brakeabs;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); brakeabsDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    brakeabsDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_brakeabs_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT mfrbodycodeid,mfrbodycodename from mfrbodycode;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); mfrbodycodeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    mfrbodycodeDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_mfrbodycode_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT bodynumdoorsid,bodynumdoors from bodynumdoors;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bodynumdoorsDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    bodynumdoorsDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_bodynumdoors_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT bodytypeid,bodytypename from bodytype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bodytypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    bodytypeDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
 
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_bodytype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
+
+
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT enginedesignationid,enginedesignationname from enginedesignation;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); enginedesignationDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    enginedesignationDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_enginedesignation_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT enginevinid,enginevinname from enginevin;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); enginevinDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    enginevinDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_enginevin_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT engineversionid,engineversion from engineversion;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); engineversionDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    engineversionDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_engineversion_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT mfrid,mfrname from mfr;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); mfrDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    mfrDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_mfr_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT fueldeliverytypeid,fueldeliverytypename from fueldeliverytype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fueldeliverytypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    fueldeliverytypeDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_fueldeliverytype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT fueldeliverysubtypeid,fueldeliverysubtypename from fueldeliverysubtype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fueldeliverysubtypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    fueldeliverysubtypeDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_fueldeliverysubtype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT fuelsystemcontroltypeid,fuelsystemcontroltypename from fuelsystemcontroltype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fuelsystemcontroltypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    fuelsystemcontroltypeDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_fuelsystemcontroltype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT fuelsystemdesignid,fuelsystemdesignname from fuelsystemdesign;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); fuelsystemdesignDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    fuelsystemdesignDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_fuelsystemdesign_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT cylinderheadtypeid,cylinderheadtypename from cylinderheadtype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); cylinderheadtypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    cylinderheadtypeDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_cylinderheadtype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT ignitionsystemtypeid,ignitionsystemtypename from ignitionsystemtype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); ignitionsystemtypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    ignitionsystemtypeDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_ignitionsystemtype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT transmissionmfrcodeid,transmissionmfrcode from transmissionmfrcode;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissionmfrcodeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    transmissionmfrcodeDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_transmissionmfrcode_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT transmissionbase.transmissionbaseid,transmissioncontroltypename, transmissiontypename, transmissionnumspeeds from transmissionbase, transmissiontype, transmissionnumspeeds, transmissioncontroltype WHERE transmissionbase.transmissiontypeid = transmissiontype.transmissiontypeid AND transmissionbase.transmissionnumspeedsid = transmissionnumspeeds.transmissionnumspeedsid AND transmissionbase.transmissioncontroltypeid = transmissioncontroltype.transmissioncontroltypeid;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissionbaseDict.Add(i, reader.GetValue(1).ToString().Trim() + " " + reader.GetValue(2).ToString().Trim() + " Speed " + reader.GetValue(3).ToString().Trim()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString().Trim() + " " + reader.GetValue(2).ToString().Trim() + " Speed " + reader.GetValue(3).ToString().Trim()); }
+                    transmissionbaseDict.Add(i, reader.GetValue(1).ToString().Trim() + " " + reader.GetValue(2).ToString().Trim() + " Speed " + reader.GetValue(3).ToString().Trim());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_transmissionbase_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT transmissiontypeid,transmissiontypename from transmissiontype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissiontypeDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    transmissiontypeDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_transmissiontype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT transmissioncontroltypeid,transmissioncontroltypename from transmissioncontroltype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissioncontroltypeDict.Add(i, reader.GetValue(1).ToString()); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    transmissioncontroltypeDict.Add(i, reader.GetValue(1).ToString());
+                }
                 reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_transmissioncontroltype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
-                command.CommandText = "select ElecControlledID,ElecControlled from  ElecControlled;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissioeleccontrolledDict.Add(i, reader.GetValue(1).ToString()); }
+                cachefileLinesList.Clear();
+                command.CommandText = "select ElecControlledID,ElecControlled from ElecControlled;"; reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    transmissioeleccontrolledDict.Add(i, reader.GetValue(1).ToString());
+                }
                 reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_eleccontrolled_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT transmissionnumspeedsid,transmissionnumspeeds from transmissionnumspeeds;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); transmissionnumspeedsDict.Add(i, reader.GetValue(1).ToString()); }
-                reader.Close(); 
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    transmissionnumspeedsDict.Add(i, reader.GetValue(1).ToString());
+                }
+                reader.Close();
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_transmissionnumspeeds_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT bedlengthid,bedlength from bedlength;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bedlengthDict.Add(i, reader.GetValue(1).ToString()); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    bedlengthDict.Add(i, reader.GetValue(1).ToString());
+                }
                 reader.Close(); importProgress = 90;
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_bedlength_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT bedtypeid,bedtypename from bedtype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); bedtypeDict.Add(i, reader.GetValue(1).ToString()); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    bedtypeDict.Add(i, reader.GetValue(1).ToString());
+                }
                 reader.Close(); importProgress = 91;
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_bedtype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT wheelbaseid,wheelbase from wheelbase;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); wheelbaseDict.Add(i, reader.GetValue(1).ToString()); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    wheelbaseDict.Add(i, reader.GetValue(1).ToString());
+                }
                 reader.Close(); importProgress = 92;
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_wheelbase_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT brakesystemid,brakesystemname from brakesystem;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); brakesystemDict.Add(i, reader.GetValue(1).ToString()); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    brakesystemDict.Add(i, reader.GetValue(1).ToString());
+                }
                 reader.Close(); importProgress = 93;
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_brakesystem_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT regionid,regionname from region;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); regionDict.Add(i, reader.GetValue(1).ToString()); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    regionDict.Add(i, reader.GetValue(1).ToString());
+                }
                 reader.Close(); importProgress = 94;
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_region_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT springtypeid,springtypename from springtype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); springtypeDict.Add(i, reader.GetValue(1).ToString()); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    springtypeDict.Add(i, reader.GetValue(1).ToString());
+                }
                 reader.Close(); importProgress = 95;
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_springtype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
-
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT steeringsystemid,steeringsystemname from steeringsystem;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); steeringsystemDict.Add(i, reader.GetValue(1).ToString()); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    steeringsystemDict.Add(i, reader.GetValue(1).ToString());
+                }
                 reader.Close(); importProgress = 96;
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_steeringsystem_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
-
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT steeringtypeid,steeringtypename from steeringtype;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); steeringtypeDict.Add(i, reader.GetValue(1).ToString()); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    steeringtypeDict.Add(i, reader.GetValue(1).ToString());
+                }
                 reader.Close(); importProgress = 97;
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_steeringtype_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
-
+                cachefileLinesList.Clear();
                 command.CommandText = "SELECT valvesid,valvesperengine from valves;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); valvesDict.Add(i, reader.GetValue(1).ToString()); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    valvesDict.Add(i, reader.GetValue(1).ToString());
+                }
                 reader.Close(); importProgress = 98;
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_valves_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
-
+                cachefileLinesList.Clear();
                 command.CommandText = "select PowerOutputID,HorsePower from PowerOutput;"; reader = command.ExecuteReader();
-                while (reader.Read()) { i = Convert.ToInt32(reader.GetValue(0).ToString()); poweroutputDict.Add(i, reader.GetValue(1).ToString()); }
+                while (reader.Read())
+                {
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    if (cachelocal) { cachefileLinesList.Add(i.ToString() + "\t" + reader.GetValue(1).ToString()); }
+                    poweroutputDict.Add(i, reader.GetValue(1).ToString());
+                }
                 reader.Close(); importProgress = 100;
+                if (cachelocal)
+                {
+                    using (StreamWriter sw = new StreamWriter(cachepath + "\\" + "vcdb_poweroutput_" + version + ".txt"))
+                    {
+                        foreach (string s in cachefileLinesList) { sw.WriteLine(s); }
+                    }
+                }
 
                 importSuccess = true;
 
@@ -5846,6 +7870,40 @@ default: return 0;
             return "";
         }
 
+
+
+        public string importMySQLchangelog()
+        {
+            importSuccess = false;
+            try
+            {
+                int i;
+                MySqlCommand command = new MySqlCommand("select PrimaryKeyBefore, ColumnName, ColumnValueBefore  from ChangeDetails where ChangeAttributeStateID = 2 and TableNameID = 16 and PrimaryKeyAfter is NULL order by PrimaryKeyBefore, ColumnName", connectionMySQLlist.First());
+                MySqlDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    importSuccess = true;
+                    i = Convert.ToInt32(reader.GetValue(0).ToString());
+                    KeyValuePair<string, string> myPair = new KeyValuePair<string, string>(reader.GetValue(1).ToString(), reader.GetValue(2).ToString());
+
+                    if (!deletedEngineBaseDict.ContainsKey(i))
+                    {// first record that references this enginebaseid
+
+                        List<KeyValuePair<string, string>> myList = new List<KeyValuePair<string, string>>();
+                        deletedEngineBaseDict.Add(i, myList);
+                    }
+                    deletedEngineBaseDict[i].Add(myPair);
+                }
+                reader.Close();
+            }
+            catch (Exception ex)
+            {
+                importExceptionMessage = ex.Message;
+                importSuccess = false;
+                return ex.Message;
+            }
+            return "";
+        }
 
         public string importMySQLdata()
         {
@@ -5933,7 +7991,7 @@ default: return 0;
                     }
                 }
                 reader.Close();
-                importProgress =13;
+                importProgress = 13;
 
 
                 command.CommandText = "select Vehicle.BaseVehicleID, Vehicle.VehicleID, MfrBodyCode.MfrBodyCodeID from Vehicle, VehicleToMfrBodyCode, MfrBodyCode where Vehicle.VehicleID= VehicleToMfrBodyCode.VehicleID and VehicleToMfrBodyCode.MfrBodyCodeID =MfrBodyCode.MfrBodyCodeID"; reader = command.ExecuteReader();
@@ -6296,40 +8354,8 @@ default: return 0;
 
 
 
-        public string importMySQLchangelog()
-        {
-            importSuccess = false;
-            try
-            {
-                int i;
-                MySqlCommand command = new MySqlCommand("select PrimaryKeyBefore, ColumnName, ColumnValueBefore  from ChangeDetails where ChangeAttributeStateID = 2 and TableNameID = 16 and PrimaryKeyAfter is NULL order by PrimaryKeyBefore, ColumnName", connectionMySQLlist.First());
-                MySqlDataReader reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    importSuccess = true;
-                    i = Convert.ToInt32(reader.GetValue(0).ToString());
-                    KeyValuePair<string, string> myPair = new KeyValuePair<string, string>(reader.GetValue(1).ToString(), reader.GetValue(2).ToString());
 
-                    if (!deletedEngineBaseDict.ContainsKey(i))
-                    {// first record that references this enginebaseid
-
-                        List<KeyValuePair<string, string>> myList = new List<KeyValuePair<string, string>>();
-                        deletedEngineBaseDict.Add(i, myList);
-                    }
-                    deletedEngineBaseDict[i].Add(myPair);
-                }
-                reader.Close();
-            }
-            catch (Exception ex)
-            {
-                importExceptionMessage = ex.Message;
-                importSuccess = false;
-                return ex.Message;
-            }
-            return "";
-        }
-
-    }
+    } // end of 
 
 
 

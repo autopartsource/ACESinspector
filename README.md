@@ -7,6 +7,9 @@ autopartsource.com/ACESinspector or on github as a "release"
 
 # Changelog
 
+1.2.0.59 (3/13/2024)
+ - Fixed MakeID / ModelID mix-up bug on Make/Model/Year-range app expansion - Thanks, Eric Snow (NTN) for finding this one.
+
 1.2.0.58 (2/22/2024)
  - Added VCdb caching to AiFragments directory as 50 tab-delimited text files containing exactly the query recordsets that result from our queries of the Access file. This is to lay the groundwork for consuming the VCdb from cache and avoid the costly OLEDB overhead. Initial testing implied a 4x speed-up reading the cache.
 

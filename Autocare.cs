@@ -1715,7 +1715,11 @@ namespace ACESinspector
                 nodesList.AddRange(buildFitmentTreeFromAppList(chunk.appsList, fitmentElementPrevalence, -1, false, false, vcdb, qdb));
                 badness = fitmentTreeTotalBadBranches(nodesList, qdb, concernForDisparates, respectQdbType);
 
+                
+                //------------ iteration experiment ------------------ ggg
+                
                 /*
+                
                 if (badness > 0 && fitmentElements.Count() < 8)
                 {// iterate through all permutations of the fitment elements in this group of apps and construct a tree optimized by each and test it for size
                     // record the record low node count and make note of the order of fitment elements so it can be reused later
@@ -1724,9 +1728,12 @@ namespace ACESinspector
                     {
                         fitmentElementPrevalence.Clear();
                         i = 0; foreach (string fitmentElementTemp in permutation) { fitmentElementPrevalence.Add(fitmentElementTemp, i); i++; }
-                        nodesList.Clear(); nodesList.AddRange(buildFitmentTreeFromAppList(chunk.appsList, fitmentElementPrevalence, smallestNodeCount, false, vcdb, qdb));
+                        nodesList.Clear(); nodesList.AddRange(buildFitmentTreeFromAppList(chunk.appsList, fitmentElementPrevalence, smallestNodeCount, false, false, vcdb, qdb));
+
                         if (nodesList.Count == 0) { continue; }// treebuilder bailed out because its tree had grown beyond previoulsy estabished record small
-                        badness = fitmentTreeTotalBadBranches(nodesList, concernForDisparates);
+                        badness = fitmentTreeTotalBadBranches(nodesList,qdb, concernForDisparates,false);
+
+
                         if (nodesList.Count() < smallestNodeCount) { smallestNodeCount = nodesList.Count(); chunk.lowestBadnessPermutation = permutation.ToList(); }
                         if (badness == 0)
                         {
@@ -1748,12 +1755,16 @@ namespace ACESinspector
                     nodesList.Clear();
                     fitmentElementPrevalence.Clear();
                     i = 0; foreach (string fitmentElementTemp in chunk.lowestBadnessPermutation) { fitmentElementPrevalence.Add(fitmentElementTemp, i); i++; }
-                    nodesList.AddRange(buildFitmentTreeFromAppList(chunk.appsList, fitmentElementPrevalence, -1, false, vcdb, qdb));
+                    nodesList.AddRange(buildFitmentTreeFromAppList(chunk.appsList, fitmentElementPrevalence, -1, false, false,vcdb, qdb));
                 }
 
 
-                badness = fitmentTreeTotalBadBranches(nodesList, concernForDisparates);
+                badness = fitmentTreeTotalBadBranches(nodesList, qdb, false, false);
+                
+                
                 */
+                
+                //------------ /iteration experiment ------------------
 
                 if (badness > 0)
                 {
@@ -3411,7 +3422,7 @@ default: return 0;
                     {// year-range style app. It may contain only makeid, but could also include modelid
 
                         int MakeIDtemp = 0; if (appElement.Element("Make") != null) { MakeIDtemp = Convert.ToInt32((string)appElement.Element("Make").Attribute("id").Value); }
-                        int ModelIDtemp = 0; if (appElement.Element("Model") != null) { MakeIDtemp = Convert.ToInt32((string)appElement.Element("Model").Attribute("id").Value); }
+                        int ModelIDtemp = 0; if (appElement.Element("Model") != null) { ModelIDtemp = Convert.ToInt32((string)appElement.Element("Model").Attribute("id").Value); }
                         if ((string)appElement.Element("Years").Attribute("from").Value != null && (string)appElement.Element("Years").Attribute("to").Value != null)
                         {
                             basevidsInRange = vcdb.basevidsFromYearRange(MakeIDtemp, ModelIDtemp, Convert.ToInt32((string)appElement.Element("Years").Attribute("from").Value), Convert.ToInt32((string)appElement.Element("Years").Attribute("to").Value));

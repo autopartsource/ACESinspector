@@ -7,6 +7,9 @@ autopartsource.com/ACESinspector or on github as a "release"
 
 # Changelog
 
+1.2.0.60 (8/23/2024)
+ - figured out how to code-sign with my new HSM from Sectigo - What a struggle! 0 stars, would not recommend. Post-HSM signing is not for the faint-of-heart. On top of that, I spent $600 for the privilege.
+
 1.2.0.59 (3/13/2024)
  - Fixed MakeID / ModelID mix-up bug on Make/Model/Year-range app expansion - Thanks, Eric Snow (NTN) for finding this one.
 

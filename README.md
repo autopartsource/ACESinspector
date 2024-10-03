@@ -1,11 +1,17 @@
 ﻿# ACESinspector
-C# Windows Forms app for validating automotive catalog ACES xml file content. It will tell you that your ACES Content is not as clean as you thought - guaranteed.
+C# Windows Forms app for validating automotive catalog ACES xml file content. It will tell you that your ACES Content is not as clean as you thought - guaranteed. Seriously.
 
 You can download the latest stable compiled version at
-autopartsource.com/ACESinspector or on github as a "release"
+From github as a "release" or at aps.dev
 
 
 # Changelog
+
+1.2.0.62 (10/3/2024)
+ - Added detection of blank note tags - they are now allowed into the import and added to "questionable notes" list
+
+1.2.0.61 (9/20/2024)
+ - Fixed "vehcile" typos in several spots (including assessment spreadsheet column heading) - Thanks to Sjoerd Negenman at Olyslager and Dave Logan at Autocare for catching it.
 
 1.2.0.60 (8/23/2024)
  - figured out how to code-sign with my new HSM from Sectigo - What a struggle! 0 stars, would not recommend. Post-HSM signing is not for the faint-of-heart. On top of that, I spent $600 for the privilege.

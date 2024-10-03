@@ -2480,6 +2480,16 @@ namespace ACESinspector
                             }
                         }
                     }
+
+                    //also look for a blank note
+                    foreach (String note in app.notes)
+                    {
+                        if (note=="")
+                        {// this note tag is empty
+                            chunk.questionableNotesCount++;
+                            sw.WriteLine("Empty (blank) notes are XSD-valid, but REALLY poor form" + "\t" + app.id + "\t" + app.basevehicleid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehicleid) + "\t" + vcdb.niceModelOfBasevid(app.basevehicleid) + "\t" + vcdb.niceYearOfBasevid(app.basevehicleid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + string.Join(";", app.notes));
+                        }
+                    }
                 }
             }
             if (chunk.questionableNotesCount == 0) { File.Delete(cacheFilename); } else { logHistoryEvent("", "5\tError: " + chunk.questionableNotesCount.ToString() + " questionable notes (task " + chunk.id.ToString() + ")"); }  // delete cache file if empty
@@ -3524,7 +3534,8 @@ default: return 0;
                     {
                         foreach (string noteTempChunk in noteTemp.Split(';'))
                         {
-                            if (!appTemp.notes.Contains(noteTempChunk.Trim()) && noteTempChunk.Trim() != "")
+                            //if (!appTemp.notes.Contains(noteTempChunk.Trim()) && noteTempChunk.Trim() != "")
+                            if (!appTemp.notes.Contains(noteTempChunk.Trim()))
                             {
                                 appTemp.notes.Add(noteTempChunk.Trim());
                             }
@@ -3532,7 +3543,8 @@ default: return 0;
                     }
                     else
                     {
-                        if (!appTemp.notes.Contains(noteTemp.Trim()) && noteTemp.Trim()!="")
+                        //if (!appTemp.notes.Contains(noteTemp.Trim()) && noteTemp.Trim()!="")
+                        if (!appTemp.notes.Contains(noteTemp.Trim()))
                         {
                             appTemp.notes.Add(noteTemp.Trim());
                         }
@@ -4840,7 +4852,7 @@ default: return 0;
 
 
         // return the list of VehicleID's that an app's specific attribute validates against.
-        public List<int> findVehcileIDsForAppVCdbAttribute(App app, int attributeIndex)
+        public List<int> findVehicleIDsForAppVCdbAttribute(App app, int attributeIndex)
         {
             List<int> result = new List<int>();
             if (app.VCdbAttributes.Count() == 0) { return result; }
@@ -5154,7 +5166,7 @@ default: return 0;
             if (app.VCdbAttributes.Count() == 1)
             {// single attribute
 
-                vehicleIDlist = findVehcileIDsForAppVCdbAttribute(app, 0);
+                vehicleIDlist = findVehicleIDsForAppVCdbAttribute(app, 0);
                 if (vehicleIDlist.Count() == 0)
                 {// this attribute is not found in any Vehicle config for this basevid
                     configIsValid = false;
@@ -5163,10 +5175,10 @@ default: return 0;
             else
             {// multiple attributes
 
-                vehicleIDlistinitial = findVehcileIDsForAppVCdbAttribute(app, 0);
+                vehicleIDlistinitial = findVehicleIDsForAppVCdbAttribute(app, 0);
                 for (int i = 1; i < app.VCdbAttributes.Count(); i++)
                 {
-                    vehicleIDlist = findVehcileIDsForAppVCdbAttribute(app, i);
+                    vehicleIDlist = findVehicleIDsForAppVCdbAttribute(app, i);
 
                     foundCommonConfig = false;
                     foreach (int vehicleID in vehicleIDlist)

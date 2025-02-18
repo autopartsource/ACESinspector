@@ -6,6 +6,9 @@ From github as a "release" or at aps.dev
 
 
 # Changelog
+1.2.0.63 (2/28/2025)
+ - fixed a date format culture bug that caused a VCdb load failure when non "en-US" culture was in use on the host machine (thanks Sjoerd Negenman of olyslager for helping identify)
+ - added an exception list of fluid parttype to the quantity outliers analysis (thanks Sjoerd Negenman of olyslager and Courtney Pedler of Autology for helping define)
 
 1.2.0.62 (10/3/2024)
  - Added detection of blank note tags - they are now allowed into the import and added to "questionable notes" list

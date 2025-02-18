@@ -2649,6 +2649,10 @@ namespace ACESinspector
             Dictionary<string, int> parttypePositionDict = new Dictionary<string, int>();
             Dictionary<string, int> parttypePositionQtyDict = new Dictionary<string, int>();
             Dictionary<string, Double> parttypePositionQtyPrevelence = new Dictionary<string, Double>();
+            Dictionary<int, string> parttypeQtyExemptions = new Dictionary<int, string>();
+            parttypeQtyExemptions.Add(11387, "Automatic Transmission Fluid"); parttypeQtyExemptions.Add(11389, "Brake Fluid"); parttypeQtyExemptions.Add(11393, "Engine Coolant / Antifreeze"); parttypeQtyExemptions.Add(11394, "Gear Oil"); parttypeQtyExemptions.Add(11395, "Power Steering Fluid"); parttypeQtyExemptions.Add(11396, "Steering Swivel Lubricant"); parttypeQtyExemptions.Add(11397, "Suspension Self-Leveling Unit Fluid"); parttypeQtyExemptions.Add(12137, "Differential Oil"); parttypeQtyExemptions.Add(12138, "Engine Oil"); parttypeQtyExemptions.Add(12144, "Hydraulic System Fluid"); parttypeQtyExemptions.Add(13630, "Manual Transmission Fluid"); parttypeQtyExemptions.Add(14226, "Transfer Case Fluid"); parttypeQtyExemptions.Add(14481, "Suspension Shock Absorber Fluid"); parttypeQtyExemptions.Add(15471, "Diesel Exhaust Fluid (DEF)"); parttypeQtyExemptions.Add(16745, "Automatic Dual Clutch Transmission Fluid"); parttypeQtyExemptions.Add(16810, "Chain Lubricant");
+            parttypeQtyExemptions.Add(18312, "Clutch Hydraulic System Fluid"); parttypeQtyExemptions.Add(18768, "Hub Oil"); parttypeQtyExemptions.Add(19264, "Supercharger Oil"); parttypeQtyExemptions.Add(47861, "Final Drive Oil"); parttypeQtyExemptions.Add(49882, "Drive Motor Inverter Coolant"); parttypeQtyExemptions.Add(50024, "Steering Gear Box Fluid"); parttypeQtyExemptions.Add(53001, "Chain Case Oil"); parttypeQtyExemptions.Add(57314, "Automatic Continuously Variable Transmission (CVT) Fluid"); parttypeQtyExemptions.Add(59707, "AWD Coupling Fluid"); parttypeQtyExemptions.Add(65054, "Hydraulic Cooling Fan Fluid"); parttypeQtyExemptions.Add(69579, "Drive Motor Battery Coolant / Antifreeze"); parttypeQtyExemptions.Add(69932, "Electric Vehicle (EV) Reduction Gear Fluid"); parttypeQtyExemptions.Add(70057, "Drive Shaft Lubricant"); parttypeQtyExemptions.Add(70058, "Differential Lock Actuator Fluid"); parttypeQtyExemptions.Add(70099, "Automatic Dual Clutch Transmission Clutch Actuator Fluid");
+            parttypeQtyExemptions.Add(70101, "Manual Tranmission Shift Actuator Fluid"); 
 
             Double outliernessThreshold = Convert.ToDouble(qtyOutlierThreshold / 100);
             string hashKey = "";
@@ -2657,6 +2661,8 @@ namespace ACESinspector
             foreach (App app in chunk.appsList)
             {
                 if (app.action == "D") { continue; } // ignore "Delete" apps
+                if (parttypeQtyExemptions.ContainsKey(app.parttypeid)) { continue; } // ignore apps with a parttype in the exemption list
+
                 hashKey = app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.quantity.ToString();
                 if (parttypePositionQtyDict.ContainsKey(hashKey))
                 {// seen this type/position/qty before. increment the counter
@@ -2690,6 +2696,8 @@ namespace ACESinspector
                 foreach (App app in chunk.appsList)
                 {
                     if (app.action == "D") { continue; } // ignore "Delete" apps
+                    if (parttypeQtyExemptions.ContainsKey(app.parttypeid)) { continue; } // ignore apps with a parttype in the exemption list
+
                     alreadyFlaggedThisApp = false;
                     hashKey = app.parttypeid.ToString() + "\t" + app.positionid.ToString() + "\t" + app.quantity.ToString();
                     hashKeyTypePosition = app.parttypeid.ToString() + "\t" + app.positionid.ToString();
@@ -6801,11 +6809,9 @@ default: return 0;
                 OleDbCommand command = new OleDbCommand("SELECT versiondate from version;");
                 command.Connection = connectionOLEDB;
                 OleDbDataReader reader = command.ExecuteReader();
-                while (reader.Read()) { result = reader.GetValue(0).ToString(); }
-
                 DateTime dt = new DateTime();
-                if (DateTime.TryParseExact(result, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { result = dt.ToString("yyyy-MM-dd"); }
-
+                while (reader.Read()) { dt = DateTime.Parse(reader.GetValue(0).ToString()); }
+                result = dt.ToString("yyyy-MM-dd");
                 reader.Close();
                 connectionOLEDB.Close();
 
@@ -6824,15 +6830,13 @@ default: return 0;
             try
             {
                 int i;
-
                 OleDbCommand command = new OleDbCommand("SELECT versiondate from version;");
                 command.Connection = connectionOLEDB;
                 OleDbDataReader reader = command.ExecuteReader();
-                while (reader.Read()) { version = reader.GetValue(0).ToString(); }
-                reader.Close();
 
                 DateTime dt = new DateTime();
-                if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
+                while (reader.Read()) { dt = DateTime.Parse(reader.GetValue(0).ToString()); }
+                version = dt.ToString("yyyy-MM-dd");
                 reader.Close();
 
                 command.CommandText = "SELECT BaseVehicle.BaseVehicleId,Make.MakeName,Model.ModelName,BaseVehicle.YearId,VehicleType.VehicleTypeName,Make.MakeId,Model.ModelId,VehicleType.VehicleTypeId FROM BaseVehicle,Make,Model,VehicleType where BaseVehicle.MakeId=Make.MakeId and BaseVehicle.ModelId=Model.ModelId and Model.VehicleTypeId=VehicleType.VehicleTypeId order by MakeName,ModelName,YearId;";
@@ -8174,11 +8178,10 @@ default: return 0;
                 //BaseVehicle bvtemp = new BaseVehicle();
                 //bvtemp = vcdbBasevhicleDict[2231];
 
-                command.CommandText = "SELECT VersionDate from Version"; reader = command.ExecuteReader();
-                while (reader.Read()) { version = reader.GetValue(0).ToString(); }
-
                 DateTime dt = new DateTime();
-                if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
+                command.CommandText = "SELECT VersionDate from Version"; reader = command.ExecuteReader();
+                while (reader.Read()) { dt = DateTime.Parse(reader.GetValue(0).ToString()); }
+                version = dt.ToString("yyyy-MM-dd");
                 reader.Close();
                 importProgress = 63;
 
@@ -8415,13 +8418,10 @@ default: return 0;
                 command.Connection = connectionOLEDB;
 
                 OleDbDataReader reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    version = reader.GetValue(0).ToString();
-                }
+                DateTime dt = new DateTime();
+                while (reader.Read()) { dt = DateTime.Parse(reader.GetValue(0).ToString()); }
+                version = dt.ToString("yyyy-MM-dd");
                 reader.Close();
-
-                DateTime dt = new DateTime(); if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
 
                 //prebake all the parttype/name relationships into a hashtable ("Dictionary")
                 command.CommandText = "select partterminologyid,partterminologyname from Parts"; reader = command.ExecuteReader();
@@ -8459,10 +8459,10 @@ default: return 0;
                 command.Connection = connectionMySQL;
 
                 MySqlDataReader reader = command.ExecuteReader();
-                while (reader.Read()) { version = reader.GetValue(0).ToString(); }
+                DateTime dt = new DateTime();
+                while (reader.Read()) { dt = DateTime.Parse(reader.GetValue(0).ToString()); }
+                version = dt.ToString("yyyy-MM-dd");
                 reader.Close();
-
-                DateTime dt = new DateTime(); if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
 
                 //prebake all the parttype/name relationships into a hashtable ("Dictionary")
                 command.CommandText = "select partterminologyid,partterminologyname from Parts"; reader = command.ExecuteReader();
@@ -8604,10 +8604,10 @@ default: return 0;
                 command.Connection = connectionOLEDB;
 
                 OleDbDataReader reader = command.ExecuteReader();
-                while (reader.Read()) { version = reader.GetValue(0).ToString(); }
+                DateTime dt = new DateTime();
+                while (reader.Read()) { dt = DateTime.Parse(reader.GetValue(0).ToString()); }
+                version = dt.ToString("yyyy-MM-dd");
                 reader.Close();
-
-                DateTime dt = new DateTime(); if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
 
                 //prebake all the parttype/name relationships into a hashtable ("Dictionary")
                 command.CommandText = "select qualifierid,qualifiertext,qualifiertypeid from Qualifier order by qualifierid"; reader = command.ExecuteReader();
@@ -8641,10 +8641,10 @@ default: return 0;
                 command.Connection = connectionMySQL;
 
                 MySqlDataReader reader = command.ExecuteReader();
-                while (reader.Read()) { version = reader.GetValue(0).ToString(); }
+                DateTime dt = new DateTime();
+                while (reader.Read()) { dt = DateTime.Parse(reader.GetValue(0).ToString()); }
+                version = dt.ToString("yyyy-MM-dd");
                 reader.Close();
-
-                DateTime dt = new DateTime(); if (DateTime.TryParseExact(version, "M/d/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) { version = dt.ToString("yyyy-MM-dd"); }
 
                 //prebake all the parttype/name relationships into a hashtable ("Dictionary")
                 command.CommandText = "select qualifierid,qualifiertext,qualifiertypeid from Qualifier"; reader = command.ExecuteReader();

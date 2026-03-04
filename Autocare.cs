@@ -2431,6 +2431,13 @@ namespace ACESinspector
                             chunk.qdbErrorsCount++;
                             sw.WriteLine("Invalid Qdb id (" + myQdbQualifier.qualifierId.ToString() + ")" + "\t" + app.id + "\t" + app.basevehicleid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehicleid) + "\t" + vcdb.niceModelOfBasevid(app.basevehicleid) + "\t" + vcdb.niceYearOfBasevid(app.basevehicleid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + string.Join(";", app.notes));
                         }
+
+                        // look for count mismatch between the expected and actual parms
+                        if (qdb.qualifierParmCount(myQdbQualifier.qualifierId) != myQdbQualifier.qualifierParameters.Count())
+                        {//
+                            chunk.qdbErrorsCount++;
+                            sw.WriteLine("Parameter count mismatch using Qdb id (" + myQdbQualifier.qualifierId.ToString() + ")" + "\t" + app.id + "\t" + app.basevehicleid.ToString() + "\t" + vcdb.niceMakeOfBasevid(app.basevehicleid) + "\t" + vcdb.niceModelOfBasevid(app.basevehicleid) + "\t" + vcdb.niceYearOfBasevid(app.basevehicleid) + "\t" + pcdb.niceParttype(app.parttypeid) + "\t" + pcdb.nicePosition(app.positionid) + "\t" + app.quantity + "\t" + app.part + "\t" + app.niceAttributesString(vcdb, false) + "\t" + string.Join(";", app.notes));
+                        }
                     }
                 }
 
@@ -8764,6 +8771,12 @@ default: return 0;
                             fullRawParameterString = niceValue.Substring(parameterStartingPos, (parameterEndingPos - parameterStartingPos) + 3);
                             niceValue = niceValue.Replace(fullRawParameterString, parameter);
                         }
+                        else
+                        {// test 3/4/2026 
+
+                            string errorDescription = "";
+                            //logHistoryEvent("", "5\tLooking for fitment logic problems");
+                        }
                         parameterNumber++;
                     }
                     return niceValue;
@@ -8785,7 +8798,46 @@ default: return 0;
         }
 
 
+
+        public int qualifierParmCount(int qualifierid)
+        { // get the count of parm qdb reference data
+
+            int returnVal = -1; // negative 1 will imply that the qdb is not found/valid
+            string niceValue = "";
+
+            if (qualifiers.Count > 0)
+            {// Qdb reference database is in-play. try to lookup and nicify the supplied QdbId
+
+                returnVal = 0; // 0 will imply that the qdb has no expected parms
+
+                string parameterOpenChunk;
+                if (qualifiers.TryGetValue(qualifierid, out niceValue))
+                {
+                    // <p1 type="size"/> - <p2 type="size"/> Or <p3 type="size"/> - <p4 type="size"/>
+                    // num, name, size, weight, idlist, date
+
+                    for (int i = 1; i <= 10; i++)
+                    {
+                        parameterOpenChunk = "<p" + i.ToString() + " type=\"";
+                        if (niceValue.Contains(parameterOpenChunk))
+                        {
+                            returnVal = i;
+
+                        }
+                    }
+                }
+            }
+            else
+            {// no Qdb reference data was supplied - return 0 to imply the id is valid and has no parm
+                returnVal = 0;
+            }
+            return returnVal;
+        }
+
+
+
+
     }
-       
-    
+
+
 }

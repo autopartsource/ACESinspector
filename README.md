@@ -6,7 +6,16 @@ From github as a "release" or at aps.dev
 
 
 # Changelog
-1.2.0.63 (2/28/2025)
+1.2.0.66 (3/4/2026)
+ - Added logic to detect when the count of Qdb parameters given in the ACES file do not match with the list in given Qdb. This was inspired by the "pre-check" feature that AutoCare added to their fork of ACESinspector.
+
+1.2.0.65 (2/19/2025)
+ - Experiment with publishing as a "partial trust" application to account for in-tune - zone is Local Intranet
+
+1.2.0.64 (2/19/2025)
+ - Experiment with publishing as a "partial trust" application to account for in-tune 
+
+1.2.0.63 (2/18/2025)
  - fixed a date format culture bug that caused a VCdb load failure when non "en-US" culture was in use on the host machine (thanks Sjoerd Negenman of olyslager for helping identify)
  - added an exception list of fluid parttype to the quantity outliers analysis (thanks Sjoerd Negenman of olyslager and Courtney Pedler of Autology for helping define)
 

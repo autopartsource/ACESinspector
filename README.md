@@ -6,6 +6,14 @@ From github as a "release" or at aps.dev
 
 
 # Changelog
+1.2.0.67 (3/26/2026)
+ - Added ACES 5.0 xsd to collection of schemas
+ - Added logic to dynamicaly ingest <Part> or <PartNumber> app elements
+ - Added logic to dynamicaly ingest <PartType> or <PartTerminology> app elements
+ - added logic to deal with "versiondate" vs. "publicationdate" in version table that changed with the 3/26/2026 publication ("VCdb 2.0 Schema")
+ - fixed divide-by-zero bug on loading progress calculation when footer count is 0
+ - Set net-change output file to 4.2 schema
+ 
 1.2.0.66 (3/4/2026)
  - Added logic to detect when the count of Qdb parameters given in the ACES file do not match with the list in given Qdb. This was inspired by the "pre-check" feature that AutoCare added to their fork of ACESinspector.
 

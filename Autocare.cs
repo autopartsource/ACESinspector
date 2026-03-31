@@ -6920,7 +6920,6 @@ default: return 0;
             DateTime dt = new DateTime();
 
             // determin pre/post march/2026 flavor of the VCdb access file
-
             OleDbCommand versionCommand = new OleDbCommand("select * from Version;");
             versionCommand.Connection = connectionOLEDB;
             OleDbDataReader versionReader= versionCommand.ExecuteReader();
@@ -8524,6 +8523,7 @@ default: return 0;
         public string importExceptionMessage = "";
         public string filePath = "";
         public string version = "";
+        public string schemaVersion = "";
 
         public Dictionary<int, String> parttypes = new Dictionary<int, string>();
         public Dictionary<int, String> positions = new Dictionary<int, string>();
@@ -8532,17 +8532,44 @@ default: return 0;
 
         public string importOLEdb()
         {
-            importSuccess = false; int i;
+            importSuccess = false; int i; version = ""; schemaVersion = "";
+
+            // determin pre/post march/2026 flavor of the PCdb access file
+            OleDbCommand versionCommand = new OleDbCommand("select * from Version;");
+            versionCommand.Connection = connectionOLEDB;
+            OleDbDataReader versionReader = versionCommand.ExecuteReader();
+
             try
             {
-                OleDbCommand command = new OleDbCommand("select VersionDate from Version");
-                command.Connection = connectionOLEDB;
+                while (versionReader.Read())
+                { // success on older table layout
+                    if (versionReader.GetValue(0).ToString() == "PCdb")
+                    {
+                        schemaVersion = versionReader.GetValue(1).ToString();
+                        version = DateTime.Parse(versionReader.GetValue(2).ToString()).ToString("yyyy-MM-dd");
+                    }
+                    else
+                    {
+                        schemaVersion = "1.0";
+                        version = DateTime.Parse(versionReader.GetValue(0).ToString()).ToString("yyyy-MM-dd");
+                    }
+                }
+                versionReader.Close();
+            }
+            catch (Exception ex)
+            {
+                importExceptionMessage = ex.Message;
+                importSuccess = false;
+                versionReader.Close();
+                return ex.Message;
+            }
 
-                OleDbDataReader reader = command.ExecuteReader();
-                DateTime dt = new DateTime();
-                while (reader.Read()) { dt = DateTime.Parse(reader.GetValue(0).ToString()); }
-                version = dt.ToString("yyyy-MM-dd");
-                reader.Close();
+
+            try
+            {
+                OleDbCommand command = new OleDbCommand("");
+                command.Connection = connectionOLEDB;
+                OleDbDataReader reader;
 
                 //prebake all the parttype/name relationships into a hashtable ("Dictionary")
                 command.CommandText = "select partterminologyid,partterminologyname from Parts"; reader = command.ExecuteReader();
@@ -8555,7 +8582,16 @@ default: return 0;
                 reader.Close();
 
                 // make a composite key string in a List<string> to store all valid combinations of parttype/position from the codemaster table of the pcdb.
-                command.CommandText = "select partterminologyid, positionid from codemaster"; reader = command.ExecuteReader();
+                // PCdb2.0 schema has a table called PartPosition instead of CodeMaster
+                if(schemaVersion=="1.0")
+                {
+                    command.CommandText = "select partterminologyid, positionid from codemaster"; reader = command.ExecuteReader();
+                }
+                else
+                {// must be 2.0
+                    command.CommandText = "select PartTerminologyID, PositionID from PartPosition"; reader = command.ExecuteReader();
+                }
+
                 while (reader.Read()){codmasterParttypePoisitions.Add(Convert.ToInt32(reader.GetValue(0).ToString()) + "_" + Convert.ToInt32(reader.GetValue(1).ToString()));}
                 reader.Close();
                 importSuccess = true;
@@ -8709,6 +8745,7 @@ default: return 0;
         public MySqlConnection connectionMySQL = null;
         public string filePath = "";
         public string version = "";
+        public string schemaVersion = "";
         public bool importSuccess = false;
         public string importExceptionMessage = "";
         public Dictionary<int, String> qualifiers = new Dictionary<int, string>();
@@ -8717,18 +8754,45 @@ default: return 0;
 
         public string importOLEdb()
         {
-            importSuccess = false; 
+            importSuccess = false; version = ""; schemaVersion = "";
             int qualifierid; int qualifiertypeid;
+
+            // determin pre/post march/2026 flavor of the Qdb access file
+            OleDbCommand versionCommand = new OleDbCommand("select * from Version;");
+            versionCommand.Connection = connectionOLEDB;
+            OleDbDataReader versionReader = versionCommand.ExecuteReader();
+
             try
             {
-                OleDbCommand command = new OleDbCommand("select versiondate from Version");
-                command.Connection = connectionOLEDB;
+                while (versionReader.Read())
+                { // success on older table layout
+                    if (versionReader.GetValue(0).ToString() == "Qdb")
+                    {
+                        schemaVersion = versionReader.GetValue(1).ToString();
+                        version = DateTime.Parse(versionReader.GetValue(2).ToString()).ToString("yyyy-MM-dd");
+                    }
+                    else
+                    {
+                        schemaVersion = "1.0";
+                        version = DateTime.Parse(versionReader.GetValue(0).ToString()).ToString("yyyy-MM-dd");
+                    }
+                }
+                versionReader.Close();
+            }
+            catch (Exception ex)
+            {
+                importExceptionMessage = ex.Message;
+                importSuccess = false;
+                versionReader.Close();
+                return ex.Message;
+            }
 
-                OleDbDataReader reader = command.ExecuteReader();
-                DateTime dt = new DateTime();
-                while (reader.Read()) { dt = DateTime.Parse(reader.GetValue(0).ToString()); }
-                version = dt.ToString("yyyy-MM-dd");
-                reader.Close();
+            //dsss
+            try
+            {
+                OleDbCommand command = new OleDbCommand("");
+                command.Connection = connectionOLEDB;
+                OleDbDataReader reader;
 
                 //prebake all the parttype/name relationships into a hashtable ("Dictionary")
                 command.CommandText = "select qualifierid,qualifiertext,qualifiertypeid from Qualifier order by qualifierid"; reader = command.ExecuteReader();

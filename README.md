@@ -6,7 +6,7 @@ From github as a "release" or at aps.dev
 
 
 # Changelog
-1.2.0.67 (3/26/2026)
+1.2.0.67 (3/31/2026)
  - Added ACES 5.0 xsd to collection of schemas
  - Added logic to dynamicaly ingest <Part> or <PartNumber> app elements
  - Added logic to dynamicaly ingest <PartType> or <PartTerminology> app elements
